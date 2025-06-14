@@ -1,26 +1,126 @@
 @import "tailwindcss";
+@import "../styles/colors.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* PT SOAP Generator Colors - from Style Guide */
+  /* Primary Colors */
+  --blue-primary: #007AFF; /* Apple Blue per style guide */
+  --blue-light: rgba(0, 122, 255, 0.1);
+  --blue-dark: #0056b3; /* Darker shade of Apple Blue */
+  
+  /* Glassmorphism Palette */
+  --glass-light: rgba(255, 255, 255, 0.25);
+  --glass-medium: rgba(255, 255, 255, 0.18);
+  --glass-dark: rgba(0, 0, 0, 0.05);
+  --backdrop-blur: 20px;
+
+  /* Neutral Palette (Notion-Inspired) */
+  --white: #ffffff;
+  --grey-50: #fbfbfa;
+  --grey-100: #f1f1ef;
+  --grey-300: #e9e9e7;
+  --grey-500: #a8a29e;
+  --grey-700: #454440;
+  --grey-900: #1f1f1f;
+  --black: #000000;
+  
+  /* UI Colors */
+  --background: var(--white);
+  --foreground: var(--grey-900);
+  --muted: var(--grey-50);
+  --muted-foreground: var(--grey-500);
+  
+  --border: var(--grey-100);
+  --input: var(--grey-100);
+  --ring: var(--blue-primary);
+  
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  
+  /* Font */
+  --font-sans: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  
+  /* Additional UI variables */
+  --card: var(--white);
+  --card-foreground: var(--grey-900);
+  --popover: var(--white);
+  --popover-foreground: var(--grey-900);
+  --primary: var(--blue-primary);
+  --primary-foreground: var(--white);
+  --secondary: var(--grey-100);
+  --secondary-foreground: var(--grey-900);
+  --accent: var(--grey-50);
+  --accent-foreground: var(--grey-900);
+  --destructive: #ef4444;
+  
+  /* Charts */
+  --chart-1: var(--blue-primary);
+  --chart-2: #3b82f6;
+  --chart-3: #8b5cf6;
+  --chart-4: #10b981;
+  --chart-5: #f59e0b;
+  
+  /* Sidebar */
+  --sidebar: var(--glass-medium);
+  --sidebar-foreground: var(--grey-900);
+  --sidebar-primary: var(--blue-primary);
+  --sidebar-primary-foreground: var(--white);
+  --sidebar-accent: var(--glass-light);
+  --sidebar-accent-foreground: var(--grey-900);
+  --sidebar-border: var(--grey-100);
+  --sidebar-ring: var(--blue-primary);
+  
+  /* Border radius */
+  --radius: 0.625rem;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  input, textarea {
+    border-color: var(--border);
+    outline-color: rgba(var(--ring), 0.5);
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
 }

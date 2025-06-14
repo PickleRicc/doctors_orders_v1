@@ -1,0 +1,103 @@
+/* PT SOAP Generator Color Utilities 
+   These classes directly use arbitrary values for consistency across components
+   Based on the style guide with Notion-inspired neutrals, Apple Blue accents, and glassmorphism
+*/
+
+/* Background Colors */
+.bg-notion-white {
+  background-color: #ffffff;
+}
+
+.bg-notion-grey-50 {
+  background-color: #fbfbfa;
+}
+
+.bg-notion-grey-100 {
+  background-color: #f1f1ef;
+}
+
+.bg-apple-blue {
+  background-color: #007AFF;
+}
+
+.bg-apple-blue-light {
+  background-color: rgba(0, 122, 255, 0.1);
+}
+
+.bg-apple-blue-gradient {
+  background-image: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+}
+
+/* Glassmorphism */
+.bg-glass-light {
+  background-color: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+}
+
+.bg-glass-medium {
+  background-color: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px);
+}
+
+.bg-glass-dark {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Text Colors */
+.text-notion-black {
+  color: #000000;
+}
+
+.text-notion-grey-900 {
+  color: #1f1f1f;
+}
+
+.text-notion-grey-700 {
+  color: #454440;
+}
+
+.text-notion-grey-500 {
+  color: #a8a29e;
+}
+
+.text-apple-blue {
+  color: #007AFF;
+}
+
+.text-apple-blue-dark {
+  color: #0056b3;
+}
+
+/* Border Colors */
+.border-notion-grey-100 {
+  border-color: #f1f1ef;
+}
+
+.border-apple-blue {
+  border-color: #007AFF;
+}
+
+/* Hover States */
+.hover-bg-notion-grey-50:hover {
+  background-color: #fbfbfa;
+}
+
+.hover-bg-notion-grey-100:hover {
+  background-color: #f1f1ef;
+}
+
+.hover-bg-glass-dark:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.hover-text-notion-grey-900:hover {
+  color: #1f1f1f;
+}
+
+.hover-text-apple-blue:hover {
+  color: #007AFF;
+}
+
+.hover-text-apple-blue-dark:hover {
+  color: #0056b3;
+}
