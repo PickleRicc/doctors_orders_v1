@@ -19,9 +19,9 @@ const useTemplates = () => {
   const [bodyRegions, setBodyRegions] = useState([]);
   const [sessionTypes, setSessionTypes] = useState([]);
 
-  // Default templates that are always available
-  const getDefaultTemplates = () => {
-    // NOTE: In a real app, these would be loaded from a database or external file
+  // Fallback default templates in case database fetch fails
+  const getFallbackTemplates = () => {
+    // NOTE: These templates are only used as a fallback if database templates cannot be loaded
     return [
       // Example template to guide users
       {
@@ -35,114 +35,73 @@ const useTemplates = () => {
         plan: 'This is the PLAN section where you document treatment strategies:\n\n- Frequency: {{frequency}} for {{duration_of_care}}\n- Interventions: {{interventions}}\n- Home program: {{home_exercises}}\n- Short-term goals: {{short_term_goals}} in {{short_term_timeframe}}\n- Long-term goals: {{long_term_goals}} in {{long_term_timeframe}}\n\nTIP: Templates can be customized for different body regions and session types.',
         isDefault: true,
         isExample: true
-      },
-      {
-        id: 'default-shoulder',
-        name: 'Shoulder Evaluation',
-        bodyRegion: 'shoulder',
-        sessionType: 'evaluation',
-        sections: {
-          subjective: 'Patient presents with {{duration}} shoulder pain, describing it as {{pain_description}}. Pain is rated {{pain_scale}}/10. {{aggravating_factors}} worsen symptoms, while {{relieving_factors}} provide relief. {{relevant_medical_history}}',
-          objective: 'Visual inspection reveals {{visual_findings}}. ROM is {{rom_findings}}. Strength testing shows {{strength_findings}}. Special tests: {{special_tests_findings}}.',
-          assessment: "Patient is presenting with typical signs of shoulder impingement syndrome, with possible involvement of the supraspinatus tendon. Range of motion is limited primarily due to pain rather than mechanical restrictions. Strength is diminished but should improve with appropriate exercises.",
-          plan: 'Patient will attend PT {{frequency}} focusing on {{treatment_focus}}. Home program includes {{home_exercises}}. Goals include {{treatment_goals}} within {{timeframe}}.',
-        },
-        isDefault: true,
-      },
-      {
-        id: 'default-knee',
-        name: 'Knee Progress',
-        bodyRegion: 'knee',
-        sessionType: 'progress',
-        sections: {
-          subjective: 'Patient reports {{subjective_progress}} since last session. Current pain level is {{current_pain}}/10. {{current_activities}} are {{activity_difficulty}}. {{home_program_compliance}}',
-          objective: 'Current ROM is {{current_rom}}. Strength assessment shows {{current_strength}}. Observed gait pattern: {{gait_pattern}}. Functional testing: {{functional_test_results}}.',
-          assessment: "Patient demonstrates positive progress in knee rehabilitation following ACL reconstruction. Continued improvement in strength and stability noted. Some residual swelling and limitation in terminal flexion remains but is improving appropriately for this stage of recovery.",
-          plan: 'Continue with {{treatment_adjustments}}. Progressing exercises to include {{exercise_progressions}}. Next reassessment in {{reassessment_timeframe}}.',
-        },
-        isDefault: true,
-      },
-      {
-        id: 'default-back',
-        name: 'Low Back Discharge',
-        bodyRegion: 'lumbar',
-        sessionType: 'discharge',
-        sections: {
-          subjective: 'Patient reports {{subjective_outcome}} following the course of therapy. Current pain level is {{final_pain}}/10, compared to initial {{initial_pain}}/10. {{adl_improvements}}',
-          objective: 'Final assessment reveals {{objective_findings}}. {{outcome_measures}} show improvement from {{initial_scores}} to {{final_scores}}. {{functional_achievements}}',
-          assessment: "Patient has reached rehabilitation goals for ACL reconstruction. Demonstrates near-symmetrical strength, full ROM, and ability to perform sport-specific movements. Patient reports confidence in knee stability during all activities.",
-          plan: 'Patient is discharged from skilled PT services with {{home_program}}. {{follow_up_recommendations}}. Patient is instructed to contact provider if {{return_criteria}}.',
-        },
-        isDefault: true,
-      },
+      }
     ];
   };
 
-  // Fetch templates from Supabase and merge with defaults
-  const fetchTemplates = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
+  // Fetch templates from the database
+  const fetchTemplates = async () => {
+    if (!user) {
+      // If no user, just provide the fallback templates
+      setTemplates(getFallbackTemplates());
+      setIsLoading(false);
+      return;
+    }
+    
     try {
-      // Get default templates
-      const defaultTemplates = getDefaultTemplates();
+      setIsLoading(true);
+      setError(null);
       
-      // If user is logged in, fetch their templates from Supabase
-      let userTemplates = [];
-      if (user) {
-        const { data, error } = await supabase
-          .from('templates')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-
-        // Transform database format to match our app's format
-        userTemplates = data.map(template => ({
-          id: template.template_key,
-          name: template.name,
-          bodyRegion: template.body_region,
-          sessionType: template.session_type,
-          subjective: template.subjective,
-          objective: template.objective,
-          assessment: template.assessment,
-          plan: template.plan,
-          isDefault: false,
-          isCustom: true,
-          createdAt: template.created_at,
-          updatedAt: template.updated_at,
-          // Add isNew flag for templates created in the last 24 hours
-          isNew: new Date(template.created_at).getTime() > Date.now() - 24 * 60 * 60 * 1000
-        }));
+      // Fetch templates from Supabase
+      const { data, error } = await supabase
+        .from('templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Transform the data from snake_case to camelCase
+      const transformedData = data.map((template) => ({
+        id: template.template_key,
+        name: template.name,
+        bodyRegion: template.body_region,
+        sessionType: template.session_type,
+        subjective: template.subjective,
+        objective: template.objective,
+        assessment: template.assessment,
+        plan: template.plan,
+        isDefault: template.is_default,
+        isExample: template.is_example,
+        isCustom: !template.is_default,
+        createdAt: template.created_at,
+        updatedAt: template.updated_at
+      }));
+      
+      // If there are no templates, use fallback templates
+      if (transformedData.length === 0) {
+        setTemplates(getFallbackTemplates());
+        toast.error('Failed to load templates from database. Using fallback templates.');
+      } else {
+        setTemplates(transformedData);
       }
-
-      // Merge default and user templates, prioritizing user templates if there's a conflict
-      const allTemplates = [...defaultTemplates, ...userTemplates];
       
-      // Sort templates - new templates first, then by name
-      allTemplates.sort((a, b) => {
-        if (a.isNew && !b.isNew) return -1;
-        if (!a.isNew && b.isNew) return 1;
-        return a.name.localeCompare(b.name);
-      });
-      
-      setTemplates(allTemplates);
-
-      // Extract unique body regions and session types from all templates
-      const regions = [...new Set(allTemplates.map((t) => t.bodyRegion))];
+      // Extract unique body regions and session types for filtering
+      const regions = [...new Set(transformedData.map(t => t.bodyRegion))];
+      const types = [...new Set(transformedData.map(t => t.sessionType))];
       setBodyRegions(regions);
-
-      const types = [...new Set(allTemplates.map((t) => t.sessionType))];
       setSessionTypes(types);
-
-    } catch (err) {
-      console.error('Error fetching templates:', err);
-      setError('Failed to load templates: ' + err.message);
-      toast.error(`Error loading templates: ${err.message}`);
+      
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      setError(error);
+      toast.error('Error loading templates: ' + error.message);
+      
+      // Use fallback templates if database fetch fails
+      setTemplates(getFallbackTemplates());
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  };
 
   // Select a template based on body region and session type
   const selectTemplateByBodyRegionAndType = (bodyRegion, sessionType) => {
@@ -281,11 +240,16 @@ const useTemplates = () => {
 
       if (existingTemplate?.isDefault) {
         // If updating a default template, create a new custom one instead
-        return createTemplate({
+        toast.info(`Creating your personalized copy of "${existingTemplate.name}"`);
+        
+        const newTemplate = await createTemplate({
           ...templateData,
-          name: `${templateData.name} (Custom)`,
+          name: `${templateData.name} (My Version)`,
           id: undefined, // Remove ID to create a new one
         });
+        
+        // Return the new template for redirection
+        return newTemplate;
       }
 
       // Update in Supabase

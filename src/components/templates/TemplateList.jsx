@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, FileText, Plus, Edit2, Copy, Trash2, Clock, Tag, Calendar } from 'lucide-react';
+import { Search, FileText, Plus, Edit2, Copy, Trash2, Clock, Tag, Calendar, BookTemplate, UserPlus } from 'lucide-react';
 import useTemplates from '@/hooks/useTemplates';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 
@@ -17,23 +17,40 @@ const TemplateList = ({ onSelectTemplate, onEditTemplate, onNewTemplate }) => {
   const [filterSessionType, setFilterSessionType] = useState('');
   const [templateToDelete, setTemplateToDelete] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'default', or 'custom'
   
-  // Filter templates based on search query and filters
-  const filteredTemplates = templates.filter(template => {
-    // Search query filter
-    const matchesSearch = searchQuery === '' || 
-      template.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Body region filter
-    const matchesBodyRegion = filterBodyRegion === '' || 
-      template.bodyRegion === filterBodyRegion;
-    
-    // Session type filter
-    const matchesSessionType = filterSessionType === '' || 
-      template.sessionType === filterSessionType;
-    
-    return matchesSearch && matchesBodyRegion && matchesSessionType;
-  });
+  // Filter templates based on search query, filters, and active tab
+  const filteredTemplates = templates
+    .filter(template => {
+      // Search query filter
+      const matchesSearch = searchQuery === '' || 
+        template.name.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Body region filter
+      const matchesBodyRegion = filterBodyRegion === '' || 
+        template.bodyRegion === filterBodyRegion;
+      
+      // Session type filter
+      const matchesSessionType = filterSessionType === '' || 
+        template.sessionType === filterSessionType;
+      
+      // Tab filter
+      const matchesTab = 
+        activeTab === 'all' || 
+        (activeTab === 'default' && template.isDefault) || 
+        (activeTab === 'custom' && !template.isDefault);
+      
+      return matchesSearch && matchesBodyRegion && matchesSessionType && matchesTab;
+    })
+    // Sort templates: example template first, then alphabetically by body region
+    .sort((a, b) => {
+      // Always put example template at the top
+      if (a.isExample) return -1;
+      if (b.isExample) return 1;
+      
+      // Then sort alphabetically by body region
+      return a.bodyRegion.localeCompare(b.bodyRegion) || a.name.localeCompare(b.name);
+    });
   
   // Handle template duplication
   const handleDuplicate = async (template) => {
@@ -65,6 +82,59 @@ const TemplateList = ({ onSelectTemplate, onEditTemplate, onNewTemplate }) => {
 
   return (
     <div className="space-y-6">
+      {/* Template Type Tabs */}
+      <div className="flex border-b border-[#e9e9e7]">
+        <button
+          className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'all' 
+            ? 'text-[#2563eb]' 
+            : 'text-[#4b5563] hover:text-[#111827]'}`}
+          onClick={() => setActiveTab('all')}
+        >
+          All Templates
+          {activeTab === 'all' && (
+            <motion.div 
+              layoutId="activeTabIndicator"
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563eb]"
+              initial={false}
+            />
+          )}
+        </button>
+        
+        <button
+          className={`px-4 py-2 font-medium text-sm transition-colors relative flex items-center gap-1.5 ${activeTab === 'default' 
+            ? 'text-[#2563eb]' 
+            : 'text-[#4b5563] hover:text-[#111827]'}`}
+          onClick={() => setActiveTab('default')}
+        >
+          <BookTemplate size={14} />
+          Default Templates
+          {activeTab === 'default' && (
+            <motion.div 
+              layoutId="activeTabIndicator"
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563eb]"
+              initial={false}
+            />
+          )}
+        </button>
+        
+        <button
+          className={`px-4 py-2 font-medium text-sm transition-colors relative flex items-center gap-1.5 ${activeTab === 'custom' 
+            ? 'text-[#2563eb]' 
+            : 'text-[#4b5563] hover:text-[#111827]'}`}
+          onClick={() => setActiveTab('custom')}
+        >
+          <UserPlus size={14} />
+          My Templates
+          {activeTab === 'custom' && (
+            <motion.div 
+              layoutId="activeTabIndicator"
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563eb]"
+              initial={false}
+            />
+          )}
+        </button>
+      </div>
+      
       {/* Search and filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Search input */}
@@ -99,7 +169,7 @@ const TemplateList = ({ onSelectTemplate, onEditTemplate, onNewTemplate }) => {
           value={filterSessionType}
           onChange={(e) => setFilterSessionType(e.target.value)}
         >
-          <option value="">All Types</option>
+          <option value="">All Session Types</option>
           {sessionTypes.map(type => (
             <option key={type} value={type}>
               {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -107,18 +177,46 @@ const TemplateList = ({ onSelectTemplate, onEditTemplate, onNewTemplate }) => {
           ))}
         </select>
         
-        {/* New Template Button */}
-        <button 
-          className="px-4 py-2 bg-[#2563eb] text-white rounded-lg hover:bg-[#1d4ed8] transition flex items-center gap-2"
-          onClick={onNewTemplate}
-        >
-          <Plus size={16} />
-          <span className="hidden sm:inline">New Template</span>
-        </button>
+        {/* New Template Button - only show on 'custom' or 'all' tabs */}
+        {(activeTab === 'custom' || activeTab === 'all') && (
+          <button 
+            className="px-4 py-2 bg-[#2563eb] text-white rounded-lg hover:bg-[#1d4ed8] transition flex items-center gap-2"
+            onClick={onNewTemplate}
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">New Template</span>
+          </button>
+        )}
       </div>
       
       {/* Templates List */}
-      <div className="space-y-3">
+      {filteredTemplates.length === 0 && (
+        <div className="flex flex-col items-center justify-center p-10 text-center rounded-xl border border-[#e9e9e7] bg-[#fbfbfa]">
+          <FileText size={40} className="text-[#a8a29e] mb-3" />
+          <h3 className="text-lg font-medium text-[#454440] mb-1">
+            {activeTab === 'default' ? 'No default templates match your filters' :
+             activeTab === 'custom' ? 'No custom templates found' :
+             'No templates match your filters'}
+          </h3>
+          <p className="text-sm text-[#a8a29e] max-w-md">
+            {activeTab === 'default' ? 'Try adjusting your filters or switch to another tab' :
+             activeTab === 'custom' ? 'Create your first custom template to get started' :
+             'Try adjusting your search or filters to find what you need'}
+          </p>
+          {activeTab === 'custom' && (
+            <button
+              className="mt-4 px-4 py-2 bg-[#2563eb] text-white rounded-lg hover:bg-[#1d4ed8] transition flex items-center gap-2"
+              onClick={onNewTemplate}
+            >
+              <Plus size={16} />
+              Create Template
+            </button>
+          )}
+        </div>
+      )}
+      
+      {filteredTemplates.length > 0 && (
+        <div className="space-y-3">
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-[#2563eb] border-t-transparent"></div>
@@ -134,34 +232,14 @@ const TemplateList = ({ onSelectTemplate, onEditTemplate, onNewTemplate }) => {
               Retry
             </button>
           </div>
-        ) : filteredTemplates.length === 0 ? (
-          <div className="p-8 bg-white/90 rounded-lg shadow-sm border border-[#e9e9e7] text-center">
-            <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#2563eb]/10">
-              <FileText className="h-6 w-6 text-[#2563eb]" />
-            </div>
-            <h3 className="text-lg font-medium">No templates found</h3>
-            <p className="mt-1 text-[#4b5563]">
-              {searchQuery || filterBodyRegion || filterSessionType ? 
-                'Try adjusting your search filters' : 
-                'Create your first template to get started'}
-            </p>
-            {(!searchQuery && !filterBodyRegion && !filterSessionType) && (
-              <button
-                className="mt-4 px-4 py-2 bg-[#2563eb] text-white rounded-lg hover:bg-[#1d4ed8] transition"
-                onClick={onNewTemplate}
-              >
-                Create Template
-              </button>
-            )}
-          </div>
-        ) : (
+        ) : filteredTemplates.length > 0 && (
           filteredTemplates.map(template => (
             <motion.div
               key={template.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className={`p-4 rounded-lg shadow-sm border hover:shadow-md transition flex flex-col sm:flex-row sm:items-center sm:justify-between cursor-pointer relative overflow-hidden ${template.isNew ? 'bg-[#dbeafe]/80 border-[#2563eb]/20' : 'bg-white/90 border-[#e9e9e7]'}`}
+              className={`p-4 rounded-lg shadow-sm border hover:shadow-md transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between cursor-pointer relative overflow-hidden ${template.isNew ? 'bg-[#dbeafe]/80 border-[#2563eb]/20' : 'bg-white/90 border-[#e9e9e7]'}`}
               onClick={() => onSelectTemplate(template)}
             >
               {/* New badge */}
@@ -263,6 +341,7 @@ const TemplateList = ({ onSelectTemplate, onEditTemplate, onNewTemplate }) => {
           ))
         )}
       </div>
+      )}
       
       {/* Confirmation Dialog for Delete */}
       <ConfirmationDialog
