@@ -10,15 +10,95 @@ import {
   Box, 
   Switch,
   FormHelperText,
-  Grid
+  Grid,
+  Paper,
+  ThemeProvider,
+  createTheme
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { ArrowRightCircle } from 'lucide-react';
+import { ArrowRightCircle, CheckCircle } from 'lucide-react';
 
 /**
  * Setup Form Component
  * Allows users to select body region, session type, and template before recording
  */
+// Create a custom theme that matches our blue and white dashboard design
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#007AFF', // Apple Blue to match our dashboard
+    },
+    background: {
+      default: '#ffffff',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#333333',
+      secondary: '#666666',
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", "Segoe UI", "Roboto", "Helvetica Neue", sans-serif',
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: 'none',
+          fontWeight: 600,
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: '0 4px 10px rgba(0, 122, 255, 0.2)',
+            transform: 'translateY(-2px)',
+          },
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          fontSize: '0.9rem',
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          minWidth: '180px', // Ensure enough width for content
+        },
+        select: {
+          padding: '12px 14px',
+          whiteSpace: 'normal', // Allow text to wrap if needed
+          width: '100%', // Ensure full width
+          overflow: 'visible',
+        },
+        outlined: {
+          width: '100%',
+        },
+      },
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          padding: '10px 16px',
+          whiteSpace: 'normal', // Allow text to wrap in menu items
+          lineHeight: '1.4', // Improve text readability
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+        },
+      },
+    },
+  },
+});
+
 const SetupForm = ({
   bodyRegion,
   setBodyRegion,
@@ -88,19 +168,29 @@ const SetupForm = ({
   };
   
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
-      <form onSubmit={handleSubmit}>
-        <Grid container spacing={3}>
+    <ThemeProvider theme={theme}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Paper elevation={0} sx={{ p: 4, border: '1px solid #f0f0f0', position: 'relative', overflow: 'hidden' }}>
+          {/* Blue accent top border */}
+          <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', bgcolor: 'primary.main' }} />
+          
+          <Typography variant="h5" fontWeight={600} mb={3} color="text.primary">
+            Session Setup
+          </Typography>
+          
+          <form onSubmit={handleSubmit}>
+        <Grid container spacing={4}>
           {/* Body Region Selection */}
           <Grid item xs={12} md={6}>
             <FormControl 
               fullWidth 
               error={formErrors.bodyRegion}
               required
+              sx={{ minWidth: '100%' }}
             >
               <InputLabel id="body-region-label">Body Region</InputLabel>
               <Select
@@ -109,6 +199,23 @@ const SetupForm = ({
                 value={bodyRegion}
                 label="Body Region"
                 onChange={(e) => setBodyRegion(e.target.value)}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 300,
+                      width: 'auto',
+                      minWidth: '200px',
+                    },
+                  },
+                }}
+                sx={{
+                  '& .MuiSelect-select': {
+                    minHeight: '24px',
+                    paddingY: 1.5,
+                    overflow: 'visible',
+                    textOverflow: 'ellipsis'
+                  }
+                }}
               >
                 {templates.bodyRegions.map((region) => (
                   <MenuItem key={region} value={region}>
@@ -128,6 +235,7 @@ const SetupForm = ({
               fullWidth 
               error={formErrors.sessionType}
               required
+              sx={{ minWidth: '100%' }}
             >
               <InputLabel id="session-type-label">Session Type</InputLabel>
               <Select
@@ -136,6 +244,23 @@ const SetupForm = ({
                 value={sessionType}
                 label="Session Type"
                 onChange={(e) => setSessionType(e.target.value)}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 300,
+                      width: 'auto',
+                      minWidth: '200px',
+                    },
+                  },
+                }}
+                sx={{
+                  '& .MuiSelect-select': {
+                    minHeight: '24px',
+                    paddingY: 1.5,
+                    overflow: 'visible',
+                    textOverflow: 'ellipsis'
+                  }
+                }}
               >
                 {templates.sessionTypes.map((type) => (
                   <MenuItem key={type} value={type}>
@@ -178,7 +303,11 @@ const SetupForm = ({
             </Box>
             
             {!autoSelectTemplate && (
-              <FormControl fullWidth disabled={filteredTemplates.length === 0}>
+              <FormControl 
+                fullWidth 
+                disabled={filteredTemplates.length === 0}
+                sx={{ minWidth: '100%', mb: 1 }}
+              >
                 <InputLabel id="template-label">Template</InputLabel>
                 <Select
                   labelId="template-label"
@@ -186,9 +315,36 @@ const SetupForm = ({
                   value={selectedTemplateId || ''}
                   label="Template"
                   onChange={(e) => setSelectedTemplateId(e.target.value)}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300,
+                        width: 'auto',
+                        minWidth: '250px',
+                      },
+                    },
+                  }}
+                  sx={{
+                    '& .MuiSelect-select': {
+                      overflow: 'visible',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'normal',
+                      lineHeight: '1.4em',
+                      display: 'block',
+                      paddingRight: '32px' // Space for the dropdown icon
+                    }
+                  }}
                 >
                   {filteredTemplates.map((template) => (
-                    <MenuItem key={template.id} value={template.id}>
+                    <MenuItem 
+                      key={template.id} 
+                      value={template.id}
+                      sx={{ 
+                        whiteSpace: 'normal',
+                        wordBreak: 'break-word',
+                        paddingY: 1.5 // More vertical padding for readability
+                      }}
+                    >
                       {template.name}
                     </MenuItem>
                   ))}
@@ -203,23 +359,29 @@ const SetupForm = ({
             
             {autoSelectTemplate && filteredTemplates.length > 0 && (
               <Box sx={{ 
-                p: 2, 
-                bgcolor: 'rgba(37, 99, 235, 0.05)', 
-                borderRadius: 1,
-                border: '1px solid rgba(37, 99, 235, 0.1)'
+                p: 2.5, 
+                bgcolor: '#F0F7FF',  
+                borderRadius: 2,
+                border: '1px solid #E0EDFF',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 1
               }}>
-                <Typography variant="body2" mb={0.5}>
-                  <strong>Selected Template:</strong> {filteredTemplates[0]?.name || 'None'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" fontSize="0.875rem">
-                  This template will be used based on your body region and session type selection.
-                </Typography>
+                <CheckCircle size={18} color="#007AFF" />
+                <Box>
+                  <Typography variant="body2" fontWeight={600} mb={0.5} color="text.primary">
+                    {filteredTemplates[0]?.name || 'None'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" fontSize="0.875rem">
+                    This template will be used based on your body region and session type selection.
+                  </Typography>
+                </Box>
               </Box>
             )}
           </Grid>
           
           {/* Submit Button */}
-          <Grid item xs={12} sx={{ mt: 2 }}>
+          <Grid item xs={12} sx={{ mt: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 type="submit"
@@ -228,9 +390,15 @@ const SetupForm = ({
                 size="large"
                 endIcon={<ArrowRightCircle size={20} />}
                 sx={{
-                  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                  bgcolor: '#007AFF', // Apple Blue to match dashboard
                   px: 4,
-                  py: 1
+                  py: 1.5,
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    bgcolor: '#0068D9',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 5px 15px rgba(0, 122, 255, 0.3)'
+                  }
                 }}
               >
                 Start Recording
@@ -238,8 +406,10 @@ const SetupForm = ({
             </Box>
           </Grid>
         </Grid>
-      </form>
-    </motion.div>
+          </form>
+        </Paper>
+      </motion.div>
+    </ThemeProvider>
   );
 };
 

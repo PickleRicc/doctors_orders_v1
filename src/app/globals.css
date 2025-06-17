@@ -1,13 +1,15 @@
 @import "tailwindcss";
 @import "../styles/colors.css";
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
   /* PT SOAP Generator Colors - from Style Guide */
   /* Primary Colors */
   --blue-primary: #007AFF; /* Apple Blue per style guide */
   --blue-light: rgba(0, 122, 255, 0.1);
   --blue-dark: #0056b3; /* Darker shade of Apple Blue */
-  
+
   /* Glassmorphism Palette */
   --glass-light: rgba(255, 255, 255, 0.25);
   --glass-medium: rgba(255, 255, 255, 0.18);
@@ -23,25 +25,25 @@
   --grey-700: #454440;
   --grey-900: #1f1f1f;
   --black: #000000;
-  
+
   /* UI Colors */
   --background: var(--white);
   --foreground: var(--grey-900);
   --muted: var(--grey-50);
   --muted-foreground: var(--grey-500);
-  
+
   --border: var(--grey-100);
   --input: var(--grey-100);
   --ring: var(--blue-primary);
-  
+
   --success: #10b981;
   --error: #ef4444;
   --warning: #f59e0b;
   --info: #3b82f6;
-  
+
   /* Font */
   --font-sans: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  
+
   /* Additional UI variables */
   --card: var(--white);
   --card-foreground: var(--grey-900);
@@ -54,14 +56,14 @@
   --accent: var(--grey-50);
   --accent-foreground: var(--grey-900);
   --destructive: #ef4444;
-  
+
   /* Charts */
   --chart-1: var(--blue-primary);
   --chart-2: #3b82f6;
   --chart-3: #8b5cf6;
   --chart-4: #10b981;
   --chart-5: #f59e0b;
-  
+
   /* Sidebar */
   --sidebar: var(--glass-medium);
   --sidebar-foreground: var(--grey-900);
@@ -71,7 +73,7 @@
   --sidebar-accent-foreground: var(--grey-900);
   --sidebar-border: var(--grey-100);
   --sidebar-ring: var(--blue-primary);
-  
+
   /* Border radius */
   --radius: 0.625rem;
   --radius-sm: calc(var(--radius) - 4px);
@@ -122,5 +124,60 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+  }
+}
+
+@theme inline {
+  --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite
+    alternate;
+  --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+ 
+  @keyframes shimmer-slide {
+    to {
+      transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+  @keyframes spin-around {
+    0% {
+      transform: translateZ(0) rotate(0);
+    }
+    15%,
+    35% {
+      transform: translateZ(0) rotate(90deg);
+    }
+    65%,
+    85% {
+      transform: translateZ(0) rotate(270deg);
+    }
+    100% {
+      transform: translateZ(0) rotate(360deg);
+    }
+  }
+}
+
+@theme inline {
+  --animate-aurora: aurora 8s ease-in-out infinite alternate;
+ 
+  @keyframes aurora {
+    0% {
+      background-position: 0% 50%;
+      transform: rotate(-5deg) scale(0.9);
+    }
+    25% {
+      background-position: 50% 100%;
+      transform: rotate(5deg) scale(1.1);
+    }
+    50% {
+      background-position: 100% 50%;
+      transform: rotate(-3deg) scale(0.95);
+    }
+    75% {
+      background-position: 50% 0%;
+      transform: rotate(3deg) scale(1.05);
+    }
+    100% {
+      background-position: 0% 50%;
+      transform: rotate(-5deg) scale(0.9);
+    }
   }
 }

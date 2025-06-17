@@ -72,13 +72,18 @@ const AuthComponent = ({
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-2">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#2563eb' }}>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#007AFF' }}>
               <FileText className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">PT SOAP Generator</h1>
+            <div className="flex flex-col items-start">
+              <div className="flex items-center">
+                <h1 className="text-2xl font-bold text-foreground">Doctor's Orders</h1>
+                <span className="ml-2 px-2 py-0.5 text-xs bg-[#007AFF]/10 text-[#007AFF] rounded-full font-medium">beta 1.0</span>
+              </div>
+            </div>
           </div>
           <p className="text-muted-foreground text-sm">
-            Secure documentation for physical therapy professionals
+            Secure documentation for healthcare professionals
           </p>
         </div>
 
@@ -129,7 +134,7 @@ const AuthComponent = ({
                       placeholder="John"
                       value={formData.firstName}
                       onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      className="pl-10 border-border focus:border-[#2563eb] focus:ring-[#2563eb]"
+                      className="pl-10 border-border focus:border-[#007AFF] focus:ring-[#007AFF]"
                       required
                     />
                   </div>
@@ -144,7 +149,7 @@ const AuthComponent = ({
                     placeholder="Doe"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className="border-border focus:border-[#2563eb] focus:ring-[#2563eb]"
+                    className="border-border focus:border-[#007AFF] focus:ring-[#007AFF]"
                     required
                   />
                 </div>
@@ -164,7 +169,7 @@ const AuthComponent = ({
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="pl-10 border-border focus:border-[#2563eb] focus:ring-[#2563eb]"
+                  className="pl-10 border-border focus:border-[#007AFF] focus:ring-[#007AFF]"
                   required
                 />
               </div>
@@ -185,7 +190,7 @@ const AuthComponent = ({
                       placeholder="Enter your password"
                       value={formData.password}
                       onChange={(e) => handleInputChange('password', e.target.value)}
-                      className="pl-10 pr-10 border-border focus:border-[#2563eb] focus:ring-[#2563eb]"
+                      className="pl-10 pr-10 border-border focus:border-[#007AFF] focus:ring-[#007AFF]"
                       required
                     />
                     <Button
@@ -217,7 +222,7 @@ const AuthComponent = ({
                         placeholder="Confirm your password"
                         value={formData.confirmPassword}
                         onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                        className="pl-10 pr-10 border-border focus:border-[#2563eb] focus:ring-[#2563eb]"
+                        className="pl-10 pr-10 border-border focus:border-[#007AFF] focus:ring-[#007AFF]"
                         required
                       />
                       <Button
@@ -247,7 +252,7 @@ const AuthComponent = ({
                   variant="link"
                   size="sm"
                   onClick={() => switchMode('reset')}
-                  className="p-0 h-auto text-sm text-[#2563eb] hover:text-[#1d4ed8]"
+                  className="p-0 h-auto text-sm text-[#007AFF] hover:text-[#0056b3]"
                 >
                   Forgot your password?
                 </Button>
@@ -258,7 +263,7 @@ const AuthComponent = ({
             <Button
               type="submit"
               className="w-full text-white font-medium"
-              style={{ backgroundColor: '#2563eb' }}
+              style={{ backgroundColor: '#007AFF' }}
               disabled={isLoading}
             >
               {isLoading ? (
@@ -295,7 +300,7 @@ const AuthComponent = ({
                   variant="link"
                   size="sm"
                   onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}
-                  className="p-0 h-auto text-sm text-[#2563eb] hover:text-[#1d4ed8] font-medium"
+                  className="p-0 h-auto text-sm text-[#007AFF] hover:text-[#0056b3] font-medium"
                 >
                   {mode === 'login' ? 'Sign up' : 'Sign in'}
                 </Button>

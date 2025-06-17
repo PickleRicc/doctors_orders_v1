@@ -1,19 +1,25 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Mic } from 'lucide-react';
+import { useRouter } from 'next/router';
 
 /**
  * Floating Action Button (FAB) component for quick recording access
  * Positioned at the bottom of the screen and persists across the app
  * Styled with glassmorphism effect and blue accent color
  */
-const FloatingActionButton = ({ onClick }) => {
+const FloatingActionButton = () => {
+  const router = useRouter();
+  
+  const handleClick = () => {
+    router.push('/record');
+  };
   return (
     <motion.button
       className="fixed right-6 bottom-6 z-50 w-14 h-14 md:w-16 md:h-16 rounded-full bg-[rgba(37,99,235,0.9)] backdrop-blur-md shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      onClick={onClick}
+      onClick={handleClick}
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ 
