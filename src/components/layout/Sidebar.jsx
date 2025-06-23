@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Home, FileText, Settings, Plus, Calendar, Clock, ChevronRight, Clipboard, X, ChevronsLeft, ChevronsRight, AlertCircle } from 'lucide-react';
+import { Home, FileText, Settings, Plus, Calendar, Clock, ChevronRight, Clipboard, X, ChevronsLeft, ChevronsRight, AlertCircle, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import useSessions from '@/hooks/useSessions';
 import { format } from 'date-fns';
 import { ShimmerButton } from '@/components/magicui/shimmer-button';
+import TutorialButton from '@/components/tutorial/TutorialButton';
+import useTutorial from '@/hooks/useTutorial';
 
 /**
  * Sidebar navigation component 
@@ -17,6 +19,7 @@ function Sidebar({ collapsed = false, onToggleCollapse }) {
   const { sessions, isLoading, error, fetchSessionsByDate } = useSessions();
   const [todaySessions, setTodaySessions] = useState([]);
   const [recentSessions, setRecentSessions] = useState([]);
+  const { openTutorial } = useTutorial();
   
   // Check if the current route matches a given path
   const isActive = (path) => currentPath === path;
@@ -254,7 +257,7 @@ function Sidebar({ collapsed = false, onToggleCollapse }) {
               </div>
             )}
             
-            {/* Settings */}
+            {/* Settings and Help */}
             <div>
               {!collapsed && (
                 <h3 className="px-3 text-xs font-medium text-[#4b5563] uppercase tracking-wider mb-2">
@@ -262,6 +265,21 @@ function Sidebar({ collapsed = false, onToggleCollapse }) {
                 </h3>
               )}
               <ul className="space-y-1">
+                {/* Tutorial Button */}
+                <li>
+                  {collapsed ? (
+                    <button
+                      onClick={openTutorial}
+                      className={`flex items-center justify-center w-full px-3 py-3 rounded-lg text-[#4b5563] hover:text-[#111827] hover:bg-[rgba(219,234,254,0.3)] transition-colors`}
+                    >
+                      <BookOpen size={22} />
+                    </button>
+                  ) : (
+                    <TutorialButton onClick={openTutorial} />
+                  )}
+                </li>
+                
+                {/* Settings */}
                 <li>
                   <Link 
                     href="/settings"

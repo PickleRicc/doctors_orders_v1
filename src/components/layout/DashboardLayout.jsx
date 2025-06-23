@@ -3,6 +3,10 @@ import AppBar from './AppBar';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
 import { useRouter } from 'next/router';
+import TutorialModule from '@/components/tutorial/TutorialModule';
+import TutorialPrompt from '@/components/tutorial/TutorialPrompt';
+import useTutorial from '@/hooks/useTutorial';
+import { AnimatePresence } from 'framer-motion';
 
 /**
  * Dashboard layout with sidebar and app bar
@@ -12,6 +16,13 @@ function DashboardLayout({ children }) {
   // Sidebar collapsed state (only for desktop)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const router = useRouter();
+  const { 
+    isTutorialOpen, 
+    shouldShowTutorialPrompt, 
+    openTutorial, 
+    closeTutorial, 
+    dismissTutorialPrompt 
+  } = useTutorial();
   
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -36,6 +47,22 @@ function DashboardLayout({ children }) {
       <div className="z-30 sticky top-0 w-full">
         <AppBar />
       </div>
+      
+      {/* Tutorial Module */}
+      <TutorialModule 
+        isOpen={isTutorialOpen} 
+        onClose={() => closeTutorial(true)} 
+      />
+      
+      {/* Tutorial Prompt for new users */}
+      <AnimatePresence>
+        {shouldShowTutorialPrompt && (
+          <TutorialPrompt 
+            onStart={openTutorial} 
+            onDismiss={dismissTutorialPrompt} 
+          />
+        )}
+      </AnimatePresence>
       
       {/* Main content with sidebar layout */}
       <div className="flex flex-1 overflow-hidden relative">
