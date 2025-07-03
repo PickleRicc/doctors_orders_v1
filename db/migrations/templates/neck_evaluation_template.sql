@@ -54,9 +54,42 @@ SPECIAL TESTS:
 - Upper Limb Tension Test: {{ultt_test}}
 - Vertebral Artery Test: {{vat_test}}
 
-STRENGTH ASSESSMENT (0-5 scale):
+UE MMT 	(upper extremity manual muscle test)
+Strength scale 0-5 ( ± allowed; * = painful)
 - Cervical Flexors: {{cervical_flexor_strength}}
 - Cervical Extensors: {{cervical_extensor_strength}}
+
+UE AROM
+Shoulder IR: {{shoulder_ir_arom}}
+Shoulder ER: {{shoulder_er_arom}}
+Shoulder flexion: {{shoulder_flexion_arom}}
+Shoulder extension: {{shoulder_extension_arom}}
+Shoulder abduction: {{shoulder_abduction_arom}}
+Elbow flexion: {{elbow_flexion_arom}}
+Elbow extension: {{elbow_extension_arom}}
+Pronation: {{pronation_arom}}
+Supination: {{supination_arom}}
+Wrist flexion: {{wrist_flexion_arom}}
+Wrist extension: {{wrist_extension_arom}}
+Ulnar deviation: {{ulnar_deviation_arom}}
+Radial deviation: {{radial_deviation_arom}}
+
+UE PROM
+Shoulder IR: {{shoulder_ir_prom}}
+Shoulder ER: {{shoulder_er_prom}}
+Shoulder flexion: {{shoulder_flexion_prom}}
+Shoulder extension: {{shoulder_extension_prom}}
+Shoulder abduction: {{shoulder_abduction_prom}}
+Elbow flexion: {{elbow_flexion_prom}}
+Elbow extension: {{elbow_extension_prom}}
+Pronation: {{pronation_prom}}
+Supination: {{supination_prom}}
+Wrist flexion: {{wrist_flexion_prom}}
+Wrist extension: {{wrist_extension_prom}}
+Ulnar deviation: {{ulnar_deviation_prom}}
+Radial deviation: {{radial_deviation_prom}}
+
+- you can also use "WFL" or "WNL" if it is gross screen—within functional limits or within normal limits
 - Deep Neck Flexors: {{deep_neck_flexor_strength}}
 - Scapular Stabilizers: {{scapular_stabilizer_strength}}
 

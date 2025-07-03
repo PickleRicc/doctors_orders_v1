@@ -1,4 +1,4 @@
--- Insert Wrist/Hand Evaluation Template
+-- Insert Elbow Evaluation Template
 INSERT INTO templates (
   template_key,
   user_id,
@@ -13,16 +13,14 @@ INSERT INTO templates (
 ) VALUES (
   gen_random_uuid(),
   (SELECT id FROM auth.users ORDER BY created_at ASC LIMIT 1), -- Use the first user in the system
-  'Wrist/Hand Evaluation',
-  'wrist_hand',
+  'Elbow Evaluation',
+  'elbow',
   'evaluation',
-  'Patient presents with {{duration}} of {{pain_location}} wrist/hand pain. Pain is rated {{pain_scale}}/10 at worst and {{pain_scale_best}}/10 at best.
+  'Patient presents with {{duration}} of {{pain_location}} elbow pain. Pain is rated {{pain_scale}}/10 at worst and {{pain_scale_best}}/10 at best. 
 
-Pain is described as {{pain_quality}} and {{pain_pattern}}. Patient reports {{radiation_symptoms}} radiation to {{radiation_location}}.
+Pain is described as {{pain_quality}} and is aggravated by {{aggravating_factors}}. Pain is relieved by {{relieving_factors}}. 
 
-Onset: {{mechanism_of_injury}}. Aggravating factors include {{aggravating_factors}}. Relieving factors include {{relieving_factors}}.
-
-Patient reports {{associated_symptoms}}. Prior interventions have included {{prior_treatments}} with {{treatment_effectiveness}}.
+Patient reports {{associated_symptoms}}. History of prior elbow injury: {{injury_history}}. Prior interventions have included {{prior_treatments}} with {{treatment_effectiveness}}.
 
 Medical history significant for {{relevant_medical_history}}. Recent imaging: {{diagnostic_imaging_results}}.
 
@@ -33,43 +31,34 @@ Patient''s primary goals for therapy are {{patient_goals}}.
 Functional limitations include difficulty with {{functional_limitations}} and impact on {{daily_activity_impact}}.',
   'OBSERVATION:
 Visual inspection: {{visual_inspection}}. 
+Posture: {{postural_assessment}}.
 Edema: {{edema_location}} rated {{edema_severity}}.
 Skin integrity: {{skin_condition}}.
 Scar assessment: {{scar_assessment}}.
 
-RANGE OF MOTION (in degrees with normal values):
-- Wrist Flexion: {{wrist_flexion}} (0-80°) {{wrist_flexion_symptoms}}
-- Wrist Extension: {{wrist_extension}} (0-70°) {{wrist_extension_symptoms}}
-- Wrist Radial Deviation: {{radial_deviation}} (0-20°) {{radial_deviation_symptoms}}
-- Wrist Ulnar Deviation: {{ulnar_deviation}} (0-30°) {{ulnar_deviation_symptoms}}
-- Pronation: {{pronation}} (0-80°) {{pronation_symptoms}}
-- Supination: {{supination}} (0-80°) {{supination_symptoms}}
-- Thumb CMC Abduction: {{thumb_abduction}} {{thumb_abduction_symptoms}}
-- Thumb MCP Flexion: {{thumb_mcp_flexion}} {{thumb_mcp_flexion_symptoms}}
-- Thumb IP Flexion: {{thumb_ip_flexion}} {{thumb_ip_flexion_symptoms}}
-- Finger MCP Flexion: {{finger_mcp_flexion}} {{finger_mcp_flexion_symptoms}}
-- Finger PIP Flexion: {{finger_pip_flexion}} {{finger_pip_flexion_symptoms}}
-- Finger DIP Flexion: {{finger_dip_flexion}} {{finger_dip_flexion_symptoms}}
-
 SPECIAL TESTS:
-- Finkelstein''s Test: {{finkelsteins_test}}
-- Phalen''s Test: {{phalens_test}}
-- Tinel''s Sign: {{tinels_sign}}
-- Grind Test: {{grind_test}}
-- Watson''s Test: {{watsons_test}}
-- Piano Key Test: {{piano_key_test}}
-- Empty Can Test: {{empty_can_test}}
+- Lateral Epicondylitis Test (Cozen''s): {{cozens_test}}
+- Mills Test: {{mills_test}}
+- Medial Epicondylitis Test (Golfer''s Elbow): {{golfers_elbow_test}}
+- Tinel''s Sign at Cubital Tunnel: {{tinels_sign_cubital}}
+- Ulnar Nerve Compression Test: {{ulnar_nerve_compression}}
+- Valgus Stress Test: {{valgus_stress_test}}
+- Varus Stress Test: {{varus_stress_test}}
+- Moving Valgus Stress Test: {{moving_valgus_test}}
+- Push-up Test: {{push_up_test}}
+- Pronation/Supination Resistance Test: {{pronation_supination_test}}
 
 UE MMT 	(upper extremity manual muscle test)
 Strength scale 0-5 ( ± allowed; * = painful)
-- Grip Strength: {{grip_strength}} (Compare: L {{left_grip}} lbs, R {{right_grip}} lbs)
-- Pinch Strength: {{pinch_strength}} (Compare: L {{left_pinch}} lbs, R {{right_pinch}} lbs)
-- Wrist Flexors: {{wrist_flexor_strength}}
-- Wrist Extensors: {{wrist_extensor_strength}}
-- Finger Flexors: {{finger_flexor_strength}}
-- Finger Extensors: {{finger_extensor_strength}}
-- Thumb Abductors: {{thumb_abductor_strength}}
-- Thumb Opposers: {{thumb_opposition_strength}}
+- Shoulder Flexion: R: {{r_shoulder_flexion}}, L: {{l_shoulder_flexion}}
+- Shoulder Abduction: R: {{r_shoulder_abduction}}, L: {{l_shoulder_abduction}}
+- Elbow Flexion: R: {{r_elbow_flexion}}, L: {{l_elbow_flexion}}
+- Elbow Extension: R: {{r_elbow_extension}}, L: {{l_elbow_extension}}
+- Forearm Pronation: R: {{r_pronation}}, L: {{l_pronation}}
+- Forearm Supination: R: {{r_supination}}, L: {{l_supination}}
+- Wrist Flexion: R: {{r_wrist_flexion}}, L: {{l_wrist_flexion}}
+- Wrist Extension: R: {{r_wrist_extension}}, L: {{l_wrist_extension}}
+- Grip Strength: R: {{r_grip_strength}}, L: {{l_grip_strength}}
 
 UE AROM
 Shoulder IR: {{shoulder_ir_arom}}
@@ -107,31 +96,31 @@ PALPATION:
 {{palpation_findings}}
 
 JOINT MOBILITY:
-- Radiocarpal Joint: {{radiocarpal_mobility}}
-- Distal Radioulnar Joint: {{dru_mobility}}
-- Intercarpal Joints: {{intercarpal_mobility}}
-- CMC Joints: {{cmc_mobility}}
-- MCP Joints: {{mcp_mobility}}
-- IP Joints: {{ip_mobility}}
+- Humeroulnar Joint: {{humeroulnar_mobility}}
+- Humeroradial Joint: {{humeroradial_mobility}}
+- Proximal Radioulnar Joint: {{proximal_radioulnar_mobility}}
+- Distal Radioulnar Joint: {{distal_radioulnar_mobility}}
 
-SENSORY ASSESSMENT:
-- Light Touch: {{light_touch_assessment}}
-- Two-Point Discrimination: {{two_point_discrimination}}
-- Sharp/Dull: {{sharp_dull_assessment}}
-- Monofilament Testing: {{monofilament_results}}
+NEUROLOGICAL ASSESSMENT:
+- Sensation: {{sensation_assessment}}
+- Motor Function: {{motor_assessment}}
+- Reflexes: {{reflex_assessment}}
 
 FUNCTIONAL ASSESSMENT:
-- Dexterity Testing: {{dexterity_assessment}}
-- Functional Task Performance: {{functional_task_assessment}}',
+- Gripping Activities: {{grip_assessment}}
+- Lifting Assessment: {{lifting_assessment}}
+- Fine Motor Control: {{fine_motor_assessment}}
+- ADL Performance: {{adl_performance}}',
   'Patient presents with clinical findings consistent with {{primary_diagnosis}}.
 
 CONTRIBUTING FACTORS:
 - {{biomechanical_factors}}
-- {{ergonomic_factors}}
 - {{muscle_imbalances}}
 - {{joint_stability_issues}}
 - {{repetitive_stress_factors}}
-- {{posture_contribution}}
+- {{postural_contribution}}
+- {{activity_related_factors}}
+- {{neuromuscular_factors}}
 
 FUNCTIONAL LIMITATIONS:
 Patient demonstrates difficulty with {{specific_functional_limitations}} due to {{underlying_impairments}}. These limitations impact patient''s ability to {{impact_on_daily_functioning}}.
@@ -146,23 +135,21 @@ Recommend {{visit_frequency}} for {{treatment_duration}}.
 
 TREATMENT INTERVENTIONS:
 1. Pain Management: {{pain_management_strategies}}
-2. Edema Control: {{edema_management}}
-3. Manual Therapy: {{manual_therapy_techniques}}
-4. Joint Mobilization: {{joint_mobilization_techniques}}
-5. Soft Tissue Mobilization: {{soft_tissue_techniques}}
-6. Nerve Mobilization: {{nerve_mobilization}}
-7. Strengthening: {{strengthening_exercises}}
-8. Range of Motion: {{rom_exercises}}
-9. Dexterity Training: {{dexterity_exercises}}
-10. Functional Training: {{functional_exercises}}
-11. Modalities: {{modalities}}
+2. Joint Mobilization: {{joint_mobilization}}
+3. Soft Tissue Mobilization: {{soft_tissue_techniques}}
+4. Strengthening: {{strengthening_exercises}}
+5. Range of Motion: {{rom_exercises}}
+6. Neural Mobilization: {{nerve_mobilization}}
+7. Muscle Energy Techniques: {{muscle_energy_techniques}}
+8. Functional Training: {{functional_exercises}}
+9. Activity Modification Training: {{activity_training}}
+10. Modalities: {{modalities}}
 
 HOME EXERCISE PROGRAM:
 {{home_exercise_details}}
 
-ORTHOTIC/SPLINTING RECOMMENDATIONS:
-{{orthotic_recommendations}}
-{{splinting_recommendations}}
+BRACING/SUPPORTS:
+{{bracing_recommendations}}
 
 ACTIVITY MODIFICATIONS:
 {{activity_modifications}}

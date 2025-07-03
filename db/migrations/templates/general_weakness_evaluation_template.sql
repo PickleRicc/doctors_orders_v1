@@ -44,14 +44,17 @@ Edema: {{edema_assessment}}
 Respiratory effort: {{respiratory_effort}}
 
 MANUAL MUSCLE TESTING (0-5 scale):
-Upper Extremities:
+UE MMT 	(upper extremity manual muscle test)
+Strength scale 0-5 ( ± allowed; * = painful)
 - Shoulder Flexion: R: {{r_shoulder_flexion}}, L: {{l_shoulder_flexion}}
 - Shoulder Abduction: R: {{r_shoulder_abduction}}, L: {{l_shoulder_abduction}}
 - Elbow Flexion: R: {{r_elbow_flexion}}, L: {{l_elbow_flexion}}
 - Elbow Extension: R: {{r_elbow_extension}}, L: {{l_elbow_extension}}
 - Grip Strength: R: {{r_grip_strength}}, L: {{l_grip_strength}}
 
-Lower Extremities:
+LE MMT 	(lower extremity manual muscle test)
+Strength scale 0-5 ( ± allowed; * = painful)
+- you can also use "WFL" or "WNL" if it is gross screen—within functional limits or within normal limits
 - Hip Flexion: R: {{r_hip_flexion}}, L: {{l_hip_flexion}}
 - Hip Extension: R: {{r_hip_extension}}, L: {{l_hip_extension}}
 - Hip Abduction: R: {{r_hip_abduction}}, L: {{l_hip_abduction}}
@@ -65,8 +68,67 @@ Core/Trunk:
 - Trunk Extension: {{trunk_extension}}
 - Trunk Rotation: {{trunk_rotation}}
 
-RANGE OF MOTION:
-{{rom_findings}}
+LE AROM
+Hip flexion: {{hip_flexion_arom}}
+Hip extension: {{hip_extension_arom}}
+Hip IR: {{hip_ir_arom}}
+Hip ER: {{hip_er_arom}}
+Hip abduction: {{hip_abduction_arom}}
+Hip adduction: {{hip_adduction_arom}}
+Knee flexion: {{knee_flexion_arom}}
+Knee extension: {{knee_extension_arom}}
+Ankle dorsiflexion: {{ankle_dorsiflexion_arom}}
+Ankle plantarflexion: {{ankle_plantarflexion_arom}}
+STJ inversion: {{stj_inversion_arom}}
+STJ eversion: {{stj_eversion_arom}}
+Toe flexion: {{toe_flexion_arom}}
+Toe extension: {{toe_extension_arom}}
+
+LE PROM
+Hip flexion: {{hip_flexion_prom}}
+Hip extension: {{hip_extension_prom}}
+Hip IR: {{hip_ir_prom}}
+Hip ER: {{hip_er_prom}}
+Hip abduction: {{hip_abduction_prom}}
+Hip adduction: {{hip_adduction_prom}}
+Knee flexion: {{knee_flexion_prom}}
+Knee extension: {{knee_extension_prom}}
+Ankle dorsiflexion: {{ankle_dorsiflexion_prom}}
+Ankle plantarflexion: {{ankle_plantarflexion_prom}}
+STJ inversion: {{stj_inversion_prom}}
+STJ eversion: {{stj_eversion_prom}}
+Toe flexion: {{toe_flexion_prom}}
+Toe extension: {{toe_extension_prom}}
+
+UE AROM
+Shoulder IR: {{shoulder_ir_arom}}
+Shoulder ER: {{shoulder_er_arom}}
+Shoulder flexion: {{shoulder_flexion_arom}}
+Shoulder extension: {{shoulder_extension_arom}}
+Shoulder abduction: {{shoulder_abduction_arom}}
+Elbow flexion: {{elbow_flexion_arom}}
+Elbow extension: {{elbow_extension_arom}}
+Pronation: {{pronation_arom}}
+Supination: {{supination_arom}}
+Wrist flexion: {{wrist_flexion_arom}}
+Wrist extension: {{wrist_extension_arom}}
+Ulnar deviation: {{ulnar_deviation_arom}}
+Radial deviation: {{radial_deviation_arom}}
+
+UE PROM
+Shoulder IR: {{shoulder_ir_prom}}
+Shoulder ER: {{shoulder_er_prom}}
+Shoulder flexion: {{shoulder_flexion_prom}}
+Shoulder extension: {{shoulder_extension_prom}}
+Shoulder abduction: {{shoulder_abduction_prom}}
+Elbow flexion: {{elbow_flexion_prom}}
+Elbow extension: {{elbow_extension_prom}}
+Pronation: {{pronation_prom}}
+Supination: {{supination_prom}}
+Wrist flexion: {{wrist_flexion_prom}}
+Wrist extension: {{wrist_extension_prom}}
+Ulnar deviation: {{ulnar_deviation_prom}}
+Radial deviation: {{radial_deviation_prom}}
 
 ENDURANCE:
 - 30-Second Sit-to-Stand: {{sit_to_stand_reps}} reps (Age norm: {{sit_to_stand_norm}})

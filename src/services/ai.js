@@ -2,6 +2,7 @@
  * AI service for the PT SOAP Generator application
  * Handles transcription of audio recordings and generation of SOAP notes
  * Uses OpenAI API for transcription (Whisper) and text generation
+ * Supports advanced muscle test detection and billing code suggestions
  */
 
 import OpenAI from 'openai';
@@ -122,6 +123,17 @@ ${JSON.stringify(templateData, null, 2)}
 
 Focus on the ${bodyRegion} region for a ${sessionType} session.
 
+EXTRACTION PRIORITIES:
+1. MUSCLE TEST DETECTION: Pay special attention to identifying and extracting Manual Muscle Test (MMT) values. Listen for phrases like:
+   - "MMT for shoulder flexion is 4/5"
+   - "strength in hip abduction measures 4-/5"
+   - "knee extension strength is 3+/5 with pain"
+   - Properly format extracted values in the 0-5 scale with +/- modifiers and * for pain
+
+2. RANGE OF MOTION VALUES: Listen for and extract all Active (AROM) and Passive (PROM) range of motion values mentioned.
+   - Format as "X degrees" or as compared to normal (e.g., "WFL", "75% of normal")
+   - Note any painful arcs or restricted movements
+
 Extract relevant information from the transcription and organize it into professional SOAP note format.
 - Keep medical terminology precise
 - Format measurements with proper units
@@ -132,12 +144,20 @@ Extract relevant information from the transcription and organize it into profess
   "subjective": "Patient reported information...",
   "objective": "Measurable findings...",
   "assessment": "Clinical assessment...",
-  "plan": "Treatment plan..."
+  "plan": "Treatment plan...",
+  "billing_suggestions": []
 }
 - If the information is insufficient, still provide a valid JSON response with placeholders noting what's missing.
 - Do not include any patient identifying information
 
-Respond with a JSON object containing the SOAP sections as separate fields.`;
+BILLING SUGGESTIONS GUIDE:
+- Based on the content of the note, suggest appropriate billing codes
+- Consider CPT codes relevant to the session type (evaluation, treatment, re-evaluation)
+- For evaluations, distinguish between low, moderate, and high complexity
+- Include modifiers when appropriate (e.g., 97110 - Therapeutic Exercise, 97112 - Neuromuscular Re-education)
+- Return as an array in the billing_suggestions field
+
+Respond with a JSON object containing the SOAP sections and billing suggestions as separate fields.`;
     
     console.log('📝 Template structure being used:', {
       templateId: templateData.id,
@@ -241,6 +261,13 @@ Respond with a JSON object containing the SOAP sections as separate fields.`;
  * @param {Object} sessionInfo - Information about the session
  * @returns {Promise<Object>} - Result object with transcription and SOAP note
  */
+/**
+ * Process audio recording and generate SOAP note with enhanced features in one function
+ * @param {File|Blob} audioBlob - Audio recording file
+ * @param {Object} templateData - Template data for structure
+ * @param {Object} sessionInfo - Information about the session
+ * @returns {Promise<Object>} - Result object with transcription, SOAP note, billing, and muscle tests
+ */
 export const processRecordingToSOAP = async (audioBlob, templateData, sessionInfo) => {
   console.log('🔄 Starting end-to-end recording processing...', {
     bodyRegion: sessionInfo.bodyRegion,
@@ -252,27 +279,216 @@ export const processRecordingToSOAP = async (audioBlob, templateData, sessionInf
   
   try {
     // First transcribe the audio
-    console.log('📊 Step 1/2: Transcribing audio recording...');
+    console.log('📊 Step 1/4: Transcribing audio recording...');
     const transcription = await transcribeAudio(audioBlob);
     
-    // Then generate the SOAP note from the transcription
-    console.log('📊 Step 2/2: Generating SOAP note from transcription...');
+    // Analyze for muscle tests and ROM values in parallel with SOAP generation
+    console.log('📊 Step 2/4: Analyzing transcription for muscle tests and ROM values...');
+    const muscleTestAnalysisPromise = analyzeMuscleTests(transcription, sessionInfo.bodyRegion);
+    
+    // Generate the SOAP note from the transcription
+    console.log('📊 Step 3/4: Generating SOAP note from transcription...');
     const soapNote = await generateSOAPNote(transcription, templateData, sessionInfo);
     
-    console.log('🎉 Recording processing complete! Pipeline successful.', {
+    // Generate billing suggestions based on the SOAP note
+    console.log('📊 Step 4/4: Generating billing suggestions...');
+    const billingSuggestionsPromise = generateBillingSuggestions(soapNote, sessionInfo);
+    
+    // Wait for parallel operations to complete
+    const [muscleTestResults, billingSuggestions] = await Promise.all([
+      muscleTestAnalysisPromise,
+      billingSuggestionsPromise
+    ]);
+    
+    // Add the billing suggestions and muscle test data to the SOAP note
+    soapNote.billing_suggestions = billingSuggestions;
+    soapNote.muscle_tests = muscleTestResults;
+    
+    // Calculate processing time
+    const startTime = new Date().getTime();
+    const endTime = new Date().getTime();
+    const processingTime = endTime - startTime;
+    
+    console.log('🎉 Enhanced recording processing complete!', {
       timestamp: new Date().toISOString(),
-      processingTime: `${new Date().getTime() - new Date().getTime()}ms`
+      processingTime: `${processingTime}ms`,
+      muscleTestConfidence: muscleTestResults.confidence,
+      billingSuggestionsCount: billingSuggestions.length
     });
     
     return {
       transcription,
       soapNote,
+      muscleTests: muscleTestResults,
+      billingSuggestions,
       success: true
     };
   } catch (error) {
-    console.error('❌ Error in recording processing pipeline:', error);
+    console.error('❌ Error in enhanced recording processing pipeline:', error);
     return {
       success: false,
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Modify or refine an existing SOAP note
+ * @param {Object} existingSOAP - Current SOAP note content
+ * @param {string} userFeedback - User's feedback or instructions
+ * @returns {Promise<Object>} - Updated SOAP note
+ */
+/**
+ * Generate billing code suggestions based on SOAP note content
+ * @param {Object} soapNote - The SOAP note content
+ * @param {Object} sessionInfo - Session information including type and body region
+ * @returns {Promise<Array>} - Array of billing code suggestions
+ */
+export const generateBillingSuggestions = async (soapNote, sessionInfo) => {
+  if (!openai) {
+    throw new Error('AI service not initialized. Please provide an OpenAI API key.');
+  }
+  
+  const { bodyRegion, sessionType } = sessionInfo;
+  
+  try {
+    console.log('💵 Generating billing suggestions...', {
+      bodyRegion,
+      sessionType,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Create a prompt focused on billing code analysis
+    const systemPrompt = `You are an expert in physical therapy billing and coding. 
+    
+Analyze the following SOAP note and suggest appropriate billing codes:
+${JSON.stringify(soapNote, null, 2)}
+
+This is a ${sessionType} session focusing on the ${bodyRegion} region.
+
+Provide billing code suggestions based on:
+1. CPT codes relevant to the session content
+2. The appropriate level of evaluation (low, moderate, high complexity)
+3. Treatment modalities documented in the note
+4. Time-based vs. service-based codes as appropriate
+
+Respond with a JSON array of objects containing:
+- code: The CPT or billing code
+- description: Brief description of what the code represents
+- justification: Brief explanation of why this code is appropriate based on the note content
+
+Example response format:
+[
+  {
+    "code": "97161",
+    "description": "PT evaluation: low complexity",
+    "justification": "Initial evaluation with limited examination requirements"
+  },
+  {
+    "code": "97110",
+    "description": "Therapeutic exercise",
+    "justification": "Documented therapeutic exercises for strength training"
+  }
+]`;
+    
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          "role": "system",
+          "content": systemPrompt
+        }
+      ],
+      response_format: { "type": "json_object" }
+    });
+    
+    const billingSuggestionsText = completion.choices[0].message.content;
+    return JSON.parse(billingSuggestionsText);
+  } catch (error) {
+    console.error('❌ Error generating billing suggestions:', error);
+    return [{
+      code: "Error",
+      description: "Unable to generate billing suggestions",
+      justification: "Please try again or consult billing resources"
+    }];
+  }
+};
+
+/**
+ * Analyze transcription for specific muscle tests and ROM values
+ * @param {string} transcriptionText - Transcribed text to analyze
+ * @param {Object} bodyRegion - The body region of focus
+ * @returns {Object} - Extracted muscle tests and ROM values
+ */
+export const analyzeMuscleTests = async (transcriptionText, bodyRegion) => {
+  if (!openai) {
+    throw new Error('AI service not initialized. Please provide an OpenAI API key.');
+  }
+  
+  try {
+    console.log('💪 Analyzing transcription for muscle tests...', {
+      bodyRegion,
+      transcriptionLength: transcriptionText.length,
+      timestamp: new Date().toISOString()
+    });
+    
+    const systemPrompt = `You are an expert physical therapist specializing in manual muscle testing and range of motion assessment.
+
+Analyze the following transcription for any mentions of muscle tests and range of motion values, focusing on the ${bodyRegion} region.
+
+Extract and structure the following information:
+1. Manual Muscle Tests (MMT) - Format as muscle: grade (e.g., "Shoulder Flexion: 4/5")
+   - Include any modifiers like + or - and * for pain
+   - Convert verbal descriptions to numerical values when possible
+   - Example: "good strength" → approximately 4/5
+
+2. Range of Motion (ROM) values - Both active (AROM) and passive (PROM)
+   - Format as movement: value (e.g., "Shoulder Flexion: 160 degrees")
+   - Note any discrepancies between active and passive
+   - Convert descriptive terms to estimated values when possible
+   - Example: "slightly limited" → approximately 10-20% restriction
+
+Respond with a JSON object containing:
+- muscle_tests: Array of detected muscle tests with muscle name and grade
+- rom_values: Array of detected ROM values with movement name and measurement
+- confidence: Your confidence in these extractions (low, medium, high)
+
+Example response:
+{
+  "muscle_tests": [
+    { "muscle": "Shoulder Flexion", "grade": "4/5", "side": "right" },
+    { "muscle": "Elbow Extension", "grade": "4+/5*", "side": "left" }
+  ],
+  "rom_values": [
+    { "movement": "Shoulder Flexion", "arom": "160 degrees", "prom": "170 degrees", "side": "right" },
+    { "movement": "Shoulder External Rotation", "arom": "WFL", "prom": "WFL", "side": "left" }
+  ],
+  "confidence": "medium"
+}`;
+    
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          "role": "system",
+          "content": systemPrompt
+        },
+        {
+          "role": "user",
+          "content": transcriptionText
+        }
+      ],
+      response_format: { "type": "json_object" }
+    });
+    
+    const analysisText = completion.choices[0].message.content;
+    return JSON.parse(analysisText);
+  } catch (error) {
+    console.error('❌ Error analyzing muscle tests:', error);
+    return {
+      muscle_tests: [],
+      rom_values: [],
+      confidence: "error",
       error: error.message
     };
   }

@@ -55,7 +55,8 @@ SPECIAL TESTS:
 - Straight Leg Raise: {{slr_test}}
 - SI Joint Provocation Tests: {{si_joint_tests}}
 
-STRENGTH ASSESSMENT (0-5 scale):
+LE MMT 	(lower extremity manual muscle test)
+Strength scale 0-5 ( ± allowed; * = painful)
 - Hip Flexors: {{hip_flexor_strength}}
 - Hip Extensors: {{hip_extensor_strength}}
 - Hip Abductors: {{hip_abductor_strength}}
@@ -63,6 +64,34 @@ STRENGTH ASSESSMENT (0-5 scale):
 - Hip Internal Rotators: {{hip_ir_strength}}
 - Hip External Rotators: {{hip_er_strength}}
 - Core Stability: {{core_stability}}
+
+LE AROM
+Hip flexion: {{hip_flexion_arom}}
+Hip extension: {{hip_extension_arom}}
+Hip Abduction: {{hip_abduction_arom}}
+Hip adduction: {{hip_adduction_arom}}
+Glute extension: {{glute_extension_arom}}
+Knee extension: {{knee_extension_arom}}
+Knee flexion: {{knee_flexion_arom}}
+Ankle dorsiflexion: {{ankle_dorsiflexion_arom}}
+Ankle plantarflexion: {{ankle_plantarflexion_arom}}
+Ankle inversion: {{ankle_inversion_arom}}
+Ankle eversion: {{ankle_evension_arom}}
+
+LE PROM
+Hip flexion: {{hip_flexion_prom}}
+Hip extension: {{hip_extension_prom}}
+Hip Abduction: {{hip_abduction_prom}}
+Hip adduction: {{hip_adduction_prom}}
+Glute extension: {{glute_extension_prom}}
+Knee extension: {{knee_extension_prom}}
+Knee flexion: {{knee_flexion_prom}}
+Ankle dorsiflexion: {{ankle_dorsiflexion_prom}}
+Ankle plantarflexion: {{ankle_plantarflexion_prom}}
+Ankle inversion: {{ankle_inversion_prom}}
+Ankle eversion: {{ankle_evension_prom}}
+
+- you can also use "WFL" or "WNL" if it is gross screen—within functional limits or within normal limits
 
 PALPATION:
 {{palpation_findings}}
