@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { useAuth } from './useAuth';
+import { enhanceSessionWithTemplate, processTemplateData } from '@/utils/templateProcessor';
+import { logInfo, logWarning, logAIProcess } from '@/utils/logging';
 
 /**
  * Custom hook for managing sessions and SOAP notes
@@ -14,6 +16,25 @@ export default function useSessions() {
   const [sortOption, setSortOption] = useState('newest'); // 'newest', 'oldest', 'bodyRegion', 'sessionType'
   const { user } = useAuth(); // Get the authenticated user
   
+  // Fetch template by id
+  const fetchTemplate = async (templateId) => {
+    if (!templateId) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      logWarning('Template Fetch', 'Failed to fetch template', { error: err.message, templateId });
+      return null;
+    }
+  };
+
   // Get all sessions for the specified date, defaults to today
   const fetchSessionsByDate = useCallback(async (date = new Date()) => {
     setIsLoading(true);
@@ -56,8 +77,29 @@ export default function useSessions() {
         } : 'No sessions found'
       });
       
+      // Process each session to add structured data if available
+      const processedSessions = [];
+      for (const session of data || []) {
+        if (session.template_id) {
+          logInfo('Session Processing', 'Session has a template, fetching template data', { 
+            sessionId: session.id, 
+            templateId: session.template_id 
+          });
+          
+          const template = await fetchTemplate(session.template_id);
+          if (template && template.structured_data) {
+            const enhancedSession = enhanceSessionWithTemplate(session, template, session.transcript || '');
+            processedSessions.push(enhancedSession);
+          } else {
+            processedSessions.push(session);
+          }
+        } else {
+          processedSessions.push(session);
+        }
+      }
+      
       // Apply current sort option
-      const sortedSessions = sortSessions(data, sortOption);
+      const sortedSessions = sortSessions(processedSessions, sortOption);
       setSessions(sortedSessions);
       
       return sortedSessions;
@@ -76,6 +118,11 @@ export default function useSessions() {
   const saveSession = async (sessionData) => {
     setIsLoading(true);
     setError(null);
+    logAIProcess('SAVE_SESSION', 'Starting session save process', {
+      bodyRegion: sessionData.bodyRegion,
+      sessionType: sessionData.sessionType,
+      hasTemplate: !!sessionData.templateId
+    });
     
     console.log('🔵 Starting session save operation:', {
       bodyRegion: sessionData.bodyRegion,
@@ -87,12 +134,27 @@ export default function useSessions() {
     });
     
     try {
-      // Validate required fields
-      if (!sessionData.bodyRegion || !sessionData.sessionType || !sessionData.soapNote) {
+      // Validate required fields - check for both camelCase and snake_case fields
+      // to support different formats from different parts of the application
+      const bodyRegion = sessionData.bodyRegion || sessionData.body_region;
+      const sessionType = sessionData.sessionType || sessionData.session_type;
+      const hasSoapData = !!(sessionData.soapNote || 
+                         (sessionData.subjective && sessionData.objective && 
+                          sessionData.assessment && sessionData.plan));
+      
+      // Log the session data structure to help with debugging
+      console.log('Session data structure:', {
+        hasBodyRegion: !!bodyRegion,
+        hasSessionType: !!sessionType,
+        hasSoapData,
+        fieldNames: Object.keys(sessionData).join(', ')
+      });
+      
+      if (!bodyRegion || !sessionType || !hasSoapData) {
         const missingFields = [];
-        if (!sessionData.bodyRegion) missingFields.push('bodyRegion');
-        if (!sessionData.sessionType) missingFields.push('sessionType');
-        if (!sessionData.soapNote) missingFields.push('soapNote');
+        if (!bodyRegion) missingFields.push('body_region');
+        if (!sessionType) missingFields.push('session_type');
+        if (!hasSoapData) missingFields.push('SOAP note data');
         
         console.error('❌ Validation failed - missing fields:', missingFields);
         throw new Error(`Missing required session data: ${missingFields.join(', ')}`);
@@ -105,21 +167,54 @@ export default function useSessions() {
         throw new Error('You must be logged in to save a session');
       }
 
-      // Insert into Supabase - schema has individual fields for SOAP sections
+      // Handle template type (new system) or legacy template_id
+      let validatedTemplateId = null;
+      const templateType = sessionData.template_type || sessionData.templateType || bodyRegion;
+      
+      // Legacy template ID handling (for backward compatibility during transition)
+      const templateId = sessionData.templateId || sessionData.template_id;
+      if (templateId) {
+        try {
+          const template = await fetchTemplate(templateId);
+          if (template) {
+            validatedTemplateId = template.id;
+            logInfo('Session Save', 'Legacy template fetched for session', { 
+              templateId: validatedTemplateId, 
+              templateName: template.name
+            });
+          }
+        } catch (templateError) {
+          console.warn('⚠️ Legacy template fetch failed, using template_type instead:', templateError);
+        }
+      }
+      
+      // Construct the session object for the database
       const sessionToSave = {
         user_id: user.id, // Add the authenticated user's ID for RLS policy
-        body_region: sessionData.bodyRegion,
-        session_type: sessionData.sessionType,
+        body_region: bodyRegion, // Use the validated field
+        session_type: sessionType, // Use the validated field
+        template_type: templateType, // New template system
         // Split SOAP note into individual fields as per DB schema
-        subjective: sessionData.soapNote?.subjective || '',
-        objective: sessionData.soapNote?.objective || '',
-        assessment: sessionData.soapNote?.assessment || '',
-        plan: sessionData.soapNote?.plan || '',
-        transcript: sessionData.transcription || '', // Note: schema uses transcript, not transcription
-        audio_url: sessionData.audioUrl || null,
-        // The sessions table doesn't have a duration column
-        session_number: 1, // Required field in schema
+        subjective: sessionData.subjective || sessionData.soapNote?.subjective || '',
+        objective: sessionData.objective || sessionData.soapNote?.objective || '',
+        assessment: sessionData.assessment || sessionData.soapNote?.assessment || '',
+        plan: sessionData.plan || sessionData.soapNote?.plan || '',
+        transcript: sessionData.transcript || sessionData.transcription || '', // Handle both field names
+        audio_url: sessionData.audio_url || sessionData.audioUrl || null, // Handle both field names
+        template_id: validatedTemplateId, // Legacy template ID (nullable for transition)
+        session_number: sessionData.session_number || sessionData.sessionNumber || 1, // Required field in schema
+        structured_notes: sessionData.structured_notes || sessionData.soapNote?.structured_data || null // New structured data
       };
+      
+      // Log structured data (we can't save it yet without a migration)
+      const structuredData = sessionData.structured_data || sessionData.soapNote?.structured_data;
+      if (structuredData) {
+        console.log('📑 Structured data available (not saving to DB yet):', {
+          hasRom: !!structuredData?.objective?.rom,
+          hasMmt: !!structuredData?.objective?.mmt,
+          dataSize: JSON.stringify(structuredData).length
+        });
+      }
       
       console.log('📦 Saving session data to Supabase:', {
         body_region: sessionToSave.body_region,
@@ -144,12 +239,23 @@ export default function useSessions() {
       console.log('🎉 Session saved successfully to Supabase:', { 
         sessionId: data[0].id,
         createdAt: data[0].created_at,
+        templateId: data[0].template_id
       });
+      
+      // Enhance the saved session with template structured data if available
+      let savedSession = data[0];
+      if (template && template.structured_data) {
+        savedSession = enhanceSessionWithTemplate(savedSession, template, savedSession.transcript || '');
+        logAIProcess('SESSION_ENHANCEMENT', 'Enhanced new session with template data', {
+          sessionId: savedSession.id,
+          hasStructuredData: true
+        });
+      }
       
       // Update local state
       await fetchSessionsByDate();
       toast.success('Session saved successfully');
-      return data[0];
+      return savedSession;
     } catch (err) {
       console.error('❌ Error saving session:', err);
       setError('Failed to save session. Please try again.');
@@ -166,7 +272,21 @@ export default function useSessions() {
     setIsLoading(true);
     setError(null);
     
+    logInfo('Session Update', 'Updating session', { 
+      sessionId,
+      updatedFields: Object.keys(updatedData)
+    });
+    
     try {
+      // Get current session to check for template_id
+      const { data: currentSession, error: fetchError } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
       // Update in Supabase
       const { data, error } = await supabase
         .from('sessions')
@@ -176,10 +296,23 @@ export default function useSessions() {
       
       if (error) throw error;
       
+      // If session has a template, re-enhance with structured data
+      let updatedSession = data[0];
+      if (updatedSession.template_id) {
+        const template = await fetchTemplate(updatedSession.template_id);
+        if (template && template.structured_data) {
+          updatedSession = enhanceSessionWithTemplate(updatedSession, template, updatedSession.transcript || '');
+          logAIProcess('SESSION_UPDATE', 'Re-enhanced session with template data after update', {
+            sessionId: updatedSession.id,
+            hasStructuredData: true
+          });
+        }
+      }
+      
       // Update local state
       await fetchSessionsByDate();
       toast.success('Session updated successfully');
-      return data[0];
+      return updatedSession;
     } catch (err) {
       console.error('Error updating session:', err);
       setError('Failed to update session. Please try again.');

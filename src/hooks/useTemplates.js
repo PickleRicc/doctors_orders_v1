@@ -1,8 +1,12 @@
 import { useState, useEffect, useContext, createContext, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from '../services/supabase';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { useAuth } from './useAuth';
+import logging from '../utils/logging';  // Import logging as a module
+
+// Destructure logging functions for convenience
+const { logInfo, logWarning, logAIProcess } = logging;
 
 /**
  * Custom hook for managing SOAP note templates
@@ -22,6 +26,7 @@ const useTemplates = () => {
   // Fallback default templates in case database fetch fails
   const getFallbackTemplates = () => {
     // NOTE: These templates are only used as a fallback if database templates cannot be loaded
+    logInfo('Templates', 'Using fallback templates', { reason: 'Database fetch failed or user not authenticated' });
     return [
       // Example template to guide users
       {
@@ -29,6 +34,46 @@ const useTemplates = () => {
         name: '👋 Example Template - How To Guide',
         bodyRegion: 'general',
         sessionType: 'evaluation',
+        structured_data: JSON.stringify({
+          subjective: {
+            chief_complaint: "{{pain_location}} pain",
+            history_of_present_illness: {
+              duration: "{{duration}}",
+              pain_scale: "{{pain_scale}}/10",
+              pain_quality: "{{pain_quality}}",
+              pain_pattern: "{{pain_pattern}}"
+            },
+            aggravating_factors: ["{{aggravating_factors}}"],
+            relieving_factors: ["{{relieving_factors}}"],
+            previous_interventions: ["{{previous_interventions}}"]
+          },
+          objective: {
+            rom: {},
+            mmt: {},
+            special_tests: {},
+            observations: "{{movement_patterns}}"
+          },
+          assessment: {
+            diagnosis: "{{diagnosis}}",
+            clinical_impression: "Patient presents with signs consistent with {{diagnosis}}",
+            contributing_factors: ["{{contributing_factors}}"],
+            functional_deficits: ["{{functional_limitations}}"]
+          },
+          plan: {
+            interventions: ["{{interventions}}"],
+            goals: {
+              short_term: ["{{short_term_goals}}"],
+              long_term: ["{{long_term_goals}}"]
+            },
+            treatment_parameters: {
+              frequency: "{{frequency}}",
+              duration: "{{duration_of_care}}"
+            },
+            home_program: ["{{home_exercises}}"],
+            education: [],
+            referrals: []
+          }
+        }),
         subjective: 'This is the SUBJECTIVE section where you document what the patient reports:\n\n- Patient reports {{duration}} of {{pain_location}} pain, rating it {{pain_scale}}/10\n- Pain is described as {{pain_quality}} and {{pain_pattern}}\n- Aggravating factors include {{aggravating_factors}}\n- Relieving factors include {{relieving_factors}}\n- Previous interventions: {{previous_interventions}}\n\nTIP: Use variables like {{variable_name}} for information that will be filled in later based on your recording.',
         objective: 'This is the OBJECTIVE section where you document measurable findings:\n\n- Range of motion: {{rom_findings}}\n- Strength testing: {{strength_findings}}\n- Special tests: {{special_tests}}\n- Palpation: {{palpation_findings}}\n- Gait/movement analysis: {{movement_patterns}}\n\nTIP: Structure your recording to match these variables for better AI extraction.',
         assessment: 'This is the ASSESSMENT section where you provide your clinical reasoning:\n\n- Patient presents with signs consistent with {{diagnosis}}\n- Contributing factors include {{contributing_factors}}\n- Current functional limitations: {{functional_limitations}}\n- Rehabilitation potential is {{rehab_potential}}\n\nTIP: Speak clearly about your clinical impression during recording.',
@@ -41,8 +86,10 @@ const useTemplates = () => {
 
   // Fetch templates from the database
   const fetchTemplates = async () => {
+    logInfo('Templates', 'Fetching templates from database');
     if (!user) {
       // If no user, just provide the fallback templates
+      logWarning('Templates', 'No authenticated user, using fallback templates');
       setTemplates(getFallbackTemplates());
       setIsLoading(false);
       return;
@@ -60,6 +107,8 @@ const useTemplates = () => {
         
       if (error) throw error;
       
+      logInfo('Templates', `Fetched ${data.length} templates from database`);
+      
       // Transform the data from snake_case to camelCase
       const transformedData = data.map((template) => ({
         id: template.template_key,
@@ -69,6 +118,7 @@ const useTemplates = () => {
         subjective: template.subjective,
         objective: template.objective,
         assessment: template.assessment,
+        structured_data: template.structured_data,
         plan: template.plan,
         isDefault: template.is_default,
         isExample: template.is_example,
@@ -105,34 +155,55 @@ const useTemplates = () => {
 
   // Select a template based on body region and session type
   const selectTemplateByBodyRegionAndType = (bodyRegion, sessionType) => {
-    const found = templates.find(
-      (t) => t.bodyRegion === bodyRegion && t.sessionType === sessionType
+    if (!bodyRegion || !sessionType) return;
+
+    logInfo('Templates', 'Selecting template by body region and type', { bodyRegion, sessionType });
+
+    // Find a template that matches both body region and session type
+    let matchingTemplate = templates.find((template) =>
+      template.bodyRegion === bodyRegion && template.sessionType === sessionType
     );
 
-    if (found) {
-      setSelectedTemplate(found);
-      return found;
+    // If no exact match, try to find a template for the body region with a general session type
+    if (!matchingTemplate) {
+      matchingTemplate = templates.find((template) =>
+        template.bodyRegion === bodyRegion && template.sessionType === 'general'
+      );
     }
 
-    // Fallback to default if no specific match is found
-    const fallback = templates.find((t) => t.isDefault) || templates[0];
-    setSelectedTemplate(fallback);
-    return fallback;
+    if (matchingTemplate) {
+      logInfo('Templates', 'Found matching template', { 
+        templateId: matchingTemplate.id, 
+        templateName: matchingTemplate.name,
+        hasStructuredData: !!matchingTemplate.structured_data
+      });
+    } else {
+      logWarning('Templates', 'No matching template found for criteria', { bodyRegion, sessionType });
+    }
+
+    setSelectedTemplate(matchingTemplate || null);
   };
 
   // Select a template by ID
   const selectTemplateById = (templateId) => {
-    const found = templates.find((t) => t.id === templateId);
-
-    if (found) {
-      setSelectedTemplate(found);
-      return found;
+    if (!templateId) {
+      setSelectedTemplate(null);
+      return;
     }
 
-    // Fallback to default if no specific match is found
-    const fallback = templates.find((t) => t.isDefault) || templates[0];
-    setSelectedTemplate(fallback);
-    return fallback;
+    const template = templates.find((t) => t.id === templateId);
+    
+    if (template) {
+      logInfo('Templates', 'Selected template by ID', { 
+        templateId: template.id, 
+        templateName: template.name,
+        hasStructuredData: !!template.structured_data
+      });
+    } else {
+      logWarning('Templates', 'Template not found by ID', { templateId });
+    }
+    
+    setSelectedTemplate(template || null);
   };
 
   // Fill template with data
@@ -183,27 +254,35 @@ const useTemplates = () => {
 
   // Create a new template
   const createTemplate = async (templateData) => {
-    setIsSaving(true);
+    logAIProcess('TEMPLATE_CREATION', 'Starting template creation', {
+      name: templateData.name,
+      bodyRegion: templateData.bodyRegion,
+      sessionType: templateData.sessionType,
+      hasStructuredData: !!templateData.structured_data
+    });
+    
     try {
+      setIsSaving(true);
       if (!user) throw new Error('User must be logged in to create templates');
 
       // Generate a UUID for the new template
       const templateId = uuidv4();
 
-      // Insert into Supabase
-      const { error } = await supabase.from('templates').insert({
-        template_key: templateId,
-        user_id: user.id,
-        name: templateData.name,
-        body_region: templateData.bodyRegion,
-        session_type: templateData.sessionType,
-        subjective: templateData.subjective,
-        objective: templateData.objective,
-        assessment: templateData.assessment,
-        plan: templateData.plan,
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
+      // Create in Supabase
+      const { data, error } = await supabase.from('templates').insert([
+        {
+          template_key: templateId,
+          user_id: user.id,
+          name: templateData.name,
+          body_region: templateData.bodyRegion,
+          session_type: templateData.sessionType,
+          subjective: templateData.subjective,
+          objective: templateData.objective,
+          assessment: templateData.assessment,
+          plan: templateData.plan,
+          structured_data: templateData.structured_data || null,
+        },
+      ]);
 
       if (error) throw error;
 
@@ -212,6 +291,12 @@ const useTemplates = () => {
 
       // Show success toast
       toast.success(`Template "${templateData.name}" created successfully`);
+      
+      logAIProcess('TEMPLATE_CREATION', 'Template created successfully', {
+        templateId,
+        name: templateData.name,
+        hasStructuredData: !!templateData.structured_data
+      });
 
       return {
         ...templateData,
@@ -263,6 +348,7 @@ const useTemplates = () => {
           objective: templateData.objective,
           assessment: templateData.assessment,
           plan: templateData.plan,
+          structured_data: templateData.structured_data || null,
           updated_at: new Date(),
         })
         .eq('template_key', templateData.id)
@@ -346,6 +432,30 @@ const useTemplates = () => {
     fetchTemplates();
   }, []);
 
+  // Parse structured data from a template if available
+  const parseStructuredData = (template) => {
+    if (!template || !template.structured_data) return null;
+    
+    try {
+      const structuredData = typeof template.structured_data === 'string'
+        ? JSON.parse(template.structured_data)
+        : template.structured_data;
+      
+      logInfo('Templates', 'Successfully parsed structured data from template', {
+        templateId: template.id,
+        structuredDataKeys: Object.keys(structuredData)
+      });
+      
+      return structuredData;
+    } catch (error) {
+      logWarning('Templates', 'Failed to parse structured data from template', {
+        templateId: template.id,
+        error: error.message
+      });
+      return null;
+    }
+  };
+  
   return {
     templates,
     bodyRegions,
@@ -363,6 +473,7 @@ const useTemplates = () => {
     deleteTemplate,
     duplicateTemplate,
     fetchTemplates,
+    parseStructuredData,
   };
 };
 

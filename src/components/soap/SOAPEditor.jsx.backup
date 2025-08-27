@@ -1,0 +1,468 @@
+/**
+ * SOAP Editor Component
+ * Enhanced, wider editing experience for SOAP notes with session name input
+ * Combines WYSIWYG editors and interactive tables in a single scroll flow
+ * Follows glassmorphism design system with Notion-inspired UX
+ */
+
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Save, Download, Copy, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import WYSIWYGEditor from './WYSIWYGEditor';
+import ObjectiveTable from './ObjectiveTable';
+
+const SOAPEditor = ({ 
+  soapData, 
+  onSoapChange, 
+  onSave, 
+  onExport,
+  isLoading = false,
+  confidenceScores = {},
+  className = '',
+  sessionName = '',
+  onSessionNameChange
+}) => {
+  const [activeSection, setActiveSection] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('idle'); // idle, saving, saved, error, copied, exported
+  const [localSessionName, setLocalSessionName] = useState(sessionName || '');
+
+  // Handle data changes and mark as unsaved
+  const handleSectionChange = (sectionType, newData) => {
+    const updatedSOAP = {
+      ...soapData,
+      [sectionType]: newData
+    };
+    
+    onSoapChange(updatedSOAP);
+    setHasUnsavedChanges(true);
+    setSaveStatus('idle');
+  };
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      const autoSaveTimer = setTimeout(() => {
+        handleSave();
+      }, 2000); // Auto-save after 2 seconds of inactivity
+
+      return () => clearTimeout(autoSaveTimer);
+    }
+  }, [hasUnsavedChanges, soapData]);
+
+  const handleSave = async () => {
+    if (!hasUnsavedChanges && !localSessionName) return;
+    
+    setSaveStatus('saving');
+    try {
+      const sessionData = {
+        ...soapData,
+        sessionName: localSessionName || 'Untitled Session'
+      };
+      await onSave(sessionData);
+      setSaveStatus('saved');
+      setHasUnsavedChanges(false);
+      
+      // Update parent with session name
+      if (onSessionNameChange) {
+        onSessionNameChange(localSessionName);
+      }
+      
+      // Reset saved status after 2 seconds
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      setSaveStatus('error');
+      console.error('Save failed:', error);
+    }
+  };
+
+  const handleSessionNameChange = (newName) => {
+    setLocalSessionName(newName);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleCopyToClipboard = async () => {
+    try {
+      const soapText = formatSOAPForText(soapData);
+      await navigator.clipboard.writeText(soapText);
+      
+      // Show success feedback
+      setSaveStatus('copied');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Copy failed:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    }
+  };
+
+  const handlePDFExport = async () => {
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(16);
+      doc.text(localSessionName || 'SOAP Note', 20, 20);
+      
+      // Add date
+      doc.setFontSize(10);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 30);
+      
+      let yPosition = 45;
+      
+      // Add each section
+      const sections = [
+        { title: 'SUBJECTIVE', content: soapData.subjective?.content || '' },
+        { title: 'OBJECTIVE', content: formatObjectiveForPDF(soapData.objective) },
+        { title: 'ASSESSMENT', content: soapData.assessment?.content || '' },
+        { title: 'PLAN', content: soapData.plan?.content || '' }
+      ];
+      
+      sections.forEach(section => {
+        if (yPosition > 250) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text(section.title, 20, yPosition);
+        yPosition += 10;
+        
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(10);
+        
+        // Clean HTML and split into lines
+        const cleanContent = section.content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+        const lines = doc.splitTextToSize(cleanContent, 170);
+        
+        lines.forEach(line => {
+          if (yPosition > 280) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          doc.text(line, 20, yPosition);
+          yPosition += 5;
+        });
+        
+        yPosition += 10;
+      });
+      
+      // Download the PDF
+      doc.save(`${localSessionName || 'soap-note'}.pdf`);
+      
+      // Show success feedback
+      setSaveStatus('exported');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    }
+  };
+
+  const handleExport = async (format) => {
+    try {
+      if (format === 'pdf') {
+        await handlePDFExport();
+      } else if (format === 'copy') {
+        await handleCopyToClipboard();
+      } else {
+        await onExport(soapData, format);
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
+  };
+
+  // Helper functions
+  const formatSOAPForText = (soap) => {
+    return `
+${localSessionName || 'SOAP Note'}
+Generated: ${new Date().toLocaleDateString()}
+
+SUBJECTIVE:
+${soap.subjective?.content?.replace(/<[^>]*>/g, '') || 'No subjective data'}
+
+OBJECTIVE:
+${formatObjectiveForText(soap.objective)}
+
+ASSESSMENT:
+${soap.assessment?.content?.replace(/<[^>]*>/g, '') || 'No assessment data'}
+
+PLAN:
+${soap.plan?.content?.replace(/<[^>]*>/g, '') || 'No plan data'}
+    `.trim();
+  };
+
+  const formatObjectiveForText = (objective) => {
+    if (!objective || !objective.rows) return 'No objective data';
+    
+    let text = '';
+    objective.rows.forEach(row => {
+      text += `${row.measurement || ''}: ${row.value || ''}\n`;
+    });
+    return text || 'No objective data';
+  };
+
+  const formatObjectiveForPDF = (objective) => {
+    if (!objective || !objective.rows) return 'No objective data';
+    
+    let text = '';
+    objective.rows.forEach(row => {
+      text += `${row.measurement || ''}: ${row.value || ''}\n`;
+    });
+    return text || 'No objective data';
+  };
+
+  const getSectionIcon = (confidence) => {
+    if (confidence >= 0.8) return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+    if (confidence >= 0.6) return <CheckCircle2 className="w-4 h-4 text-yellow-500" />;
+    return <AlertCircle className="w-4 h-4 text-red-500" />;
+  };
+
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    focused: { scale: 1.01, transition: { duration: 0.2 } }
+  };
+
+  return (
+    <div className={`soap-editor max-w-7xl mx-auto ${className}`}>
+      {/* Header with Session Name and Actions */}
+      <motion.div 
+        className="mb-8 bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6 shadow-lg"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          {/* Session Name Input */}
+          <div className="flex-1 max-w-md">
+            <label className="block text-sm font-medium text-grey-700 mb-2">
+              Session Name
+              <span className="text-xs text-grey-500 block mt-1">
+                Use a memorable name (no patient details)
+              </span>
+            </label>
+            <input
+              type="text"
+              value={localSessionName}
+              onChange={(e) => handleSessionNameChange(e.target.value)}
+              placeholder="e.g., Knee eval session 1, Shoulder follow-up..."
+              className="w-full px-4 py-3 bg-white/50 backdrop-blur-8 border border-white/30 rounded-xl 
+                         text-grey-900 placeholder-grey-500 focus:outline-none focus:ring-2 
+                         focus:ring-blue-primary/50 focus:border-blue-primary transition-all"
+            />
+          </div>
+
+          {/* Status and Actions */}
+          <div className="flex items-center gap-4">
+            {/* Save Status Indicator */}
+            <div className="flex items-center gap-2">
+              {saveStatus === 'saving' && (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-primary" />
+                  <span className="text-sm text-grey-600">Saving...</span>
+                </>
+              )}
+              {saveStatus === 'saved' && (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <span className="text-sm text-grey-600">Saved</span>
+                </>
+              )}
+              {saveStatus === 'copied' && (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-blue-primary" />
+                  <span className="text-sm text-grey-600">Copied!</span>
+                </>
+              )}
+              {saveStatus === 'exported' && (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <span className="text-sm text-grey-600">PDF Downloaded!</span>
+                </>
+              )}
+              {saveStatus === 'error' && (
+                <>
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                  <span className="text-sm text-grey-600">Error</span>
+                </>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSave}
+                disabled={(!hasUnsavedChanges && !localSessionName) || saveStatus === 'saving'}
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-primary text-white rounded-xl 
+                           hover:bg-blue-dark transition-all duration-200 disabled:opacity-50 
+                           disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              >
+                <Save className="w-4 h-4" />
+                Save Note
+              </button>
+              
+              <button
+                onClick={() => handleExport('copy')}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white/50 backdrop-blur-8 
+                           text-grey-700 border border-white/30 rounded-xl hover:bg-white/70 
+                           transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                <Copy className="w-4 h-4" />
+                Copy
+              </button>
+              
+              <button
+                onClick={() => handleExport('pdf')}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white/50 backdrop-blur-8 
+                           text-grey-700 border border-white/30 rounded-xl hover:bg-white/70 
+                           transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                <Download className="w-4 h-4" />
+                PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Main SOAP Content - Wider Layout */}
+      <div className="px-6 py-8 space-y-8">
+        {/* Session Name Input */}
+        <div className="flex-1 max-w-md">
+          <label className="block text-sm font-medium text-grey-700 mb-2">
+            Session Name
+            <span className="text-xs text-grey-500 block mt-1">
+              Use a memorable name (no patient details)
+            </span>
+          </label>
+          <input
+            type="text"
+            value={localSessionName}
+            onChange={(e) => handleSessionNameChange(e.target.value)}
+            placeholder="e.g., Knee eval session 1, Shoulder follow-up..."
+            className="w-full px-4 py-3 bg-white/50 backdrop-blur-8 border border-white/30 rounded-xl 
+                       text-grey-900 placeholder-grey-500 focus:outline-none focus:ring-2 
+                       focus:ring-blue-primary/50 focus:border-blue-primary transition-all"
+          />
+        </div>
+
+        {/* Status and Actions */}
+        <div className="flex items-center gap-4">
+          {/* Save Status Indicator */}
+          <div className="flex items-center gap-2">
+            {saveStatus === 'saving' && (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-blue-primary" />
+                <span className="text-sm text-grey-600">Saving...</span>
+              </>
+            )}
+            {saveStatus === 'saved' && (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <span className="text-sm text-grey-600">Saved</span>
+              </>
+        {/* Objective Section */}
+        <motion.section
+          variants={sectionVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.1 }}
+          whileHover="focused"
+          className={`soap-section ${activeSection === 'objective' ? 'active' : ''}`}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-semibold text-grey-900">Objective</h2>
+              {confidenceScores.objective && getSectionIcon(confidenceScores.objective)}
+            </div>
+            {confidenceScores.objective && (
+              <div className="text-sm text-grey-500">
+                Confidence: {Math.round(confidenceScores.objective * 100)}%
+              </div>
+            )}
+          </div>
+          
+          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6">
+            <ObjectiveTable
+              data={soapData.objective || { headers: [], rows: [] }}
+              onChange={(objectiveData) => handleSectionChange('objective', objectiveData)}
+              onFocus={() => setActiveSection('objective')}
+              onBlur={() => setActiveSection(null)}
+            />
+          </div>
+        </motion.section>
+
+        {/* Assessment Section */}
+        <motion.section
+          variants={sectionVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.2 }}
+          whileHover="focused"
+          className={`soap-section ${activeSection === 'assessment' ? 'active' : ''}`}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-semibold text-grey-900">Assessment</h2>
+              {confidenceScores.assessment && getSectionIcon(confidenceScores.assessment)}
+            </div>
+            {confidenceScores.assessment && (
+              <div className="text-sm text-grey-500">
+                Confidence: {Math.round(confidenceScores.assessment * 100)}%
+              </div>
+            )}
+          </div>
+          
+          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6">
+            <WYSIWYGEditor
+              content={soapData.assessment?.content || ''}
+              placeholder={soapData.assessment?.placeholder || 'Clinical impression, diagnosis, prognosis...'}
+              onChange={(content) => handleSectionChange('assessment', { ...soapData.assessment, content })}
+              onFocus={() => setActiveSection('assessment')}
+              onBlur={() => setActiveSection(null)}
+            />
+          </div>
+        </motion.section>
+
+        {/* Plan Section */}
+        <motion.section
+          variants={sectionVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.3 }}
+          whileHover="focused"
+          className={`soap-section ${activeSection === 'plan' ? 'active' : ''}`}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-semibold text-grey-900">Plan</h2>
+              {confidenceScores.plan && getSectionIcon(confidenceScores.plan)}
+            </div>
+            {confidenceScores.plan && (
+              <div className="text-sm text-grey-500">
+                Confidence: {Math.round(confidenceScores.plan * 100)}%
+              </div>
+            )}
+          </div>
+          
+          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6">
+            <WYSIWYGEditor
+              content={soapData.plan?.content || ''}
+              placeholder={soapData.plan?.placeholder || 'Treatment plan, goals, frequency, patient education...'}
+              onChange={(content) => handleSectionChange('plan', { ...soapData.plan, content })}
+              onFocus={() => setActiveSection('plan')}
+              onBlur={() => setActiveSection(null)}
+            />
+          </div>
+        </motion.section>
+      </div>
+    </div>
+  );
+};
+
+export default SOAPEditor;

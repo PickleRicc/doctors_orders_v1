@@ -150,24 +150,38 @@ function Dashboard() {
                 </div>
               </div>
               
-              {/* AI Status Indicator */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6, duration: 0.3 }}
-                className="relative mt-4 md:mt-0 cursor-default group inline-flex"
-              >
-                <div className="flex items-center bg-white rounded-lg px-3 py-2 shadow-sm border border-[#007AFF]/20">
-                  {/* AI Icon with small border */}
-                  <div className="flex items-center justify-center mr-2.5 p-0.5 rounded-full bg-[#007AFF]/10">
-                    <Zap size={14} className="text-[#007AFF]" />
-                  </div>
-                  
-                  {/* Text */}
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">AI Processing Ready</p>
-                    <div className="flex items-center mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
+              <div className="flex items-center gap-3 mt-4 md:mt-0">
+                {/* Test Mode Button - Only show in development */}
+                {process.env.NODE_ENV === 'development' && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5, duration: 0.3 }}
+                    onClick={() => router.push('/test/template-hooks')}
+                    className="flex items-center gap-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 px-3 py-2 rounded-8 text-sm font-medium transition-all duration-200 hover:shadow-sm"
+                  >
+                    🧪 Test Mode
+                  </motion.button>
+                )}
+
+                {/* AI Status Indicator */}
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6, duration: 0.3 }}
+                  className="relative cursor-default group inline-flex"
+                >
+                  <div className="flex items-center bg-white rounded-lg px-3 py-2 shadow-sm border border-[#007AFF]/20">
+                    {/* AI Icon with small border */}
+                    <div className="flex items-center justify-center mr-2.5 p-0.5 rounded-full bg-[#007AFF]/10">
+                      <Zap size={14} className="text-[#007AFF]" />
+                    </div>
+                    
+                    {/* Text */}
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">AI Processing Ready</p>
+                      <div className="flex items-center mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
                       <p className="text-xs text-gray-500">Voice recording enabled</p>
                     </div>
                   </div>
@@ -176,6 +190,7 @@ function Dashboard() {
                 {/* Subtle hover effect */}
                 <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md -z-10"></div>
               </motion.div>
+              </div>
             </div>
             
             {/* Motivational message with animation */}
