@@ -1,15 +1,6 @@
-import { Pool } from 'pg';
+import { query } from '../../../lib/db';
 
 export default async function handler(req, res) {
-  const pool = new Pool({
-    host: process.env.PGHOST,
-    port: parseInt(process.env.PGPORT) || 5432,
-    database: process.env.PGDATABASE,
-    user: process.env.PGUSER,
-    password: process.env.PGPASSWORD,
-    ssl: { rejectUnauthorized: false }
-  });
-
   try {
     switch (req.method) {
       case 'GET': {
@@ -17,7 +8,7 @@ export default async function handler(req, res) {
         
         // If ID provided, get single encounter
         if (id) {
-          const result = await pool.query(
+          const result = await query(
             'SELECT * FROM phi.encounters WHERE id = $1',
             [id]
           );
@@ -35,7 +26,7 @@ export default async function handler(req, res) {
         }
         
         // Otherwise list encounters
-        const result = await pool.query(
+        const result = await query(
           'SELECT id, template_type, session_title, status, created_at FROM phi.encounters ORDER BY created_at DESC LIMIT $1',
           [parseInt(limit)]
         );
@@ -52,7 +43,7 @@ export default async function handler(req, res) {
         const testUserId = '00000000-0000-0000-0000-000000000001';
         const testOrgId = '00000000-0000-0000-0000-000000000002';
         
-        const result = await pool.query(
+        const result = await query(
           `INSERT INTO phi.encounters (org_id, clinician_id, status, template_type, session_title, soap)
            VALUES ($1, $2, 'draft', $3, $4, $5) RETURNING *`,
           [testOrgId, testUserId, templateType, sessionTitle, '{}']
@@ -92,7 +83,7 @@ export default async function handler(req, res) {
         
         values.push(id);
         
-        const result = await pool.query(
+        const result = await query(
           `UPDATE phi.encounters SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`,
           values
         );
@@ -113,7 +104,5 @@ export default async function handler(req, res) {
       error: 'Database error',
       message: error.message 
     });
-  } finally {
-    await pool.end();
   }
 }
