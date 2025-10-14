@@ -95,8 +95,17 @@ async function handleGet(req, res) {
     
     console.log('📋 Fetching encounters with limit:', limitNum);
     
+    // Simple query without joins
     const result = await query(
-      `SELECT id, template_type, session_title, status, created_at, updated_at
+      `SELECT 
+        id, 
+        template_type, 
+        session_title, 
+        status, 
+        created_at, 
+        updated_at,
+        clinician_id,
+        org_id
        FROM phi.encounters 
        ORDER BY created_at DESC 
        LIMIT $1`,
@@ -105,17 +114,31 @@ async function handleGet(req, res) {
     
     console.log('✅ Fetched encounters:', result.rows.length);
     
-    return res.json({
+    // Format the response to match what the frontend expects
+    const formattedEncounters = result.rows.map(row => ({
+      id: row.id,
+      template_type: row.template_type,
+      session_title: row.session_title,
+      status: row.status,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      clinician_id: row.clinician_id,
+      org_id: row.org_id
+    }));
+    
+    return res.status(200).json({
       success: true,
-      encounters: result.rows,
-      count: result.rows.length
+      encounters: formattedEncounters,
+      count: formattedEncounters.length
     });
   } catch (error) {
-    console.error('Error fetching encounters list:', error);
+    console.error('❌ Error fetching encounters list:', error);
     return res.status(500).json({ 
+      success: false,
       error: 'Failed to fetch encounters',
       message: error.message,
-      details: error.stack
+      stack: error.stack,
+      code: error.code
     });
   }
 }
