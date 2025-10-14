@@ -1,6 +1,7 @@
 /**
  * PHI API - Encounters Endpoint
  * HIPAA-compliant encounter management
+ * Handles GET, POST, PUT operations for patient encounters
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -133,12 +134,18 @@ async function handleGet(req, res) {
     });
   } catch (error) {
     console.error('❌ Error fetching encounters list:', error);
+    
+    // Return detailed error for debugging
     return res.status(500).json({ 
       success: false,
       error: 'Failed to fetch encounters',
       message: error.message,
-      stack: error.stack,
-      code: error.code
+      stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint,
+      position: error.position,
+      query: error.query
     });
   }
 }
