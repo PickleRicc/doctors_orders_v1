@@ -14,6 +14,7 @@ let pool = null;
  */
 export function getPool() {
   if (!pool) {
+    console.log('🔌 Creating new PostgreSQL connection pool...');
     pool = new Pool({
       host: process.env.PGHOST,
       port: parseInt(process.env.PGPORT) || 5432,
@@ -23,15 +24,19 @@ export function getPool() {
       ssl: { 
         rejectUnauthorized: false 
       },
-      max: 20, // Maximum number of clients in the pool
-      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection cannot be established
+      max: 5, // Reduced for serverless (Vercel has limited connections)
+      idleTimeoutMillis: 10000, // Close idle clients after 10 seconds (serverless optimization)
+      connectionTimeoutMillis: 10000, // Increased timeout for Azure
+      allowExitOnIdle: true, // Allow pool to close when idle (important for serverless)
     });
 
     // Handle pool errors
     pool.on('error', (err) => {
-      console.error('Unexpected database pool error:', err);
+      console.error('❌ Unexpected database pool error:', err);
+      pool = null; // Reset pool on error
     });
+    
+    console.log('✅ PostgreSQL pool created');
   }
 
   return pool;
@@ -45,12 +50,22 @@ export function getPool() {
  */
 export async function query(text, params) {
   const pool = getPool();
+  const client = await pool.connect();
+  
   try {
-    const result = await pool.query(text, params);
+    console.log('🔍 Executing query:', text.substring(0, 100) + '...');
+    const result = await client.query(text, params);
+    console.log('✅ Query successful, rows:', result.rows?.length || 0);
     return result;
   } catch (error) {
-    console.error('Database query error:', error);
+    console.error('❌ Database query error:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail
+    });
     throw error;
+  } finally {
+    client.release();
   }
 }
 
