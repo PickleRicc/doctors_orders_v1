@@ -55,45 +55,69 @@ export default async function handler(req, res) {
 
 // GET /api/phi/encounters - List encounters
 async function handleGet(req, res) {
-  const { limit = 10, id } = req.query;
+  const { limit = '10', id } = req.query;
   
   // If ID is provided, get specific encounter
   if (id) {
-    const result = await query(
-      `SELECT * FROM phi.encounters WHERE id = $1`,
-      [id]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Encounter not found' });
+    try {
+      const result = await query(
+        `SELECT * FROM phi.encounters WHERE id = $1`,
+        [id]
+      );
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Encounter not found' });
+      }
+      
+      const encounter = result.rows[0];
+      
+      // Parse SOAP JSON if it's a string
+      if (typeof encounter.soap === 'string') {
+        encounter.soap = JSON.parse(encounter.soap);
+      }
+      
+      // Log audit event
+      await logAudit(id, '00000000-0000-0000-0000-000000000001', 'READ');
+      
+      return res.json(encounter);
+    } catch (error) {
+      console.error('Error fetching single encounter:', error);
+      return res.status(500).json({ 
+        error: 'Failed to fetch encounter',
+        message: error.message 
+      });
     }
-    
-    const encounter = result.rows[0];
-    
-    // Parse SOAP JSON if it's a string
-    if (typeof encounter.soap === 'string') {
-      encounter.soap = JSON.parse(encounter.soap);
-    }
-    
-    // Log audit event
-    await logAudit(id, '00000000-0000-0000-0000-000000000001', 'READ');
-    
-    return res.json(encounter);
   }
   
   // Otherwise list encounters
-  const result = await query(
-    `SELECT id, template_type, session_title, status, created_at, updated_at
-     FROM phi.encounters 
-     ORDER BY created_at DESC 
-     LIMIT $1`,
-    [limit]
-  );
-  
-  res.json({
-    encounters: result.rows,
-    count: result.rows.length
-  });
+  try {
+    const limitNum = parseInt(limit) || 10;
+    
+    console.log('📋 Fetching encounters with limit:', limitNum);
+    
+    const result = await query(
+      `SELECT id, template_type, session_title, status, created_at, updated_at
+       FROM phi.encounters 
+       ORDER BY created_at DESC 
+       LIMIT $1`,
+      [limitNum]
+    );
+    
+    console.log('✅ Fetched encounters:', result.rows.length);
+    
+    return res.json({
+      success: true,
+      encounters: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Error fetching encounters list:', error);
+    return res.status(500).json({ 
+      error: 'Failed to fetch encounters',
+      message: error.message,
+      details: error.stack
+    });
+  }
 }
 
 // POST /api/phi/encounters - Create new encounter
