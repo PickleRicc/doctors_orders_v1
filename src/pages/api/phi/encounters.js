@@ -17,8 +17,22 @@ export default async function handler(req, res) {
     return;
   }
 
+  // Check if database environment variables are set
+  if (!process.env.PGHOST || !process.env.PGUSER || !process.env.PGPASSWORD) {
+    console.error('❌ Missing database environment variables:', {
+      PGHOST: !!process.env.PGHOST,
+      PGUSER: !!process.env.PGUSER,
+      PGPASSWORD: !!process.env.PGPASSWORD,
+      PGDATABASE: !!process.env.PGDATABASE,
+      PGPORT: !!process.env.PGPORT
+    });
+    return res.status(500).json({ 
+      error: 'Database not configured',
+      details: 'Missing required environment variables. Please check PGHOST, PGUSER, PGPASSWORD, PGDATABASE, PGPORT in Vercel settings.'
+    });
+  }
+
   try {
-    
     switch (req.method) {
       case 'GET':
         return await handleGet(req, res);
@@ -33,7 +47,8 @@ export default async function handler(req, res) {
     console.error('PHI API Error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }
