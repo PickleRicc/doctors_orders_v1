@@ -1,5 +1,7 @@
+'use client';
+
 import { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/useAuth';
 
 /**
@@ -15,9 +17,9 @@ export function ProtectedRoute({ children }) {
   const router = useRouter();
   
   useEffect(() => {
-    // If not loading and no user, redirect to auth page
+    // If not loading and no user, redirect to landing page
     if (!loading && !user) {
-      router.push('/auth');
+      router.push('/landing');
     }
   }, [user, loading, router]);
   

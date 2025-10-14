@@ -1,5 +1,7 @@
+'use client';
+
 import { useState, useEffect, createContext, useContext } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import authService from '../services/supabase';
 
 // Create auth context
@@ -39,8 +41,8 @@ export function AuthProvider({ children }) {
       // Handle auth events
       switch (event) {
         case 'SIGNED_OUT':
-          // Redirect to auth page when signed out
-          router.push('/auth');
+          // Redirect to landing page when signed out
+          router.push('/landing');
           break;
         case 'SIGNED_IN':
           // Additional signed in handling if needed
@@ -64,7 +66,7 @@ export function AuthProvider({ children }) {
         console.log('Session expired, logging out...');
         authService.signOut();
         setUser(null);
-        router.push('/auth');
+        router.push('/landing');
       }
     }, 60000); // Check every minute
 
@@ -126,7 +128,7 @@ export function AuthProvider({ children }) {
   const signOut = async () => {
     try {
       await authService.signOut();
-      router.push('/auth');
+      router.push('/landing');
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };

@@ -1,8 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize the Supabase client with the project URL and anonymous key
-const supabaseUrl = 'https://oozghvnctxihtbqzktdv.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vemdodm5jdHhpaHRicXprdGR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MjAyNzcsImV4cCI6MjA2NDk5NjI3N30.I3AbqcZO3bBkF2qCDBmvJkpA8j9zpgwFNk1NCZyjxpc';
+// Initialize the Supabase client with the project URL and anonymous key from environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Validate environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file.'
+  );
+}
 
 // Create a single instance of the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

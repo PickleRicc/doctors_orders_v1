@@ -193,7 +193,7 @@ function Sidebar({ collapsed = false, onToggleCollapse }) {
                     todaySessions.map(session => (
                       <li key={session.id}>
                         <Link
-                          href={`/sessions/${session.id}`}
+                          href={`/soap/generate?sessionId=${session.id}&templateType=${session.body_region}`}
                           className="flex items-center justify-between text-[#4b5563] hover:text-[#111827] hover:bg-[rgba(219,234,254,0.3)] px-3 py-2 rounded-lg transition-colors"
                         >
                           <div className="flex items-center">
@@ -240,7 +240,7 @@ function Sidebar({ collapsed = false, onToggleCollapse }) {
                     recentSessions.map(session => (
                       <li key={session.id}>
                         <Link
-                          href={`/sessions/${session.id}`}
+                          href={`/soap/generate?sessionId=${session.id}&templateType=${session.body_region}`}
                           className="flex items-center justify-between text-[#4b5563] hover:text-[#111827] hover:bg-[rgba(219,234,254,0.3)] px-3 py-2 rounded-lg transition-colors"
                         >
                           <div className="flex items-center">

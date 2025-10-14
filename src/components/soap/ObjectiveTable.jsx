@@ -1,22 +1,24 @@
 /**
  * Objective Table Component
  * Interactive table for objective SOAP data (tests, measurements, observations)
+ * Supports both flat rows (backward compatible) and categorized rows
+ * Categories: Observation, Palpation, ROM, Strength, Special Tests, Functional
  * Inline editing with glassmorphism styling following design system
- * Clean, Google Docs-style table editing experience
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, ChevronDown, Check } from 'lucide-react';
 
-const ObjectiveTable = ({ 
-  data = { headers: [], rows: [] }, 
+const ObjectiveTable = memo(({ 
+  data = { headers: [], rows: [], categories: [] }, 
   onChange, 
   onFocus, 
   onBlur,
   className = '' 
 }) => {
   const [editingCell, setEditingCell] = useState(null);
+  const [editingValue, setEditingValue] = useState('');
   const [showAddRow, setShowAddRow] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const inputRef = useRef(null);
@@ -25,84 +27,120 @@ const ObjectiveTable = ({
   const defaultData = {
     headers: ['Test/Measurement', 'Result', 'Notes'],
     rows: [],
+    categories: null, // If null, use flat structure (backward compatible)
     allowAddRows: true,
     commonResults: ['Positive', 'Negative', 'Not Tested', 'WNL', 'Limited', '1+', '2+', '3+']
   };
 
   const tableData = { ...defaultData, ...data };
+  const hasCategories = tableData.categories && Array.isArray(tableData.categories);
 
   // Focus input when editing starts
   useEffect(() => {
     if (editingCell && inputRef.current) {
       inputRef.current.focus();
-      inputRef.current.select();
+      // Move cursor to end of text instead of selecting
+      const length = inputRef.current.value.length;
+      inputRef.current.setSelectionRange(length, length);
     }
   }, [editingCell]);
 
-  const handleCellEdit = (rowIndex, columnKey, newValue) => {
-    const updatedRows = [...tableData.rows];
-    updatedRows[rowIndex] = {
-      ...updatedRows[rowIndex],
-      [columnKey]: newValue
-    };
-
-    onChange({
-      ...tableData,
-      rows: updatedRows
-    });
+  // Save changes when editing cell changes or component unmounts
+  const saveEditingValue = (categoryIndex, rowIndex, columnKey, value) => {
+    if (hasCategories && categoryIndex !== null) {
+      const updatedCategories = [...tableData.categories];
+      const updatedRows = [...updatedCategories[categoryIndex].rows];
+      updatedRows[rowIndex] = {
+        ...updatedRows[rowIndex],
+        [columnKey]: value
+      };
+      updatedCategories[categoryIndex] = {
+        ...updatedCategories[categoryIndex],
+        rows: updatedRows
+      };
+      onChange({
+        ...tableData,
+        categories: updatedCategories
+      });
+    } else {
+      const updatedRows = [...tableData.rows];
+      updatedRows[rowIndex] = {
+        ...updatedRows[rowIndex],
+        [columnKey]: value
+      };
+      onChange({
+        ...tableData,
+        rows: updatedRows
+      });
+    }
   };
 
-  const handleAddRow = (templateRow = {}) => {
-    const newRow = {
-      test: templateRow.test || '',
-      result: templateRow.result || '',
-      notes: templateRow.notes || '',
-      ...templateRow
-    };
+  // This function is no longer needed - we use saveEditingValue instead
+  // Keeping for dropdown compatibility
+  const handleCellEdit = (categoryIndex, rowIndex, columnKey, newValue) => {
+    saveEditingValue(categoryIndex, rowIndex, columnKey, newValue);
+  };
 
-    onChange({
-      ...tableData,
-      rows: [...tableData.rows, newRow]
-    });
+  const handleAddRow = (categoryIndex = null) => {
+    const newRow = { test: '', result: '', notes: '' };
+
+    if (hasCategories && categoryIndex !== null) {
+      // Add to specific category
+      const updatedCategories = [...tableData.categories];
+      updatedCategories[categoryIndex] = {
+        ...updatedCategories[categoryIndex],
+        rows: [...updatedCategories[categoryIndex].rows, newRow]
+      };
+
+      onChange({
+        ...tableData,
+        categories: updatedCategories
+      });
+    } else {
+      // Add to flat rows
+      onChange({
+        ...tableData,
+        rows: [...tableData.rows, newRow]
+      });
+    }
 
     setShowAddRow(false);
   };
 
-  const handleRemoveRow = (rowIndex) => {
-    const updatedRows = tableData.rows.filter((_, index) => index !== rowIndex);
-    onChange({
-      ...tableData,
-      rows: updatedRows
-    });
-  };
+  const handleRemoveRow = (categoryIndex, rowIndex) => {
+    if (hasCategories && categoryIndex !== null) {
+      const updatedCategories = [...tableData.categories];
+      const updatedRows = updatedCategories[categoryIndex].rows.filter((_, i) => i !== rowIndex);
+      updatedCategories[categoryIndex] = {
+        ...updatedCategories[categoryIndex],
+        rows: updatedRows
+      };
 
-  const handleKeyDown = (e, rowIndex, columnKey) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      setEditingCell(null);
-      
-      // Move to next row or add new row if at end
-      if (rowIndex === tableData.rows.length - 1) {
-        handleAddRow();
-      }
-    } else if (e.key === 'Escape') {
-      setEditingCell(null);
-    } else if (e.key === 'Tab') {
-      e.preventDefault();
-      // Move to next cell
-      const columns = ['test', 'result', 'notes'];
-      const currentColumnIndex = columns.indexOf(columnKey);
-      const nextColumnIndex = (currentColumnIndex + 1) % columns.length;
-      const nextRowIndex = nextColumnIndex === 0 ? rowIndex + 1 : rowIndex;
-      
-      if (nextRowIndex < tableData.rows.length) {
-        setEditingCell(`${nextRowIndex}-${columns[nextColumnIndex]}`);
-      }
+      onChange({
+        ...tableData,
+        categories: updatedCategories
+      });
+    } else {
+      const updatedRows = tableData.rows.filter((_, i) => i !== rowIndex);
+      onChange({
+        ...tableData,
+        rows: updatedRows
+      });
     }
   };
 
-  const ResultDropdown = ({ value, onChange, rowIndex }) => {
+  const handleKeyDown = (e, categoryIndex, rowIndex, columnKey) => {
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      setEditingCell(null);
+    } else if (e.key === 'Escape') {
+      setEditingCell(null);
+    }
+  };
+
+  const ResultDropdown = ({ value, onChange, categoryIndex, rowIndex }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const dropdownId = `dropdown-${categoryIndex}-${rowIndex}`;
     
     return (
       <div className="relative">
@@ -154,8 +192,8 @@ const ObjectiveTable = ({
     );
   };
 
-  const CellContent = ({ row, rowIndex, columnKey, value }) => {
-    const cellId = `${rowIndex}-${columnKey}`;
+  const CellContent = ({ row, categoryIndex, rowIndex, columnKey, value }) => {
+    const cellId = `${categoryIndex}-${rowIndex}-${columnKey}`;
     const isEditing = editingCell === cellId;
 
     if (isEditing) {
@@ -163,10 +201,26 @@ const ObjectiveTable = ({
         <input
           ref={inputRef}
           type="text"
-          value={value || ''}
-          onChange={(e) => handleCellEdit(rowIndex, columnKey, e.target.value)}
-          onBlur={() => setEditingCell(null)}
-          onKeyDown={(e) => handleKeyDown(e, rowIndex, columnKey)}
+          value={editingValue}
+          onChange={(e) => setEditingValue(e.target.value)}
+          onBlur={() => {
+            // Save the value
+            saveEditingValue(categoryIndex, rowIndex, columnKey, editingValue);
+            setEditingCell(null);
+            setEditingValue('');
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === 'Tab') {
+              e.preventDefault();
+              saveEditingValue(categoryIndex, rowIndex, columnKey, editingValue);
+              setEditingCell(null);
+              setEditingValue('');
+            } else if (e.key === 'Escape') {
+              setEditingCell(null);
+              setEditingValue('');
+            }
+          }}
+          autoFocus
           className="w-full px-3 py-2 bg-white/30 backdrop-blur-8 border border-blue-primary/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-primary/20"
           placeholder={`Enter ${columnKey}...`}
         />
@@ -177,7 +231,8 @@ const ObjectiveTable = ({
       return (
         <ResultDropdown
           value={value}
-          onChange={(newValue) => handleCellEdit(rowIndex, columnKey, newValue)}
+          onChange={(newValue) => handleCellEdit(categoryIndex, rowIndex, 'result', newValue)}
+          categoryIndex={categoryIndex}
           rowIndex={rowIndex}
         />
       );
@@ -185,7 +240,10 @@ const ObjectiveTable = ({
 
     return (
       <div
-        onClick={() => setEditingCell(cellId)}
+        onClick={() => {
+          setEditingCell(cellId);
+          setEditingValue(value || '');
+        }}
         className="w-full px-3 py-2 min-h-[40px] cursor-text hover:bg-white/20 rounded-lg transition-colors flex items-center"
       >
         <span className={value ? 'text-grey-900' : 'text-grey-500'}>
@@ -211,58 +269,147 @@ const ObjectiveTable = ({
         <div className="col-span-1"></div>
       </div>
 
-      {/* Table Rows */}
-      <div className="space-y-2">
-        <AnimatePresence>
-          {tableData.rows.map((row, rowIndex) => (
-            <motion.div
-              key={rowIndex}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="grid grid-cols-12 gap-4 p-4 bg-white/15 backdrop-blur-8 border border-white/20 rounded-xl hover:bg-white/25 transition-colors group"
-            >
-              <div className="col-span-4">
-                <CellContent
-                  row={row}
-                  rowIndex={rowIndex}
-                  columnKey="test"
-                  value={row.test}
-                />
+      {/* Categorized or Flat Rows */}
+      {hasCategories ? (
+        <div className="space-y-6">
+          {tableData.categories.map((category, categoryIndex) => (
+            <div key={categoryIndex}>
+              {/* Category Header */}
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-base font-semibold text-grey-800 flex items-center gap-2">
+                  <div className="w-1 h-5 bg-blue-primary rounded-full" />
+                  {category.name}
+                </h4>
+                {tableData.allowAddRows && (
+                  <button
+                    onClick={() => handleAddRow(categoryIndex)}
+                    className="text-sm text-blue-primary hover:text-blue-dark font-medium transition-colors flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Test
+                  </button>
+                )}
               </div>
-              <div className="col-span-3">
-                <CellContent
-                  row={row}
-                  rowIndex={rowIndex}
-                  columnKey="result"
-                  value={row.result}
-                />
-              </div>
-              <div className="col-span-4">
-                <CellContent
-                  row={row}
-                  rowIndex={rowIndex}
-                  columnKey="notes"
-                  value={row.notes}
-                />
-              </div>
-              <div className="col-span-1 flex items-center justify-center">
-                <button
-                  onClick={() => handleRemoveRow(rowIndex)}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-grey-400 hover:text-red-500 transition-all duration-200"
-                  title="Remove row"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
 
-      {/* Add Row Section */}
-      {tableData.allowAddRows && (
+              {/* Category Rows */}
+              <div className="space-y-2">
+                <AnimatePresence>
+                  {category.rows.map((row, rowIndex) => (
+                    <motion.div
+                      key={rowIndex}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="grid grid-cols-12 gap-4 p-4 bg-white/15 backdrop-blur-8 border border-white/20 rounded-xl hover:bg-white/25 transition-colors group"
+                    >
+                      <div className="col-span-4">
+                        <CellContent
+                          row={row}
+                          categoryIndex={categoryIndex}
+                          rowIndex={rowIndex}
+                          columnKey="test"
+                          value={row.test}
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <CellContent
+                          row={row}
+                          categoryIndex={categoryIndex}
+                          rowIndex={rowIndex}
+                          columnKey="result"
+                          value={row.result}
+                        />
+                      </div>
+                      <div className="col-span-4">
+                        <CellContent
+                          row={row}
+                          categoryIndex={categoryIndex}
+                          rowIndex={rowIndex}
+                          columnKey="notes"
+                          value={row.notes}
+                        />
+                      </div>
+                      <div className="col-span-1 flex items-center justify-center">
+                        <button
+                          onClick={() => handleRemoveRow(categoryIndex, rowIndex)}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-grey-400 hover:text-red-500 transition-all duration-200"
+                          title="Remove row"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+
+                {/* Empty State */}
+                {category.rows.length === 0 && (
+                  <div className="text-center py-4 text-grey-500 text-sm italic">
+                    No tests added yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Flat Rows (Backward Compatible) */
+        <div className="space-y-2">
+          <AnimatePresence>
+            {tableData.rows.map((row, rowIndex) => (
+              <motion.div
+                key={rowIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-12 gap-4 p-4 bg-white/15 backdrop-blur-8 border border-white/20 rounded-xl hover:bg-white/25 transition-colors group"
+              >
+                <div className="col-span-4">
+                  <CellContent
+                    row={row}
+                    categoryIndex={null}
+                    rowIndex={rowIndex}
+                    columnKey="test"
+                    value={row.test}
+                  />
+                </div>
+                <div className="col-span-3">
+                  <CellContent
+                    row={row}
+                    categoryIndex={null}
+                    rowIndex={rowIndex}
+                    columnKey="result"
+                    value={row.result}
+                  />
+                </div>
+                <div className="col-span-4">
+                  <CellContent
+                    row={row}
+                    categoryIndex={null}
+                    rowIndex={rowIndex}
+                    columnKey="notes"
+                    value={row.notes}
+                  />
+                </div>
+                <div className="col-span-1 flex items-center justify-center">
+                  <button
+                    onClick={() => handleRemoveRow(null, rowIndex)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-grey-400 hover:text-red-500 transition-all duration-200"
+                    title="Remove row"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Add Row Section (Only for flat structure) */}
+      {!hasCategories && tableData.allowAddRows && (
         <div className="mt-4">
           <AnimatePresence>
             {!showAddRow ? (
@@ -335,6 +482,6 @@ const ObjectiveTable = ({
       )}
     </div>
   );
-};
+});
 
 export default ObjectiveTable;

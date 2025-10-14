@@ -21,33 +21,101 @@ export const useKneeEvaluation = () => {
     },
     objective: {
       type: 'table',
-      headers: ['Test/Measurement', 'Result', 'Notes'],
-      rows: [
-        { test: 'Anterior Drawer Test', result: '', notes: '' },
-        { test: 'Posterior Drawer Test', result: '', notes: '' },
-        { test: 'Lachman\'s Test', result: '', notes: '' },
-        { test: 'Valgus Stress Test', result: '', notes: '' },
-        { test: 'Varus Stress Test', result: '', notes: '' },
-        { test: 'McMurray\'s Test', result: '', notes: '' },
-        { test: 'Patella Apprehension Test', result: '', notes: '' },
-        { test: 'Patella Grind Test', result: '', notes: '' },
-        { test: 'Knee Flexion ROM', result: '', notes: '' },
-        { test: 'Knee Extension ROM', result: '', notes: '' },
-        { test: 'Quadriceps Strength', result: '', notes: '' },
-        { test: 'Hamstring Strength', result: '', notes: '' }
+      headers: ['Category', 'Test/Measurement', 'Result', 'Notes'],
+      categories: [
+        {
+          name: 'Observation',
+          rows: [
+            { test: 'Knee Effusion/Swelling', result: '', notes: '' },
+            { test: 'Gait Pattern', result: '', notes: '' }
+          ]
+        },
+        {
+          name: 'Palpation',
+          rows: [
+            { test: 'Joint Line Tenderness', result: '', notes: '' },
+            { test: 'Patellar Tendon', result: '', notes: '' }
+          ]
+        },
+        {
+          name: 'Range of Motion',
+          rows: [
+            { test: 'Knee Flexion', result: '', notes: '' },
+            { test: 'Knee Extension', result: '', notes: '' }
+          ]
+        },
+        {
+          name: 'Strength Testing',
+          rows: [
+            { test: 'Quadriceps Strength', result: '', notes: '' },
+            { test: 'Hamstring Strength', result: '', notes: '' }
+          ]
+        },
+        {
+          name: 'Special Tests',
+          rows: [
+            { test: 'McMurray\'s Test', result: '', notes: '' },
+            { test: 'Lachman\'s Test', result: '', notes: '' },
+            { test: 'Valgus/Varus Stress', result: '', notes: '' },
+            { test: 'Patellar Mobility', result: '', notes: '' }
+          ]
+        },
+        {
+          name: 'Functional Testing',
+          rows: [
+            { test: 'Single Leg Stance', result: '', notes: '' },
+            { test: 'Squat Assessment', result: '', notes: '' }
+          ]
+        }
       ],
       allowAddRows: true,
-      commonResults: ['Positive', 'Negative', 'Not Tested', 'Limited', 'WNL', '1+', '2+', '3+']
+      commonResults: ['Positive', 'Negative', 'Not Tested', 'WNL', 'Limited', 'Painful', '3/5', '4/5', '5/5']
     },
     assessment: {
-      type: 'wysiwyg',
-      content: '',
-      placeholder: 'Clinical impression, diagnosis, prognosis...'
+      type: 'composite',
+      clinical_impression: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Clinical reasoning, diagnosis, contributing factors, prognosis...'
+      },
+      short_term_goals: {
+        type: 'list',
+        items: [],
+        placeholder: 'Goals for 2-4 weeks (e.g., Reduce pain to 3/10, Improve knee flexion to 120°)'
+      },
+      long_term_goals: {
+        type: 'list',
+        items: [],
+        placeholder: 'Goals for 6-12 weeks (e.g., Return to running, Independent with HEP)'
+      }
     },
     plan: {
-      type: 'wysiwyg',
-      content: '',
-      placeholder: 'Treatment plan, goals, frequency, patient education...'
+      type: 'composite',
+      interventions: {
+        type: 'list',
+        items: [],
+        placeholder: 'Manual therapy, therapeutic exercises, modalities...'
+      },
+      progressions: {
+        type: 'list',
+        items: [],
+        placeholder: 'How to advance exercises as patient improves...'
+      },
+      regressions: {
+        type: 'list',
+        items: [],
+        placeholder: 'How to modify if symptoms increase...'
+      },
+      frequency_duration: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Treatment frequency, session duration, expected timeline...'
+      },
+      patient_education: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Home exercise program, activity modifications, precautions...'
+      }
     }
   });
 
@@ -66,33 +134,106 @@ INSTRUCTIONS:
 2. Use professional PT terminology
 3. Focus on knee-specific assessments and findings
 4. Return ONLY a JSON object matching this exact structure:
-
 {
   "subjective": {
     "content": "Patient narrative including pain description, functional limitations, mechanism of injury, and relevant history. Use professional medical language."
   },
   "objective": {
-    "rows": [
-      {"test": "Test Name", "result": "Result", "notes": "Additional notes"},
-      // Include all relevant tests mentioned in transcript
-      // Use standard results: Positive/Negative/Not Tested/WNL/Limited
-      // Include ROM measurements, strength grades, special tests
+    "categories": [
+      {
+        "name": "Observation",
+        "rows": [
+          {"test": "Knee Effusion/Swelling", "result": "Moderate", "notes": "Joint line swelling present"},
+          {"test": "Gait Pattern", "result": "Antalgic", "notes": "Decreased stance time on affected leg"}
+        ]
+      },
+      {
+        "name": "Palpation",
+        "rows": [
+          {"test": "Joint Line Tenderness", "result": "Positive", "notes": "Medial joint line tender to palpation"},
+          {"test": "Patellar Tendon", "result": "WNL", "notes": "No tenderness noted"}
+        ]
+      },
+      {
+        "name": "Range of Motion",
+        "rows": [
+          {"test": "Knee Flexion", "result": "120°", "notes": "Limited by pain at end range"},
+          {"test": "Knee Extension", "result": "-5°", "notes": "Extension lag present"}
+        ]
+      },
+      {
+        "name": "Strength Testing",
+        "rows": [
+          {"test": "Quadriceps Strength", "result": "4/5", "notes": "Weakness noted with resistance"},
+          {"test": "Hamstring Strength", "result": "5/5", "notes": "Strong and pain-free"}
+        ]
+      },
+      {
+        "name": "Special Tests",
+        "rows": [
+          {"test": "McMurray's Test", "result": "Positive", "notes": "Medial compartment clicking"},
+          {"test": "Lachman's Test", "result": "Negative", "notes": "Firm endpoint, no laxity"},
+          {"test": "Valgus/Varus Stress", "result": "Negative", "notes": "Stable in both planes"},
+          {"test": "Patellar Mobility", "result": "Limited", "notes": "Decreased superior glide"}
+        ]
+      },
+      {
+        "name": "Functional Testing",
+        "rows": [
+          {"test": "Single Leg Stance", "result": "15 seconds", "notes": "Decreased from 30s baseline"},
+          {"test": "Squat Assessment", "result": "Limited", "notes": "Pain at 90° knee flexion"}
+        ]
+      }
     ]
   },
   "assessment": {
-    "content": "Clinical reasoning, likely diagnosis, contributing factors, prognosis. Be specific about knee pathology."
+    "clinical_impression": "Clinical reasoning, likely diagnosis (e.g., meniscus tear, ACL sprain, patellofemoral syndrome), contributing factors, prognosis. Be specific about knee pathology.",
+    "short_term_goals": [
+      "Specific, measurable goal for 2-4 weeks (e.g., Reduce pain from 6/10 to 3/10)",
+      "Another short-term goal (e.g., Increase knee flexion from 95° to 120°)",
+      "2-4 goals total focused on immediate improvements"
+    ],
+    "long_term_goals": [
+      "Specific, measurable goal for 6-12 weeks (e.g., Return to basketball without pain)",
+      "Another long-term goal (e.g., Demonstrate proper squat mechanics)",
+      "2-3 goals total focused on functional outcomes"
+    ]
   },
   "plan": {
-    "content": "Treatment plan including interventions, goals, frequency, patient education, and follow-up recommendations."
+    "interventions": [
+      "Patellar mobilizations (superior/inferior glides)",
+      "Quad strengthening (straight leg raises, short arc quads)",
+      "IT band foam rolling and stretching",
+      "Hamstring strengthening (prone curls)",
+      "Manual therapy to patellar tendon",
+      "Balance training on affected leg",
+      "3-5 knee-specific interventions"
+    ],
+    "progressions": [
+      "Increase resistance from 5 lbs to 10 lbs to 15 lbs",
+      "Progress from double leg to single leg exercises",
+      "Advance from partial ROM to full ROM",
+      "Add functional movements (squats, lunges, step-ups)"
+    ],
+    "regressions": [
+      "Reduce ROM to pain-free range if pain increases",
+      "Return to isometric exercises if swelling worsens",
+      "Decrease weight bearing or resistance"
+    ],
+    "frequency_duration": "Treatment frequency (e.g., 2x/week for 4 weeks), expected timeline for reassessment.",
+    "patient_education": "Home exercise program details, activity modifications, precautions, when to call clinic."
   }
 }
 
-IMPORTANT: 
-- Only include tests/measurements that were actually mentioned in the transcript
-- Use "Not assessed" if information is missing
-- Be concise but thorough
-- Use proper medical abbreviations (ROM, WNL, etc.)
-- Return valid JSON only, no additional text
+CRITICAL INSTRUCTIONS FOR OBJECTIVE SECTION:
+1. ALWAYS fill in the "result" field with ACTUAL values from the transcript
+2. NEVER use placeholder text like "Result" or "Notes" - these are INVALID
+3. Use standard results: Positive, Negative, Not Tested, WNL, Limited, Painful, specific measurements
+4. If a test wasn't mentioned, use "Not assessed" in the result field
+5. Include specific measurements when mentioned (degrees, MMT grades, time durations)
+6. The "notes" field should add clinical context, NOT be a placeholder
+7. Only include tests/measurements that were actually performed or mentioned
+8. Return valid JSON only, no additional text before or after
 `;
 
   /**
@@ -123,6 +264,12 @@ IMPORTANT:
         throw new Error('AI returned invalid JSON response');
       }
 
+      console.log('🔍 AI Response received:', {
+        hasAssessment: !!soapData.assessment,
+        assessmentKeys: soapData.assessment ? Object.keys(soapData.assessment) : [],
+        assessmentPreview: JSON.stringify(soapData.assessment).substring(0, 200)
+      });
+
       // Merge with schema structure to ensure all required fields exist
       const schema = getSchema();
       const structuredSOAP = {
@@ -132,17 +279,53 @@ IMPORTANT:
         },
         objective: {
           ...schema.objective,
-          rows: soapData.objective?.rows || schema.objective.rows
+          categories: soapData.objective?.categories || schema.objective.categories
         },
         assessment: {
           ...schema.assessment,
-          content: soapData.assessment?.content || ''
+          clinical_impression: {
+            ...schema.assessment.clinical_impression,
+            content: soapData.assessment?.clinical_impression || ''
+          },
+          short_term_goals: {
+            ...schema.assessment.short_term_goals,
+            items: soapData.assessment?.short_term_goals || []
+          },
+          long_term_goals: {
+            ...schema.assessment.long_term_goals,
+            items: soapData.assessment?.long_term_goals || []
+          }
         },
         plan: {
           ...schema.plan,
-          content: soapData.plan?.content || ''
+          interventions: {
+            ...schema.plan.interventions,
+            items: soapData.plan?.interventions || []
+          },
+          progressions: {
+            ...schema.plan.progressions,
+            items: soapData.plan?.progressions || []
+          },
+          regressions: {
+            ...schema.plan.regressions,
+            items: soapData.plan?.regressions || []
+          },
+          frequency_duration: {
+            ...schema.plan.frequency_duration,
+            content: soapData.plan?.frequency_duration || ''
+          },
+          patient_education: {
+            ...schema.plan.patient_education,
+            content: soapData.plan?.patient_education || ''
+          }
         }
       };
+
+      console.log('✅ Structured SOAP created:', {
+        hasAssessmentGoals: !!structuredSOAP.assessment.short_term_goals,
+        shortTermCount: structuredSOAP.assessment.short_term_goals?.items?.length || 0,
+        longTermCount: structuredSOAP.assessment.long_term_goals?.items?.length || 0
+      });
 
       // Calculate confidence scores (simplified for now)
       const confidence = {
@@ -155,10 +338,9 @@ IMPORTANT:
 
       return {
         success: true,
-        soapData: structuredSOAP,
-        confidence: confidence,
-        templateType: 'knee',
-        generatedAt: new Date().toISOString()
+        data: structuredSOAP,
+        confidence,
+        templateType: 'knee'
       };
 
     } catch (error) {
@@ -207,8 +389,8 @@ IMPORTANT:
     });
 
     // Validate objective table structure
-    if (soapData.objective && !Array.isArray(soapData.objective.rows)) {
-      errors.push('Objective section must contain rows array');
+    if (soapData.objective && !Array.isArray(soapData.objective.categories)) {
+      errors.push('Objective section must contain categories array');
     }
 
     return {

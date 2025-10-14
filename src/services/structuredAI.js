@@ -4,26 +4,67 @@
  * Replaces complex soapGenerationService.js with clean, focused approach
  */
 
-import { createChatCompletion } from './aiClient.js';
+import { createChatCompletion, initializeAI, isAIInitialized } from './aiClient.js';
+
+/**
+ * Prepend strict rules to any AI prompt to prevent hallucination
+ */
+const addStrictRules = (prompt) => {
+  const strictRules = `
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+1. ONLY use information explicitly stated in the transcript below
+2. If a test/measurement is NOT mentioned in the transcript, use "Not documented" or leave the field empty
+3. DO NOT make assumptions or infer information not present
+4. DO NOT fill in fields with generic placeholder content
+5. If the transcript lacks sufficient information, it's better to have empty fields than fabricated data
+6. Examples in the prompt are for structure only - do not copy example values
+
+`;
+  return strictRules + prompt;
+};
 
 /**
  * AI Service wrapper that matches the expected interface for template hooks
  * Provides generateCompletion method that template hooks expect
  */
 export const createAIService = () => {
+  // Auto-initialize AI client if not already initialized
+  if (!isAIInitialized()) {
+    const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    console.log('🔑 Checking OpenAI API key...', {
+      hasKey: !!apiKey,
+      keyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'none',
+      envVars: Object.keys(process.env).filter(k => k.includes('OPENAI'))
+    });
+    
+    if (apiKey) {
+      console.log('✅ Initializing OpenAI client...');
+      initializeAI(apiKey);
+    } else {
+      const errorMsg = '⚠️ No OpenAI API key found in environment variables. Please set NEXT_PUBLIC_OPENAI_API_KEY in .env.local';
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+  }
   return {
     generateCompletion: async (prompt, options = {}) => {
       try {
-        const defaultOptions = {
-          temperature: 0.3,
-          max_tokens: 2000,
-          model: 'gpt-4',
-          ...options
+        // Add strict rules to prevent hallucination
+        const enhancedPrompt = addStrictRules(prompt);
+        
+        // Convert camelCase options to snake_case for OpenAI API
+        const normalizedOptions = {
+          temperature: options.temperature || 0.2, // Lower temperature for more factual responses
+          max_tokens: options.maxTokens || options.max_tokens || 2000,
+          model: options.model || 'gpt-4o'
         };
+        
+        // Note: Not using response_format as it's not supported by all models
+        // The prompt should explicitly request JSON format instead
 
         console.log('🧠 Generating structured SOAP with AI...', {
-          promptLength: prompt.length,
-          options: defaultOptions,
+          promptLength: enhancedPrompt.length,
+          options: normalizedOptions,
           timestamp: new Date().toISOString()
         });
 
@@ -31,14 +72,24 @@ export const createAIService = () => {
           messages: [
             {
               role: 'system',
-              content: 'You are an expert physical therapist creating professional SOAP notes. Always return valid JSON matching the requested structure exactly.'
+              content: `You are an expert physical therapist creating professional SOAP notes. 
+
+CRITICAL RULES:
+1. ONLY use information explicitly stated in the transcript
+2. NEVER make up, assume, or infer information not present in the transcript
+3. If information for a field is not mentioned, use "Not documented" or leave empty
+4. If the transcript is empty or has insufficient information, return an error message
+5. Do not fill in template fields with generic or placeholder content
+6. Always return valid JSON matching the requested structure exactly
+
+Your goal is accuracy and honesty, not completeness. An incomplete note based on real data is better than a complete note with fabricated information.`
             },
             {
               role: 'user',
-              content: prompt
+              content: enhancedPrompt
             }
           ],
-          ...defaultOptions
+          ...normalizedOptions
         });
 
         // Extract the response content from the completion
@@ -48,12 +99,32 @@ export const createAIService = () => {
           throw new Error('No response content received from AI service');
         }
 
-        console.log('✅ AI response received', {
+        console.log('📄 AI Response received:', {
           responseLength: response.length,
+          responsePreview: response.substring(0, 200) + '...',
           timestamp: new Date().toISOString()
         });
 
-        return response;
+        // Clean up the response - remove markdown code blocks if present
+        let cleanedResponse = response.trim();
+        
+        // Remove ```json and ``` wrappers if present
+        if (cleanedResponse.startsWith('```json')) {
+          cleanedResponse = cleanedResponse.replace(/^```json\s*\n?/, '').replace(/\n?```\s*$/, '');
+        } else if (cleanedResponse.startsWith('```')) {
+          cleanedResponse = cleanedResponse.replace(/^```\s*\n?/, '').replace(/\n?```\s*$/, '');
+        }
+        
+        cleanedResponse = cleanedResponse.trim();
+
+        console.log('✅ AI response cleaned and ready', {
+          originalLength: response.length,
+          cleanedLength: cleanedResponse.length,
+          startsWithBrace: cleanedResponse.startsWith('{'),
+          timestamp: new Date().toISOString()
+        });
+
+        return cleanedResponse;
 
       } catch (error) {
         console.error('❌ Structured AI generation failed:', error);

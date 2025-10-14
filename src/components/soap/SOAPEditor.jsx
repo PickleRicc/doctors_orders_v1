@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Download, Copy, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import WYSIWYGEditor from './WYSIWYGEditor';
 import ObjectiveTable from './ObjectiveTable';
+import GoalsList from './GoalsList';
+import InterventionsList from './InterventionsList';
 
 const SOAPEditor = ({ 
   soapData, 
@@ -27,6 +29,21 @@ const SOAPEditor = ({
   const [saveStatus, setSaveStatus] = useState('idle'); // idle, saving, saved, error, copied, exported
   const [localSessionName, setLocalSessionName] = useState(sessionName || '');
 
+  // Log received SOAP data for debugging
+  useEffect(() => {
+    console.log('📋 SOAPEditor received data:', {
+      hasData: !!soapData,
+      dataKeys: soapData ? Object.keys(soapData) : [],
+      subjective: soapData?.subjective,
+      objective: soapData?.objective,
+      objectiveType: typeof soapData?.objective,
+      objectiveKeys: soapData?.objective ? Object.keys(soapData.objective) : [],
+      assessment: soapData?.assessment,
+      plan: soapData?.plan,
+      fullData: JSON.stringify(soapData).substring(0, 500)
+    });
+  }, [soapData]);
+
   // Handle data changes and mark as unsaved
   const handleSectionChange = (sectionType, newData) => {
     const updatedSOAP = {
@@ -38,17 +55,6 @@ const SOAPEditor = ({
     setHasUnsavedChanges(true);
     setSaveStatus('idle');
   };
-
-  // Auto-save functionality
-  useEffect(() => {
-    if (hasUnsavedChanges) {
-      const autoSaveTimer = setTimeout(() => {
-        handleSave();
-      }, 2000); // Auto-save after 2 seconds of inactivity
-
-      return () => clearTimeout(autoSaveTimer);
-    }
-  }, [hasUnsavedChanges, soapData]);
 
   const handleSave = async () => {
     if (!hasUnsavedChanges && !localSessionName) return;
@@ -98,59 +104,45 @@ const SOAPEditor = ({
 
   const handlePDFExport = async () => {
     try {
-      const { jsPDF } = await import('jspdf');
-      const doc = new jsPDF();
+      // Use browser's print dialog for PDF export (works with all browsers)
+      const printWindow = window.open('', '_blank');
+      const soapText = formatSOAPForText(soapData);
       
-      // Add title
-      doc.setFontSize(16);
-      doc.text(localSessionName || 'SOAP Note', 20, 20);
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>${localSessionName || 'SOAP Note'}</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                padding: 40px;
+                max-width: 800px;
+                margin: 0 auto;
+              }
+              h1 { font-size: 24px; margin-bottom: 10px; }
+              h2 { font-size: 18px; margin-top: 20px; margin-bottom: 10px; }
+              p { line-height: 1.6; white-space: pre-wrap; }
+              .date { color: #666; font-size: 14px; margin-bottom: 30px; }
+              @media print {
+                body { padding: 20px; }
+              }
+            </style>
+          </head>
+          <body>
+            <h1>${localSessionName || 'SOAP Note'}</h1>
+            <div class="date">Generated: ${new Date().toLocaleDateString()}</div>
+            <pre style="font-family: Arial, sans-serif; white-space: pre-wrap;">${soapText}</pre>
+          </body>
+        </html>
+      `);
       
-      // Add date
-      doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 30);
+      printWindow.document.close();
       
-      let yPosition = 45;
-      
-      // Add each section
-      const sections = [
-        { title: 'SUBJECTIVE', content: soapData.subjective?.content || '' },
-        { title: 'OBJECTIVE', content: formatObjectiveForPDF(soapData.objective) },
-        { title: 'ASSESSMENT', content: soapData.assessment?.content || '' },
-        { title: 'PLAN', content: soapData.plan?.content || '' }
-      ];
-      
-      sections.forEach(section => {
-        if (yPosition > 250) {
-          doc.addPage();
-          yPosition = 20;
-        }
-        
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text(section.title, 20, yPosition);
-        yPosition += 10;
-        
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(10);
-        
-        // Clean HTML and split into lines
-        const cleanContent = section.content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
-        const lines = doc.splitTextToSize(cleanContent, 170);
-        
-        lines.forEach(line => {
-          if (yPosition > 280) {
-            doc.addPage();
-            yPosition = 20;
-          }
-          doc.text(line, 20, yPosition);
-          yPosition += 5;
-        });
-        
-        yPosition += 10;
-      });
-      
-      // Download the PDF
-      doc.save(`${localSessionName || 'soap-note'}.pdf`);
+      // Wait for content to load, then trigger print
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
       
       // Show success feedback
       setSaveStatus('exported');
@@ -189,31 +181,154 @@ OBJECTIVE:
 ${formatObjectiveForText(soap.objective)}
 
 ASSESSMENT:
-${soap.assessment?.content?.replace(/<[^>]*>/g, '') || 'No assessment data'}
+${formatAssessmentForText(soap.assessment)}
 
 PLAN:
-${soap.plan?.content?.replace(/<[^>]*>/g, '') || 'No plan data'}
+${formatPlanForText(soap.plan)}
     `.trim();
   };
 
   const formatObjectiveForText = (objective) => {
-    if (!objective || !objective.rows) return 'No objective data';
+    if (!objective) return 'No objective data';
     
-    let text = '';
-    objective.rows.forEach(row => {
-      text += `${row.measurement || ''}: ${row.value || ''}\n`;
-    });
-    return text || 'No objective data';
+    // Handle categorized structure
+    if (objective.categories && Array.isArray(objective.categories)) {
+      let text = '';
+      objective.categories.forEach(category => {
+        if (category.rows && category.rows.length > 0) {
+          text += `\n${category.name}:\n`;
+          category.rows.forEach(row => {
+            const result = row.result || 'Not assessed';
+            const notes = row.notes ? ` - ${row.notes}` : '';
+            text += `  ${row.test}: ${result}${notes}\n`;
+          });
+        }
+      });
+      return text || 'No objective data';
+    }
+    
+    // Fallback for old flat structure
+    if (objective.rows && Array.isArray(objective.rows)) {
+      let text = '';
+      objective.rows.forEach(row => {
+        const result = row.result || 'Not assessed';
+        const notes = row.notes ? ` - ${row.notes}` : '';
+        text += `${row.test}: ${result}${notes}\n`;
+      });
+      return text || 'No objective data';
+    }
+    
+    return 'No objective data';
   };
 
   const formatObjectiveForPDF = (objective) => {
-    if (!objective || !objective.rows) return 'No objective data';
+    if (!objective) return 'No objective data';
+    
+    // Handle categorized structure
+    if (objective.categories && Array.isArray(objective.categories)) {
+      let text = '';
+      objective.categories.forEach(category => {
+        if (category.rows && category.rows.length > 0) {
+          text += `\n${category.name}:\n`;
+          category.rows.forEach(row => {
+            const result = row.result || 'Not assessed';
+            const notes = row.notes ? ` - ${row.notes}` : '';
+            text += `  ${row.test}: ${result}${notes}\n`;
+          });
+        }
+      });
+      return text || 'No objective data';
+    }
+    
+    // Fallback for old flat structure
+    if (objective.rows && Array.isArray(objective.rows)) {
+      let text = '';
+      objective.rows.forEach(row => {
+        const result = row.result || 'Not assessed';
+        const notes = row.notes ? ` - ${row.notes}` : '';
+        text += `${row.test}: ${result}${notes}\n`;
+      });
+      return text || 'No objective data';
+    }
+    
+    return 'No objective data';
+  };
+
+  const formatAssessmentForText = (assessment) => {
+    if (!assessment) return 'No assessment data';
     
     let text = '';
-    objective.rows.forEach(row => {
-      text += `${row.measurement || ''}: ${row.value || ''}\n`;
-    });
-    return text || 'No objective data';
+    
+    // Clinical Impression
+    if (assessment.clinical_impression?.content) {
+      text += assessment.clinical_impression.content.replace(/<[^>]*>/g, '') + '\n\n';
+    }
+    
+    // Short-term Goals
+    if (assessment.short_term_goals?.items && assessment.short_term_goals.items.length > 0) {
+      text += 'Short-term Goals (2-4 weeks):\n';
+      assessment.short_term_goals.items.forEach(goal => {
+        text += `  • ${goal}\n`;
+      });
+      text += '\n';
+    }
+    
+    // Long-term Goals
+    if (assessment.long_term_goals?.items && assessment.long_term_goals.items.length > 0) {
+      text += 'Long-term Goals (6-12 weeks):\n';
+      assessment.long_term_goals.items.forEach(goal => {
+        text += `  • ${goal}\n`;
+      });
+    }
+    
+    return text.trim() || 'No assessment data';
+  };
+
+  const formatPlanForText = (plan) => {
+    if (!plan) return 'No plan data';
+    
+    let text = '';
+    
+    // Interventions
+    if (plan.interventions?.items && plan.interventions.items.length > 0) {
+      text += 'Interventions:\n';
+      plan.interventions.items.forEach(item => {
+        text += `  • ${item}\n`;
+      });
+      text += '\n';
+    }
+    
+    // Progressions
+    if (plan.progressions?.items && plan.progressions.items.length > 0) {
+      text += 'Progressions:\n';
+      plan.progressions.items.forEach(item => {
+        text += `  • ${item}\n`;
+      });
+      text += '\n';
+    }
+    
+    // Regressions
+    if (plan.regressions?.items && plan.regressions.items.length > 0) {
+      text += 'Regressions:\n';
+      plan.regressions.items.forEach(item => {
+        text += `  • ${item}\n`;
+      });
+      text += '\n';
+    }
+    
+    // Frequency/Duration
+    if (plan.frequency_duration?.content) {
+      text += 'Frequency/Duration:\n';
+      text += plan.frequency_duration.content.replace(/<[^>]*>/g, '') + '\n\n';
+    }
+    
+    // Patient Education
+    if (plan.patient_education?.content) {
+      text += 'Patient Education:\n';
+      text += plan.patient_education.content.replace(/<[^>]*>/g, '');
+    }
+    
+    return text.trim() || 'No plan data';
   };
 
   const getSectionIcon = (confidence) => {
@@ -298,29 +413,45 @@ ${soap.plan?.content?.replace(/<[^>]*>/g, '') || 'No plan data'}
               <button
                 onClick={handleSave}
                 disabled={(!hasUnsavedChanges && !localSessionName) || saveStatus === 'saving'}
-                className="flex items-center gap-2 px-4 py-2.5 bg-blue-primary text-white rounded-xl 
-                           hover:bg-blue-dark transition-all duration-200 disabled:opacity-50 
-                           disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
+                           transition-all duration-200 disabled:opacity-50 
+                           disabled:cursor-not-allowed shadow-lg hover:shadow-xl font-medium"
+                style={{ 
+                  backgroundColor: '#007AFF',
+                  opacity: ((!hasUnsavedChanges && !localSessionName) || saveStatus === 'saving') ? 0.5 : 1
+                }}
+                onMouseEnter={(e) => {
+                  if (!e.currentTarget.disabled) {
+                    e.currentTarget.style.backgroundColor = '#0051D5';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#007AFF';
+                }}
               >
                 <Save className="w-4 h-4" />
                 Save Note
               </button>
               
               <button
-                onClick={() => handleExport('copy')}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white/50 backdrop-blur-8 
-                           text-grey-700 border border-white/30 rounded-xl hover:bg-white/70 
-                           transition-all duration-200 shadow-lg hover:shadow-xl"
+                onClick={handleCopyToClipboard}
+                className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
+                           transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
+                style={{ backgroundColor: '#007AFF' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0051D5'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#007AFF'}
               >
                 <Copy className="w-4 h-4" />
                 Copy
               </button>
               
               <button
-                onClick={() => handleExport('pdf')}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white/50 backdrop-blur-8 
-                           text-grey-700 border border-white/30 rounded-xl hover:bg-white/70 
-                           transition-all duration-200 shadow-lg hover:shadow-xl"
+                onClick={handlePDFExport}
+                className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
+                           transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
+                style={{ backgroundColor: '#007AFF' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0051D5'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#007AFF'}
               >
                 <Download className="w-4 h-4" />
                 PDF
@@ -404,7 +535,10 @@ ${soap.plan?.content?.replace(/<[^>]*>/g, '') || 'No plan data'}
           <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6">
             <ObjectiveTable
               data={soapData.objective || { headers: [], rows: [] }}
-              onChange={(objectiveData) => handleSectionChange('objective', objectiveData)}
+              onChange={(objectiveData) => {
+                console.log('📝 Objective changed:', objectiveData);
+                handleSectionChange('objective', objectiveData);
+              }}
               onFocus={() => setActiveSection('objective')}
               onBlur={() => setActiveSection(null)}
             />
@@ -432,14 +566,62 @@ ${soap.plan?.content?.replace(/<[^>]*>/g, '') || 'No plan data'}
             )}
           </div>
           
-          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6">
-            <WYSIWYGEditor
-              content={soapData.assessment?.content || ''}
-              placeholder={soapData.assessment?.placeholder || 'Clinical impression, diagnosis, prognosis...'}
-              onChange={(content) => handleSectionChange('assessment', { ...soapData.assessment, content })}
-              onFocus={() => setActiveSection('assessment')}
-              onBlur={() => setActiveSection(null)}
-            />
+          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6 space-y-6">
+            {/* Check if assessment has the new structure (with goals) or old structure (just content) */}
+            {soapData.assessment?.clinical_impression !== undefined ? (
+              // New structure with goals
+              <>
+                {/* Clinical Impression */}
+                <div>
+                  <h3 className="text-lg font-medium text-grey-900 mb-3">Clinical Impression</h3>
+                  <WYSIWYGEditor
+                    content={soapData.assessment.clinical_impression?.content || ''}
+                    placeholder="Clinical reasoning, diagnosis, contributing factors, prognosis..."
+                    onChange={(content) => handleSectionChange('assessment', {
+                      ...soapData.assessment,
+                      clinical_impression: { ...soapData.assessment.clinical_impression, content }
+                    })}
+                    onFocus={() => setActiveSection('assessment')}
+                    onBlur={() => setActiveSection(null)}
+                  />
+                </div>
+
+                {/* Short Term Goals */}
+                <div>
+                  <h3 className="text-lg font-medium text-grey-900 mb-3">Short Term Goals (2-4 weeks)</h3>
+                  <GoalsList
+                    goals={soapData.assessment.short_term_goals?.items || []}
+                    placeholder="e.g., Reduce pain to 3/10, Improve ROM to 120°"
+                    onChange={(items) => handleSectionChange('assessment', {
+                      ...soapData.assessment,
+                      short_term_goals: { ...soapData.assessment.short_term_goals, items }
+                    })}
+                  />
+                </div>
+
+                {/* Long Term Goals */}
+                <div>
+                  <h3 className="text-lg font-medium text-grey-900 mb-3">Long Term Goals (6-12 weeks)</h3>
+                  <GoalsList
+                    goals={soapData.assessment.long_term_goals?.items || []}
+                    placeholder="e.g., Return to sport, Independent with HEP"
+                    onChange={(items) => handleSectionChange('assessment', {
+                      ...soapData.assessment,
+                      long_term_goals: { ...soapData.assessment.long_term_goals, items }
+                    })}
+                  />
+                </div>
+              </>
+            ) : (
+              // Old structure (backward compatibility)
+              <WYSIWYGEditor
+                content={soapData.assessment?.content || ''}
+                placeholder={soapData.assessment?.placeholder || 'Clinical impression, diagnosis, prognosis...'}
+                onChange={(content) => handleSectionChange('assessment', { ...soapData.assessment, content })}
+                onFocus={() => setActiveSection('assessment')}
+                onBlur={() => setActiveSection(null)}
+              />
+            )}
           </div>
         </motion.section>
 
@@ -464,14 +646,93 @@ ${soap.plan?.content?.replace(/<[^>]*>/g, '') || 'No plan data'}
             )}
           </div>
           
-          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6">
-            <WYSIWYGEditor
-              content={soapData.plan?.content || ''}
-              placeholder={soapData.plan?.placeholder || 'Treatment plan, goals, frequency, patient education...'}
-              onChange={(content) => handleSectionChange('plan', { ...soapData.plan, content })}
-              onFocus={() => setActiveSection('plan')}
-              onBlur={() => setActiveSection(null)}
-            />
+          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6 space-y-6">
+            {/* Check if plan has the new structure (with interventions) or old structure (just content) */}
+            {soapData.plan?.interventions !== undefined ? (
+              // New structure with interventions, progressions, regressions
+              <>
+                {/* Interventions */}
+                <div>
+                  <h3 className="text-lg font-medium text-grey-900 mb-3">Interventions</h3>
+                  <InterventionsList
+                    items={soapData.plan.interventions?.items || []}
+                    placeholder="e.g., Patellar mobilizations, Quad strengthening"
+                    emptyMessage="No interventions added yet."
+                    onChange={(items) => handleSectionChange('plan', {
+                      ...soapData.plan,
+                      interventions: { ...soapData.plan.interventions, items }
+                    })}
+                  />
+                </div>
+
+                {/* Progressions */}
+                <div>
+                  <h3 className="text-lg font-medium text-grey-900 mb-3">Progressions</h3>
+                  <InterventionsList
+                    items={soapData.plan.progressions?.items || []}
+                    placeholder="e.g., Increase resistance, progress to single leg"
+                    emptyMessage="No progressions added yet."
+                    onChange={(items) => handleSectionChange('plan', {
+                      ...soapData.plan,
+                      progressions: { ...soapData.plan.progressions, items }
+                    })}
+                  />
+                </div>
+
+                {/* Regressions */}
+                <div>
+                  <h3 className="text-lg font-medium text-grey-900 mb-3">Regressions</h3>
+                  <InterventionsList
+                    items={soapData.plan.regressions?.items || []}
+                    placeholder="e.g., Reduce ROM if pain increases"
+                    emptyMessage="No regressions added yet."
+                    onChange={(items) => handleSectionChange('plan', {
+                      ...soapData.plan,
+                      regressions: { ...soapData.plan.regressions, items }
+                    })}
+                  />
+                </div>
+
+                {/* Frequency & Duration */}
+                <div>
+                  <h3 className="text-lg font-medium text-grey-900 mb-3">Frequency & Duration</h3>
+                  <WYSIWYGEditor
+                    content={soapData.plan.frequency_duration?.content || ''}
+                    placeholder="Treatment frequency, session duration, expected timeline..."
+                    onChange={(content) => handleSectionChange('plan', {
+                      ...soapData.plan,
+                      frequency_duration: { ...soapData.plan.frequency_duration, content }
+                    })}
+                    onFocus={() => setActiveSection('plan')}
+                    onBlur={() => setActiveSection(null)}
+                  />
+                </div>
+
+                {/* Patient Education */}
+                <div>
+                  <h3 className="text-lg font-medium text-grey-900 mb-3">Patient Education</h3>
+                  <WYSIWYGEditor
+                    content={soapData.plan.patient_education?.content || ''}
+                    placeholder="Home exercise program, activity modifications, precautions..."
+                    onChange={(content) => handleSectionChange('plan', {
+                      ...soapData.plan,
+                      patient_education: { ...soapData.plan.patient_education, content }
+                    })}
+                    onFocus={() => setActiveSection('plan')}
+                    onBlur={() => setActiveSection(null)}
+                  />
+                </div>
+              </>
+            ) : (
+              // Old structure (backward compatibility)
+              <WYSIWYGEditor
+                content={soapData.plan?.content || ''}
+                placeholder={soapData.plan?.placeholder || 'Treatment plan, goals, frequency, patient education...'}
+                onChange={(content) => handleSectionChange('plan', { ...soapData.plan, content })}
+                onFocus={() => setActiveSection('plan')}
+                onBlur={() => setActiveSection(null)}
+              />
+            )}
           </div>
         </motion.section>
       </div>

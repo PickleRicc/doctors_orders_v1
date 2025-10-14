@@ -54,7 +54,13 @@ export const transcribeAudio = async (audioBlob) => {
     }
     
     if (transcription.trim().length === 0) {
-      throw new Error('Empty transcription - no speech detected in audio');
+      throw new Error('Empty transcription - no speech detected in audio. Please ensure you speak clearly during recording.');
+    }
+    
+    // Check for very short transcriptions (likely just noise)
+    if (transcription.trim().length < 10) {
+      console.warn('⚠️ Very short transcription detected:', transcription);
+      throw new Error('Insufficient audio content - no clear speech detected. Please record a longer session.');
     }
     
     console.log('✅ Transcription successful!', {
