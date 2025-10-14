@@ -58,22 +58,6 @@ export { transcribeAudio };
 export { generateSOAPNote };
 
 /**
- * Generate billing code suggestions based on SOAP note content
- * @param {Object} soapNote - The SOAP note content
- * @param {Object} sessionInfo - Session information including type and body region
- * @returns {Promise<Array>} - Array of billing code suggestions
- */
-export { generateBillingSuggestions };
-
-/**
- * Analyze transcription for specific muscle tests and ROM values
- * @param {string} transcriptionText - Transcribed text to analyze
- * @param {string} bodyRegion - The body region of focus
- * @returns {Promise<Object>} - Extracted muscle tests and ROM values
- */
-export { analyzeMuscleTests };
-
-/**
  * Modify or refine an existing SOAP note
  * @param {Object} existingSOAP - Current SOAP note content
  * @param {string} userFeedback - User's feedback or instructions
