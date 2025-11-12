@@ -41,8 +41,8 @@ export default function ClientRedirect() {
     
     // Auth state is available now (or we've tried enough times)
     if (user) {
-      // User is authenticated, redirect to dashboard
-      router.push("/dashboard");
+      // User is authenticated, redirect to main app
+      router.push("/");
     } else {
       // User is not authenticated, redirect to auth page
       router.push("/auth");
