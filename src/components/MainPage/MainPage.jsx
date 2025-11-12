@@ -199,7 +199,7 @@ export default function MainPage() {
                         body: JSON.stringify({ 
                           id: currentNote.id,
                           soap: data,
-                          session_title: sessionName || 'Untitled Session',
+                          session_title: sessionName || currentNote.session_title || 'Untitled Session',
                           status: 'draft'
                         })
                       });
