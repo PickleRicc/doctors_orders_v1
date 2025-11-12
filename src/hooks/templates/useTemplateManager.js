@@ -12,6 +12,8 @@ import {
   useNeckEvaluation,
   useHipEvaluation,
   useAnkleFootEvaluation,
+  useDailyNote,
+  useDischarge,
   TEMPLATE_METADATA
 } from './index';
 
@@ -26,6 +28,8 @@ export const useTemplateManager = (templateType = 'knee') => {
   const neckTemplate = useNeckEvaluation();
   const hipTemplate = useHipEvaluation();
   const ankleFootTemplate = useAnkleFootEvaluation();
+  const dailyNoteTemplate = useDailyNote();
+  const dischargeTemplate = useDischarge();
 
   // Template hook registry
   const templateHooks = {
@@ -34,7 +38,9 @@ export const useTemplateManager = (templateType = 'knee') => {
     back: backTemplate,
     neck: neckTemplate,
     hip: hipTemplate,
-    ankle_foot: ankleFootTemplate
+    ankle_foot: ankleFootTemplate,
+    'daily-note': dailyNoteTemplate,
+    discharge: dischargeTemplate
   };
 
   // Load template based on type

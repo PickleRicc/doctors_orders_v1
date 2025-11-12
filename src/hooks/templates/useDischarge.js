@@ -125,13 +125,98 @@ Guidelines:
   };
 
   const generateSOAP = async (transcript, aiService) => {
+    if (!transcript || !aiService) {
+      return {
+        success: false,
+        error: 'Transcript and AI service are required'
+      };
+    }
+
     try {
-      const result = await aiService.generateStructuredNote(
-        transcript,
-        templateConfig.aiPrompt,
-        templateConfig.schema
-      );
-      return result;
+      // Build the full prompt with transcript
+      const fullPrompt = `${templateConfig.aiPrompt}\n\nTRANSCRIPT:\n${transcript}`;
+      
+      // Call AI service with the prompt
+      const response = await aiService.generateCompletion(fullPrompt, {
+        temperature: 0.3,
+        max_tokens: 2000
+      });
+
+      // Parse the AI response
+      let soapData;
+      try {
+        soapData = JSON.parse(response);
+      } catch (parseError) {
+        console.error('Failed to parse AI response as JSON:', parseError);
+        return {
+          success: false,
+          error: 'AI returned invalid JSON response'
+        };
+      }
+
+      // Merge with schema structure to ensure all required fields exist
+      const schema = templateConfig.schema;
+      const structuredSOAP = {
+        subjective: {
+          ...schema.subjective,
+          content: soapData.subjective || ''
+        },
+        objective: {
+          ...schema.objective,
+          fields: {
+            observations: {
+              ...schema.objective.fields.observations,
+              content: soapData.objective?.observations || ''
+            },
+            measurements: {
+              ...schema.objective.fields.measurements,
+              rows: soapData.objective?.measurements || []
+            }
+          }
+        },
+        assessment: {
+          ...schema.assessment,
+          fields: {
+            clinical_impression: {
+              ...schema.assessment.fields.clinical_impression,
+              content: soapData.assessment?.clinical_impression?.content || ''
+            },
+            goals_achieved: {
+              ...schema.assessment.fields.goals_achieved,
+              items: soapData.assessment?.goals_achieved?.items || []
+            },
+            goals_partially_met: {
+              ...schema.assessment.fields.goals_partially_met,
+              items: soapData.assessment?.goals_partially_met?.items || []
+            }
+          }
+        },
+        plan: {
+          ...schema.plan,
+          fields: {
+            discharge_instructions: {
+              ...schema.plan.fields.discharge_instructions,
+              content: soapData.plan?.discharge_instructions?.content || ''
+            },
+            follow_up: {
+              ...schema.plan.fields.follow_up,
+              content: soapData.plan?.follow_up?.content || ''
+            },
+            prognosis: {
+              ...schema.plan.fields.prognosis,
+              content: soapData.plan?.prognosis?.content || ''
+            }
+          }
+        }
+      };
+
+      console.log('✅ Discharge Note SOAP generated successfully');
+
+      return {
+        success: true,
+        data: structuredSOAP
+      };
+
     } catch (error) {
       console.error('Error generating Discharge Note:', error);
       return {

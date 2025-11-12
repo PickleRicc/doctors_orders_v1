@@ -199,7 +199,7 @@ export default function MainPage() {
                         body: JSON.stringify({ 
                           id: currentNote.id,
                           soap: data,
-                          session_title: sessionName || currentNote.session_title || 'Untitled Session',
+                          session_title: data.sessionName || sessionName || currentNote.session_title || 'Untitled Session',
                           status: 'draft'
                         })
                       });
@@ -212,6 +212,11 @@ export default function MainPage() {
                       
                       // Update current note reference with server response
                       Object.assign(currentNote, savedNote);
+                      
+                      // Update session name state if it was changed
+                      if (data.sessionName && data.sessionName !== sessionName) {
+                        setSessionName(data.sessionName);
+                      }
                       
                       // Trigger sidebar refresh to show updated note
                       triggerRefresh();

@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, User, Heart, Zap, Footprints, Wind, Loader2, Calendar, CheckCircle } from 'lucide-react';
+import { Activity, User, Heart, Zap, Footprints, Wind, Loader2, Calendar, CheckCircle, Sparkles } from 'lucide-react';
 import { useAppState, APP_STATES } from './StateManager';
 import { useTemplateManager } from '../../hooks/templates/useTemplateManager';
 import { createAIService } from '../../services/structuredAI';
@@ -114,8 +114,14 @@ export default function TemplateSelector() {
       console.log('📅 Generating Daily Note with sample data...');
       
       const transcript = sampleTranscriptions.daily_note;
-      const aiService = createAIService();
       
+      if (!transcript) {
+        throw new Error('Daily note test transcript not found in test data');
+      }
+      
+      console.log('📄 Using daily note transcript:', transcript.substring(0, 150) + '...');
+      
+      const aiService = createAIService();
       const soapResult = await dailyNoteManager.generateSOAP(transcript, aiService);
       
       if (!soapResult.success) {
@@ -165,8 +171,14 @@ export default function TemplateSelector() {
       console.log('✅ Generating Discharge Note with sample data...');
       
       const transcript = sampleTranscriptions.discharge_note;
-      const aiService = createAIService();
       
+      if (!transcript) {
+        throw new Error('Discharge note test transcript not found in test data');
+      }
+      
+      console.log('📄 Using discharge note transcript:', transcript.substring(0, 150) + '...');
+      
+      const aiService = createAIService();
       const soapResult = await dischargeManager.generateSOAP(transcript, aiService);
       
       if (!soapResult.success) {
@@ -225,57 +237,6 @@ export default function TemplateSelector() {
             ? 'Ready to start recording'
             : 'Choose the body region for this evaluation'}
         </p>
-        
-        {/* Test Mode Buttons */}
-        <div className="mt-4 flex flex-col gap-2 items-center">
-          <button
-            onClick={handleTestMode}
-            disabled={isGenerating}
-            className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            style={{ backgroundColor: '#007AFF' }}
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>🧪 Test with Sample Data</>
-            )}
-          </button>
-          
-          <button
-            onClick={() => handleTestDailyNote()}
-            disabled={isGenerating}
-            className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            style={{ backgroundColor: '#10b981' }}
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>📅 Test Daily Note</>
-            )}
-          </button>
-          
-          <button
-            onClick={() => handleTestDischarge()}
-            disabled={isGenerating}
-            className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            style={{ backgroundColor: '#8b5cf6' }}
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>✅ Test Discharge Note</>
-            )}
-          </button>
-        </div>
       </motion.div>
 
       {/* Universal Templates Section */}
@@ -325,6 +286,38 @@ export default function TemplateSelector() {
                   <div className="text-sm text-grey-600">
                     {template.description}
                   </div>
+                  
+                  {/* Try Example Link for templates with test data */}
+                  {(template.id === 'daily-note' || template.id === 'discharge') && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isGenerating) {
+                          if (template.id === 'daily-note') {
+                            handleTestDailyNote();
+                          } else if (template.id === 'discharge') {
+                            handleTestDischarge();
+                          }
+                        }
+                      }}
+                      className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 ${
+                        isGenerating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                      style={{ color: BLUE_PRIMARY }}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3" />
+                          Try Example
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {isSelected && (
                   <motion.div
@@ -394,6 +387,34 @@ export default function TemplateSelector() {
                 <div className="text-sm text-grey-600">
                   {template.description}
                 </div>
+                
+                {/* Try Example Link for Knee template */}
+                {template.id === 'knee' && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isGenerating) {
+                        handleTestMode();
+                      }
+                    }}
+                    className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 ${
+                      isGenerating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
+                    style={{ color: BLUE_PRIMARY }}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3" />
+                        Try Example
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Selected Indicator */}
