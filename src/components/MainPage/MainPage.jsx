@@ -39,14 +39,15 @@ export default function MainPage() {
         {/* Top Navbar */}
         <nav className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-black/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            {/* Left side - Back button with space for hamburger menu on mobile */}
             <div className="flex items-center gap-2">
               {showSOAPEditor && (
                 <button
                   onClick={createNewNote}
-                  className="flex items-center gap-2 px-3 py-2 text-grey-600 hover:text-grey-900 hover:bg-grey-50 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 text-grey-600 hover:text-grey-900 hover:bg-grey-50 rounded-lg transition-colors lg:ml-0 ml-14"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <span className="text-sm font-medium hidden sm:inline">Back</span>
+                  <span className="text-sm font-medium">Back</span>
                 </button>
               )}
             </div>

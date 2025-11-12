@@ -77,8 +77,9 @@ export default function Sidebar() {
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-white/90 backdrop-blur-12 rounded-lg"
+        className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-white/90 backdrop-blur-12 rounded-lg shadow-sm"
         style={{ border: '1px solid rgba(0, 0, 0, 0.06)' }}
+        aria-label={isOpen ? "Close menu" : "Open menu"}
       >
         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
@@ -118,12 +119,6 @@ export default function Sidebar() {
                     />
                   </div>
                   <h1 className="text-xl font-semibold text-grey-900">Doctors Orders</h1>
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="lg:hidden ml-auto p-1 hover:bg-grey-200 rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5 text-grey-600" />
-                  </button>
                 </div>
 
                 {/* Search */}

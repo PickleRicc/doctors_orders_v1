@@ -255,8 +255,8 @@ const ObjectiveTable = memo(({
 
   return (
     <div className={`objective-table ${className}`}>
-      {/* Table Header */}
-      <div className="grid grid-cols-12 gap-4 mb-3 px-4 py-2">
+      {/* Table Header - Hidden on mobile, shown on desktop */}
+      <div className="hidden md:grid grid-cols-12 gap-4 mb-3 px-4 py-2">
         <div className="col-span-4 text-sm font-medium text-grey-700">
           {tableData.headers[0] || 'Test/Measurement'}
         </div>
@@ -301,43 +301,89 @@ const ObjectiveTable = memo(({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="grid grid-cols-12 gap-4 p-4 bg-white/15 backdrop-blur-8 border border-white/20 rounded-xl hover:bg-white/25 transition-colors group"
+                      className="bg-white/15 backdrop-blur-8 border border-white/20 rounded-xl hover:bg-white/25 transition-colors group"
                     >
-                      <div className="col-span-4">
-                        <CellContent
-                          row={row}
-                          categoryIndex={categoryIndex}
-                          rowIndex={rowIndex}
-                          columnKey="test"
-                          value={row.test}
-                        />
+                      {/* Mobile Layout - Stacked */}
+                      <div className="md:hidden p-4 space-y-3">
+                        <div>
+                          <div className="text-xs font-medium text-grey-600 mb-1">{tableData.headers[0] || 'Test/Measurement'}</div>
+                          <CellContent
+                            row={row}
+                            categoryIndex={categoryIndex}
+                            rowIndex={rowIndex}
+                            columnKey="test"
+                            value={row.test}
+                          />
+                        </div>
+                        <div>
+                          <div className="text-xs font-medium text-grey-600 mb-1">{tableData.headers[1] || 'Result'}</div>
+                          <CellContent
+                            row={row}
+                            categoryIndex={categoryIndex}
+                            rowIndex={rowIndex}
+                            columnKey="result"
+                            value={row.result}
+                          />
+                        </div>
+                        <div>
+                          <div className="text-xs font-medium text-grey-600 mb-1">{tableData.headers[2] || 'Notes'}</div>
+                          <CellContent
+                            row={row}
+                            categoryIndex={categoryIndex}
+                            rowIndex={rowIndex}
+                            columnKey="notes"
+                            value={row.notes}
+                          />
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => handleRemoveRow(categoryIndex, rowIndex)}
+                            className="p-2 text-grey-400 hover:text-red-500 transition-colors"
+                            title="Remove row"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="col-span-3">
-                        <CellContent
-                          row={row}
-                          categoryIndex={categoryIndex}
-                          rowIndex={rowIndex}
-                          columnKey="result"
-                          value={row.result}
-                        />
-                      </div>
-                      <div className="col-span-4">
-                        <CellContent
-                          row={row}
-                          categoryIndex={categoryIndex}
-                          rowIndex={rowIndex}
-                          columnKey="notes"
-                          value={row.notes}
-                        />
-                      </div>
-                      <div className="col-span-1 flex items-center justify-center">
-                        <button
-                          onClick={() => handleRemoveRow(categoryIndex, rowIndex)}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-grey-400 hover:text-red-500 transition-all duration-200"
-                          title="Remove row"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                      
+                      {/* Desktop Layout - Grid */}
+                      <div className="hidden md:grid grid-cols-12 gap-4 p-4">
+                        <div className="col-span-4">
+                          <CellContent
+                            row={row}
+                            categoryIndex={categoryIndex}
+                            rowIndex={rowIndex}
+                            columnKey="test"
+                            value={row.test}
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <CellContent
+                            row={row}
+                            categoryIndex={categoryIndex}
+                            rowIndex={rowIndex}
+                            columnKey="result"
+                            value={row.result}
+                          />
+                        </div>
+                        <div className="col-span-4">
+                          <CellContent
+                            row={row}
+                            categoryIndex={categoryIndex}
+                            rowIndex={rowIndex}
+                            columnKey="notes"
+                            value={row.notes}
+                          />
+                        </div>
+                        <div className="col-span-1 flex items-center justify-center">
+                          <button
+                            onClick={() => handleRemoveRow(categoryIndex, rowIndex)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-grey-400 hover:text-red-500 transition-all duration-200"
+                            title="Remove row"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
@@ -364,43 +410,89 @@ const ObjectiveTable = memo(({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="grid grid-cols-12 gap-4 p-4 bg-white/15 backdrop-blur-8 border border-white/20 rounded-xl hover:bg-white/25 transition-colors group"
+                className="bg-white/15 backdrop-blur-8 border border-white/20 rounded-xl hover:bg-white/25 transition-colors group"
               >
-                <div className="col-span-4">
-                  <CellContent
-                    row={row}
-                    categoryIndex={null}
-                    rowIndex={rowIndex}
-                    columnKey="test"
-                    value={row.test}
-                  />
+                {/* Mobile Layout - Stacked */}
+                <div className="md:hidden p-4 space-y-3">
+                  <div>
+                    <div className="text-xs font-medium text-grey-600 mb-1">{tableData.headers[0] || 'Test/Measurement'}</div>
+                    <CellContent
+                      row={row}
+                      categoryIndex={null}
+                      rowIndex={rowIndex}
+                      columnKey="test"
+                      value={row.test}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-grey-600 mb-1">{tableData.headers[1] || 'Result'}</div>
+                    <CellContent
+                      row={row}
+                      categoryIndex={null}
+                      rowIndex={rowIndex}
+                      columnKey="result"
+                      value={row.result}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-grey-600 mb-1">{tableData.headers[2] || 'Notes'}</div>
+                    <CellContent
+                      row={row}
+                      categoryIndex={null}
+                      rowIndex={rowIndex}
+                      columnKey="notes"
+                      value={row.notes}
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => handleRemoveRow(null, rowIndex)}
+                      className="p-2 text-grey-400 hover:text-red-500 transition-colors"
+                      title="Remove row"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="col-span-3">
-                  <CellContent
-                    row={row}
-                    categoryIndex={null}
-                    rowIndex={rowIndex}
-                    columnKey="result"
-                    value={row.result}
-                  />
-                </div>
-                <div className="col-span-4">
-                  <CellContent
-                    row={row}
-                    categoryIndex={null}
-                    rowIndex={rowIndex}
-                    columnKey="notes"
-                    value={row.notes}
-                  />
-                </div>
-                <div className="col-span-1 flex items-center justify-center">
-                  <button
-                    onClick={() => handleRemoveRow(null, rowIndex)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-grey-400 hover:text-red-500 transition-all duration-200"
-                    title="Remove row"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                
+                {/* Desktop Layout - Grid */}
+                <div className="hidden md:grid grid-cols-12 gap-4 p-4">
+                  <div className="col-span-4">
+                    <CellContent
+                      row={row}
+                      categoryIndex={null}
+                      rowIndex={rowIndex}
+                      columnKey="test"
+                      value={row.test}
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <CellContent
+                      row={row}
+                      categoryIndex={null}
+                      rowIndex={rowIndex}
+                      columnKey="result"
+                      value={row.result}
+                    />
+                  </div>
+                  <div className="col-span-4">
+                    <CellContent
+                      row={row}
+                      categoryIndex={null}
+                      rowIndex={rowIndex}
+                      columnKey="notes"
+                      value={row.notes}
+                    />
+                  </div>
+                  <div className="col-span-1 flex items-center justify-center">
+                    <button
+                      onClick={() => handleRemoveRow(null, rowIndex)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-grey-400 hover:text-red-500 transition-all duration-200"
+                      title="Remove row"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}
