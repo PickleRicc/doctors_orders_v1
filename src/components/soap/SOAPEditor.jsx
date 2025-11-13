@@ -170,7 +170,7 @@ const SOAPEditor = ({
 
   // Helper functions
   const formatSOAPForText = (soap) => {
-    return `
+    let text = `
 ${localSessionName || 'SOAP Note'}
 Generated: ${new Date().toLocaleDateString()}
 
@@ -184,8 +184,15 @@ ASSESSMENT:
 ${formatAssessmentForText(soap.assessment)}
 
 PLAN:
-${formatPlanForText(soap.plan)}
-    `.trim();
+${formatPlanForText(soap.plan)}`;
+
+    // Add billing if it exists
+    if (soap.billing) {
+      text += `\n\nBILLING:
+${formatBillingForText(soap.billing)}`;
+    }
+
+    return text.trim();
   };
 
   const formatObjectiveForText = (objective) => {
@@ -261,7 +268,14 @@ ${formatPlanForText(soap.plan)}
     
     // Clinical Impression
     if (assessment.clinical_impression?.content) {
+      text += 'Clinical Impression:\n';
       text += assessment.clinical_impression.content.replace(/<[^>]*>/g, '') + '\n\n';
+    }
+    
+    // Medical Necessity
+    if (assessment.medical_necessity?.content) {
+      text += 'Medical Necessity:\n';
+      text += assessment.medical_necessity.content.replace(/<[^>]*>/g, '') + '\n\n';
     }
     
     // Short-term Goals
@@ -329,6 +343,37 @@ ${formatPlanForText(soap.plan)}
     }
     
     return text.trim() || 'No plan data';
+  };
+
+  const formatBillingForText = (billing) => {
+    if (!billing) return 'No billing data';
+    
+    let text = '';
+    
+    // CPT Codes
+    if (billing.cpt_codes?.items && billing.cpt_codes.items.length > 0) {
+      text += 'CPT Codes:\n';
+      billing.cpt_codes.items.forEach(code => {
+        text += `  • ${code}\n`;
+      });
+      text += '\n';
+    }
+    
+    // Units
+    if (billing.units?.content) {
+      text += 'Time Units:\n';
+      text += billing.units.content.replace(/<[^>]*>/g, '') + '\n\n';
+    }
+    
+    // ICD-10 Codes
+    if (billing.icd10_codes?.items && billing.icd10_codes.items.length > 0) {
+      text += 'ICD-10 Diagnosis Codes:\n';
+      billing.icd10_codes.items.forEach(code => {
+        text += `  • ${code}\n`;
+      });
+    }
+    
+    return text.trim() || 'No billing data';
   };
 
   const getSectionIcon = (confidence) => {
@@ -586,6 +631,23 @@ ${formatPlanForText(soap.plan)}
                   />
                 </div>
 
+                {/* Medical Necessity */}
+                {soapData.assessment.medical_necessity !== undefined && (
+                  <div>
+                    <h3 className="text-lg font-medium text-grey-900 mb-3">Medical Necessity</h3>
+                    <WYSIWYGEditor
+                      content={soapData.assessment.medical_necessity?.content || ''}
+                      placeholder="Why PT is needed: functional limitations, safety concerns, impact on ADLs..."
+                      onChange={(content) => handleSectionChange('assessment', {
+                        ...soapData.assessment,
+                        medical_necessity: { ...soapData.assessment.medical_necessity, content }
+                      })}
+                      onFocus={() => setActiveSection('assessment')}
+                      onBlur={() => setActiveSection(null)}
+                    />
+                  </div>
+                )}
+
                 {/* Short Term Goals */}
                 <div>
                   <h3 className="text-lg font-medium text-grey-900 mb-3">Short Term Goals (2-4 weeks)</h3>
@@ -735,6 +797,69 @@ ${formatPlanForText(soap.plan)}
             )}
           </div>
         </motion.section>
+
+        {/* Billing Section */}
+        {soapData.billing && (
+          <motion.section
+            variants={sectionVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.4 }}
+            whileHover="focused"
+            className={`soap-section ${activeSection === 'billing' ? 'active' : ''}`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-semibold text-grey-900">Billing</h2>
+              </div>
+            </div>
+            
+            <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6 space-y-6">
+              {/* CPT Codes */}
+              <div>
+                <h3 className="text-lg font-medium text-grey-900 mb-3">CPT Codes</h3>
+                <InterventionsList
+                  items={soapData.billing.cpt_codes?.items || []}
+                  placeholder="e.g., 97110 - Therapeutic Exercise"
+                  emptyMessage="No CPT codes added yet."
+                  onChange={(items) => handleSectionChange('billing', {
+                    ...soapData.billing,
+                    cpt_codes: { ...soapData.billing.cpt_codes, items }
+                  })}
+                />
+              </div>
+
+              {/* Units */}
+              <div>
+                <h3 className="text-lg font-medium text-grey-900 mb-3">Time Units</h3>
+                <WYSIWYGEditor
+                  content={soapData.billing.units?.content || ''}
+                  placeholder="Time-based units (1 unit = 15 minutes). Example: 97110 (2 units, 30 min)"
+                  onChange={(content) => handleSectionChange('billing', {
+                    ...soapData.billing,
+                    units: { ...soapData.billing.units, content }
+                  })}
+                  onFocus={() => setActiveSection('billing')}
+                  onBlur={() => setActiveSection(null)}
+                />
+              </div>
+
+              {/* ICD-10 Codes */}
+              <div>
+                <h3 className="text-lg font-medium text-grey-900 mb-3">ICD-10 Diagnosis Codes</h3>
+                <InterventionsList
+                  items={soapData.billing.icd10_codes?.items || []}
+                  placeholder="e.g., M25.561 - Pain in right knee"
+                  emptyMessage="No ICD-10 codes added yet."
+                  onChange={(items) => handleSectionChange('billing', {
+                    ...soapData.billing,
+                    icd10_codes: { ...soapData.billing.icd10_codes, items }
+                  })}
+                />
+              </div>
+            </div>
+          </motion.section>
+        )}
       </div>
     </div>
   );

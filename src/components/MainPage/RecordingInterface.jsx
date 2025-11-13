@@ -4,7 +4,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Square, Loader2 } from 'lucide-react';
+import { Mic, Square, Loader2, Pause, Play } from 'lucide-react';
 import { useAppState, APP_STATES } from './StateManager';
 import { transcribeAudio } from '../../services/transcriptionService';
 import { useTemplateManager } from '../../hooks/templates/useTemplateManager';
@@ -13,6 +13,7 @@ import { createAIService } from '../../services/structuredAI';
 export default function RecordingInterface() {
   const { appState, selectedTemplate, startRecording, stopRecording, finishProcessing, sessionName, setSessionName, triggerRefresh } = useAppState();
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [showNameInput, setShowNameInput] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
@@ -28,7 +29,7 @@ export default function RecordingInterface() {
   const showProcessing = appState === APP_STATES.PROCESSING;
 
   useEffect(() => {
-    if (isRecording) {
+    if (isRecording && !isPaused) {
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
@@ -43,7 +44,7 @@ export default function RecordingInterface() {
         clearInterval(timerRef.current);
       }
     };
-  }, [isRecording]);
+  }, [isRecording, isPaused]);
 
   const handleStartRecording = async () => {
     try {
@@ -81,21 +82,28 @@ export default function RecordingInterface() {
 
       mediaRecorder.start();
       setIsRecording(true);
-      setRecordingTime(0);
+      setIsPaused(false);
       startRecording();
+      console.log('🎤 Recording started');
     } catch (error) {
-      console.error('❌ Error starting recording:', error);
-      
-      // Provide specific error messages based on error type
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        alert('🎤 Microphone Access Denied\n\nPlease allow microphone access in your browser settings and try again.');
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        alert('🎤 No Microphone Found\n\nPlease connect a microphone and try again.');
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-        alert('🎤 Microphone In Use\n\nYour microphone may be in use by another application. Please close other apps and try again.');
-      } else {
-        alert(`🎤 Recording Error\n\n${error.message}\n\nPlease check your microphone and try again.`);
-      }
+      console.error('Error starting recording:', error);
+      alert('Failed to start recording. Please check microphone permissions.');
+    }
+  };
+
+  const handlePauseRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.pause();
+      setIsPaused(true);
+      console.log('⏸️ Recording paused');
+    }
+  };
+
+  const handleResumeRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+      mediaRecorderRef.current.resume();
+      setIsPaused(false);
+      console.log('▶️ Recording resumed');
     }
   };
 
@@ -312,7 +320,7 @@ export default function RecordingInterface() {
                 <motion.div
                   key={i}
                   animate={{
-                    height: [20, Math.random() * 60 + 20, 20],
+                    height: isPaused ? [20, 20, 20] : [20, Math.random() * 60 + 20, 20],
                   }}
                   transition={{
                     duration: 0.5,
@@ -320,21 +328,48 @@ export default function RecordingInterface() {
                     delay: i * 0.05,
                   }}
                   className="w-1 rounded-full"
-                  style={{ backgroundColor: '#007AFF' }}
+                  style={{ backgroundColor: isPaused ? '#94A3B8' : '#007AFF' }}
                 />
               ))}
             </div>
 
-            {/* Stop Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleStopRecording}
-              className="mx-auto w-16 h-16 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
-            >
-              <Square className="w-8 h-8 text-white fill-white" />
-            </motion.button>
-            <p className="text-grey-600 font-medium">Recording...</p>
+            {/* Control Buttons */}
+            <div className="flex items-center justify-center gap-4">
+              {/* Pause/Resume Button */}
+              {!isPaused ? (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handlePauseRecording}
+                  className="w-14 h-14 bg-grey-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+                  title="Pause recording"
+                >
+                  <Pause className="w-7 h-7 text-white fill-white" />
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleResumeRecording}
+                  className="w-14 h-14 bg-green-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+                  title="Resume recording"
+                >
+                  <Play className="w-7 h-7 text-white fill-white" />
+                </motion.button>
+              )}
+
+              {/* Stop Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleStopRecording}
+                className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+                title="Stop recording"
+              >
+                <Square className="w-8 h-8 text-white fill-white" />
+              </motion.button>
+            </div>
+            <p className="text-grey-600 font-medium">{isPaused ? 'Paused' : 'Recording...'}</p>
           </motion.div>
         )}
 

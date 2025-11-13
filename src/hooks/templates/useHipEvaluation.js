@@ -87,15 +87,20 @@ export const useHipEvaluation = () => {
         content: '',
         placeholder: 'Clinical reasoning, diagnosis, contributing factors, prognosis...'
       },
+      medical_necessity: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Why PT is needed: functional limitations, safety concerns, impact on ADLs...'
+      },
       short_term_goals: {
         type: 'list',
         items: [],
-        placeholder: 'Goals for 2-4 weeks (e.g., Reduce pain to 3/10, Improve hip flexion to 110°)'
+        placeholder: 'SMART goals for 2-4 weeks (Specific, Measurable, Achievable, Relevant, Time-bound)'
       },
       long_term_goals: {
         type: 'list',
         items: [],
-        placeholder: 'Goals for 6-12 weeks (e.g., Walk 30 minutes without pain, Return to recreational activities)'
+        placeholder: 'SMART goals for 6-12 weeks'
       }
     },
     plan: {
@@ -125,6 +130,24 @@ export const useHipEvaluation = () => {
         content: '',
         placeholder: 'Home exercise program, activity modifications, precautions...'
       }
+    },
+    billing: {
+      type: 'composite',
+      cpt_codes: {
+        type: 'list',
+        items: [],
+        placeholder: 'CPT codes based on interventions performed'
+      },
+      units: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Time-based units for billing'
+      },
+      icd10_codes: {
+        type: 'list',
+        items: [],
+        placeholder: 'ICD-10 diagnosis codes'
+      }
     }
   });
 
@@ -133,6 +156,9 @@ export const useHipEvaluation = () => {
    */
   const createPrompt = (transcript) => `
 You are a physical therapist documenting a hip evaluation. Generate a professional SOAP note from this session transcript.
+
+CRITICAL PRIVACY INSTRUCTION:
+**NEVER include patient names or identifiers in the note. ALWAYS use "patient" or "the patient" instead of names.**
 
 TRANSCRIPT:
 ${transcript}

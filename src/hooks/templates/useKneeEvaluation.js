@@ -78,15 +78,20 @@ export const useKneeEvaluation = () => {
         content: '',
         placeholder: 'Clinical reasoning, diagnosis, contributing factors, prognosis...'
       },
+      medical_necessity: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Why PT is needed: functional limitations, safety concerns, impact on ADLs...'
+      },
       short_term_goals: {
         type: 'list',
         items: [],
-        placeholder: 'Goals for 2-4 weeks (e.g., Reduce pain to 3/10, Improve knee flexion to 120°)'
+        placeholder: 'SMART goals for 2-4 weeks (Specific, Measurable, Achievable, Relevant, Time-bound)'
       },
       long_term_goals: {
         type: 'list',
         items: [],
-        placeholder: 'Goals for 6-12 weeks (e.g., Return to running, Independent with HEP)'
+        placeholder: 'SMART goals for 6-12 weeks'
       }
     },
     plan: {
@@ -116,6 +121,24 @@ export const useKneeEvaluation = () => {
         content: '',
         placeholder: 'Home exercise program, activity modifications, precautions...'
       }
+    },
+    billing: {
+      type: 'composite',
+      cpt_codes: {
+        type: 'list',
+        items: [],
+        placeholder: 'CPT codes based on interventions performed'
+      },
+      units: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Time-based units for billing'
+      },
+      icd10_codes: {
+        type: 'list',
+        items: [],
+        placeholder: 'ICD-10 diagnosis codes'
+      }
     }
   });
 
@@ -129,11 +152,18 @@ You are a physical therapist documenting a knee evaluation. Generate a professio
 TRANSCRIPT:
 ${transcript}
 
+CRITICAL PRIVACY INSTRUCTION:
+**NEVER include patient names or identifiers in the note. ALWAYS use "patient" or "the patient" instead of names.**
+If the transcript says "John reports..." or "Mrs. Smith states...", write "Patient reports..." or "The patient states..."
+
 INSTRUCTIONS:
 1. Extract relevant information for each SOAP section
 2. Use professional PT terminology
 3. Focus on knee-specific assessments and findings
-4. Return ONLY a JSON object matching this exact structure:
+4. Write SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound)
+5. Clearly document medical necessity and why PT is needed for insurance
+6. Suggest appropriate billing codes based on interventions
+7. Return ONLY a JSON object matching this exact structure:
 {
   "subjective": {
     "content": "Patient narrative including pain description, functional limitations, mechanism of injury, and relevant history. Use professional medical language."
@@ -188,15 +218,18 @@ INSTRUCTIONS:
   },
   "assessment": {
     "clinical_impression": "Clinical reasoning, likely diagnosis (e.g., meniscus tear, ACL sprain, patellofemoral syndrome), contributing factors, prognosis. Be specific about knee pathology.",
+    "medical_necessity": "Clearly state WHY the patient needs PT for insurance approval. Include: 1) Current functional limitations (e.g., unable to climb stairs independently, difficulty with work duties), 2) Safety concerns (e.g., fall risk, compensatory patterns), 3) Impact on ADLs/IADLs, 4) Without PT what would happen (e.g., increased pain, reduced mobility, unable to work). Make it clear this patient cannot improve without skilled PT intervention.",
     "short_term_goals": [
-      "Specific, measurable goal for 2-4 weeks (e.g., Reduce pain from 6/10 to 3/10)",
-      "Another short-term goal (e.g., Increase knee flexion from 95° to 120°)",
-      "2-4 goals total focused on immediate improvements"
+      "Patient will reduce knee pain from 6/10 to 3/10 during stair climbing within 2 weeks to improve work attendance",
+      "Patient will increase knee flexion AROM from 95° to 120° within 4 weeks to return to recreational activities",
+      "Patient will demonstrate independent performance of 3 quad strengthening exercises with proper form by week 3 for HEP compliance",
+      "Write 2-4 SMART goals: Specific (who/what/where), Measurable (numbers/metrics), Achievable (realistic), Relevant (functional outcome), Time-bound (within X weeks)"
     ],
     "long_term_goals": [
-      "Specific, measurable goal for 6-12 weeks (e.g., Return to basketball without pain)",
-      "Another long-term goal (e.g., Demonstrate proper squat mechanics)",
-      "2-3 goals total focused on functional outcomes"
+      "Patient will ambulate up/down 2 flights of stairs without pain or assistive device within 8 weeks to return to work duties",
+      "Patient will return to running 3 miles without knee pain within 12 weeks to resume exercise routine",
+      "Patient will demonstrate single leg squat with proper mechanics and no pain within 10 weeks to prevent re-injury",
+      "Write 2-3 SMART functional goals focused on returning to prior level of function or specific activities"
     ]
   },
   "plan": {
@@ -222,6 +255,21 @@ INSTRUCTIONS:
     ],
     "frequency_duration": "Treatment frequency (e.g., 2x/week for 4 weeks), expected timeline for reassessment.",
     "patient_education": "Home exercise program details, activity modifications, precautions, when to call clinic."
+  },
+  "billing": {
+    "cpt_codes": [
+      "97110 - Therapeutic Exercise (quad sets, SLR, terminal knee extension)",
+      "97112 - Neuromuscular Re-education (gait training, balance, proprioception)",
+      "97140 - Manual Therapy (patellar mobs, soft tissue to IT band/quad)",
+      "97530 - Therapeutic Activities (functional squats, step training)",
+      "Include 3-5 CPT codes based on interventions documented. Format: CODE - Description (specific techniques used)"
+    ],
+    "units": "Document time spent on each billable intervention. 1 unit = 15 minutes. Example: 97110 (2 units, 30 min), 97112 (1 unit, 15 min), 97140 (2 units, 30 min). Total treatment time should match documented interventions.",
+    "icd10_codes": [
+      "M25.561 - Pain in right knee",
+      "M23.201 - Derangement of unspecified meniscus due to old tear, right knee",
+      "Include 1-3 ICD-10 codes that match the clinical impression/diagnosis. Be specific (include laterality)."
+    ]
   }
 }
 
@@ -287,6 +335,10 @@ CRITICAL INSTRUCTIONS FOR OBJECTIVE SECTION:
             ...schema.assessment.clinical_impression,
             content: soapData.assessment?.clinical_impression || ''
           },
+          medical_necessity: {
+            ...schema.assessment.medical_necessity,
+            content: soapData.assessment?.medical_necessity || ''
+          },
           short_term_goals: {
             ...schema.assessment.short_term_goals,
             items: soapData.assessment?.short_term_goals || []
@@ -317,6 +369,21 @@ CRITICAL INSTRUCTIONS FOR OBJECTIVE SECTION:
           patient_education: {
             ...schema.plan.patient_education,
             content: soapData.plan?.patient_education || ''
+          }
+        },
+        billing: {
+          ...schema.billing,
+          cpt_codes: {
+            ...schema.billing.cpt_codes,
+            items: soapData.billing?.cpt_codes || []
+          },
+          units: {
+            ...schema.billing.units,
+            content: soapData.billing?.units || ''
+          },
+          icd10_codes: {
+            ...schema.billing.icd10_codes,
+            items: soapData.billing?.icd10_codes || []
           }
         }
       };

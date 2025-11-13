@@ -86,15 +86,20 @@ export const useNeckEvaluation = () => {
         content: '',
         placeholder: 'Clinical reasoning, diagnosis, contributing factors, prognosis...'
       },
+      medical_necessity: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Why PT is needed: functional limitations, safety concerns, impact on ADLs...'
+      },
       short_term_goals: {
         type: 'list',
         items: [],
-        placeholder: 'Goals for 2-4 weeks (e.g., Reduce pain to 3/10, Improve neck rotation to 70°)'
+        placeholder: 'SMART goals for 2-4 weeks (Specific, Measurable, Achievable, Relevant, Time-bound)'
       },
       long_term_goals: {
         type: 'list',
         items: [],
-        placeholder: 'Goals for 6-12 weeks (e.g., Pain-free desk work 8 hours, Full cervical ROM)'
+        placeholder: 'SMART goals for 6-12 weeks'
       }
     },
     plan: {
@@ -124,6 +129,24 @@ export const useNeckEvaluation = () => {
         content: '',
         placeholder: 'Home exercise program, activity modifications, precautions...'
       }
+    },
+    billing: {
+      type: 'composite',
+      cpt_codes: {
+        type: 'list',
+        items: [],
+        placeholder: 'CPT codes based on interventions performed'
+      },
+      units: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Time-based units for billing'
+      },
+      icd10_codes: {
+        type: 'list',
+        items: [],
+        placeholder: 'ICD-10 diagnosis codes'
+      }
     }
   });
 
@@ -133,10 +156,18 @@ export const useNeckEvaluation = () => {
   const createPrompt = (transcript) => `
 You are a physical therapist documenting a cervical spine/neck evaluation. Generate a professional SOAP note from this session transcript.
 
+CRITICAL PRIVACY INSTRUCTION:
+**NEVER include patient names or identifiers in the note. ALWAYS use "patient" or "the patient" instead of names.**
+If the transcript says "John reports..." or "Mrs. Smith states...", write "Patient reports..." or "The patient states..."
+
 TRANSCRIPT:
 ${transcript}
 
 INSTRUCTIONS:
+1. Write SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound)
+2. Clearly document medical necessity and why PT is needed for insurance
+3. Suggest appropriate billing codes based on interventions
+4.
 1. Extract relevant information for each SOAP section
 2. Use professional PT terminology specific to cervical spine conditions
 3. Focus on cervical mobility, postural dysfunction, and neurological screening

@@ -40,18 +40,23 @@ export const useDailyNote = () => {
         fields: {
           clinical_impression: {
             type: 'wysiwyg',
-            label: 'Clinical Impression',
-            placeholder: 'Progress assessment, response to treatment, functional improvements...'
+            content: '',
+            placeholder: 'Progress, clinical reasoning, response to treatment...'
+          },
+          medical_necessity: {
+            type: 'wysiwyg',
+            content: '',
+            placeholder: 'Why continued PT is needed: ongoing deficits, functional limitations, safety concerns...'
           },
           short_term_goals: {
             type: 'list',
-            label: 'Short Term Goals (2-4 weeks)',
-            items: []
+            items: [],
+            placeholder: 'SMART goals for next 1-2 weeks (Specific, Measurable, Achievable, Relevant, Time-bound)'
           },
           long_term_goals: {
             type: 'list',
-            label: 'Long Term Goals (6-12 weeks)',
-            items: []
+            items: [],
+            placeholder: 'SMART goals for 4-6 weeks'
           }
         }
       },
@@ -71,8 +76,28 @@ export const useDailyNote = () => {
           },
           frequency: {
             type: 'wysiwyg',
-            label: 'Treatment Frequency',
-            placeholder: 'Recommended frequency and duration of continued care...'
+            content: '',
+            placeholder: 'Treatment frequency and duration'
+          }
+        }
+      },
+      billing: {
+        type: 'composite',
+        fields: {
+          cpt_codes: {
+            type: 'list',
+            items: [],
+            placeholder: 'CPT codes for this session'
+          },
+          units: {
+            type: 'wysiwyg',
+            content: '',
+            placeholder: 'Time-based units (1 unit = 15 min)'
+          },
+          icd10_codes: {
+            type: 'list',
+            items: [],
+            placeholder: 'ICD-10 diagnosis codes'
           }
         }
       }
@@ -132,8 +157,21 @@ Guidelines:
     }
 
     try {
-      // Build the full prompt with transcript
-      const fullPrompt = `${templateConfig.aiPrompt}\n\nTRANSCRIPT:\n${transcript}`;
+      // Build the full prompt with transcript and privacy instructions
+      const fullPrompt = `${templateConfig.aiPrompt}
+
+CRITICAL PRIVACY INSTRUCTION:
+**NEVER include patient names or identifiers in the note. ALWAYS use "patient" or "the patient" instead of names.**
+If the transcript says "John reports..." or "Mrs. Smith states...", write "Patient reports..." or "The patient states..."
+
+INSTRUCTIONS:
+1. Write SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound)
+2. Document medical necessity - why continued PT is needed for insurance
+3. Suggest appropriate billing codes based on interventions
+4. Use professional terminology
+
+TRANSCRIPT:
+${transcript}`;
       
       // Call AI service with the prompt
       const response = await aiService.generateCompletion(fullPrompt, {
@@ -180,6 +218,10 @@ Guidelines:
               ...schema.assessment.fields.clinical_impression,
               content: soapData.assessment?.clinical_impression?.content || ''
             },
+            medical_necessity: {
+              ...schema.assessment.fields.medical_necessity,
+              content: soapData.assessment?.medical_necessity?.content || ''
+            },
             short_term_goals: {
               ...schema.assessment.fields.short_term_goals,
               items: soapData.assessment?.short_term_goals?.items || []
@@ -204,6 +246,23 @@ Guidelines:
             frequency: {
               ...schema.plan.fields.frequency,
               content: soapData.plan?.frequency?.content || ''
+            }
+          }
+        },
+        billing: {
+          ...schema.billing,
+          fields: {
+            cpt_codes: {
+              ...schema.billing.fields.cpt_codes,
+              items: soapData.billing?.cpt_codes || []
+            },
+            units: {
+              ...schema.billing.fields.units,
+              content: soapData.billing?.units || ''
+            },
+            icd10_codes: {
+              ...schema.billing.fields.icd10_codes,
+              items: soapData.billing?.icd10_codes || []
             }
           }
         }

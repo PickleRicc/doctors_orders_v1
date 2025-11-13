@@ -80,15 +80,20 @@ export const useShoulderEvaluation = () => {
         content: '',
         placeholder: 'Clinical reasoning, diagnosis, contributing factors, prognosis...'
       },
+      medical_necessity: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Why PT is needed: functional limitations, safety concerns, impact on ADLs...'
+      },
       short_term_goals: {
         type: 'list',
         items: [],
-        placeholder: 'Goals for 2-4 weeks (e.g., Reduce pain to 3/10, Improve shoulder flexion to 150°)'
+        placeholder: 'SMART goals for 2-4 weeks (Specific, Measurable, Achievable, Relevant, Time-bound)'
       },
       long_term_goals: {
         type: 'list',
         items: [],
-        placeholder: 'Goals for 6-12 weeks (e.g., Return to overhead activities, Pain-free sleeping)'
+        placeholder: 'SMART goals for 6-12 weeks'
       }
     },
     plan: {
@@ -118,6 +123,24 @@ export const useShoulderEvaluation = () => {
         content: '',
         placeholder: 'Home exercise program, activity modifications, precautions...'
       }
+    },
+    billing: {
+      type: 'composite',
+      cpt_codes: {
+        type: 'list',
+        items: [],
+        placeholder: 'CPT codes based on interventions performed'
+      },
+      units: {
+        type: 'wysiwyg',
+        content: '',
+        placeholder: 'Time-based units for billing'
+      },
+      icd10_codes: {
+        type: 'list',
+        items: [],
+        placeholder: 'ICD-10 diagnosis codes'
+      }
     }
   });
 
@@ -127,10 +150,17 @@ export const useShoulderEvaluation = () => {
   const createPrompt = (transcript) => `
 You are a physical therapist documenting a shoulder evaluation. Generate a professional SOAP note from this session transcript.
 
+CRITICAL PRIVACY INSTRUCTION:
+**NEVER include patient names or identifiers in the note. ALWAYS use "patient" or "the patient" instead of names.**
+
 TRANSCRIPT:
 ${transcript}
 
 INSTRUCTIONS:
+1. Write SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound)
+2. Document medical necessity for insurance approval
+3. Suggest appropriate billing codes
+4.
 1. Extract relevant information for each SOAP section
 2. Use professional PT terminology specific to shoulder conditions
 3. Focus on rotator cuff, impingement, and shoulder stability assessments

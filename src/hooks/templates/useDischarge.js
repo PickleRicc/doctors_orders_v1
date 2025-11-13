@@ -43,15 +43,22 @@ export const useDischarge = () => {
             label: 'Discharge Summary',
             placeholder: 'Overall progress, goal achievement, functional outcomes, reason for discharge...'
           },
+          medical_necessity: {
+            type: 'wysiwyg',
+            label: 'Medical Necessity',
+            placeholder: 'Why discharge is appropriate: goals met, independent with HEP, no longer needs skilled PT...'
+          },
           goals_achieved: {
             type: 'list',
             label: 'Goals Achieved',
-            items: []
+            items: [],
+            placeholder: 'SMART goals that were successfully met (with baseline and discharge measurements)'
           },
           goals_partially_met: {
             type: 'list',
             label: 'Goals Partially Met',
-            items: []
+            items: [],
+            placeholder: 'SMART goals with partial progress (document what was achieved)'
           }
         }
       },
@@ -73,6 +80,29 @@ export const useDischarge = () => {
             type: 'wysiwyg',
             label: 'Long-Term Prognosis',
             placeholder: 'Expected long-term outcomes, risk factors, prevention strategies...'
+          }
+        }
+      },
+      billing: {
+        type: 'composite',
+        label: 'Billing',
+        fields: {
+          cpt_codes: {
+            type: 'list',
+            label: 'CPT Codes',
+            items: [],
+            placeholder: 'CPT codes for final session'
+          },
+          units: {
+            type: 'wysiwyg',
+            label: 'Units',
+            placeholder: 'Time-based units (1 unit = 15 min)'
+          },
+          icd10_codes: {
+            type: 'list',
+            label: 'ICD-10 Codes',
+            items: [],
+            placeholder: 'ICD-10 diagnosis codes'
           }
         }
       }
@@ -133,8 +163,21 @@ Guidelines:
     }
 
     try {
-      // Build the full prompt with transcript
-      const fullPrompt = `${templateConfig.aiPrompt}\n\nTRANSCRIPT:\n${transcript}`;
+      // Build the full prompt with transcript and privacy instructions
+      const fullPrompt = `${templateConfig.aiPrompt}
+
+CRITICAL PRIVACY INSTRUCTION:
+**NEVER include patient names or identifiers in the note. ALWAYS use "patient" or "the patient" instead of names.**
+If the transcript says "John reports..." or "Mrs. Smith states...", write "Patient reports..." or "The patient states..."
+
+INSTRUCTIONS:
+1. Document goals achieved using SMART format with baseline and discharge measurements
+2. Explain why discharge is appropriate (medical necessity for ending care)
+3. Suggest appropriate billing codes for final session
+4. Use professional terminology
+
+TRANSCRIPT:
+${transcript}`;
       
       // Call AI service with the prompt
       const response = await aiService.generateCompletion(fullPrompt, {
@@ -181,6 +224,10 @@ Guidelines:
               ...schema.assessment.fields.clinical_impression,
               content: soapData.assessment?.clinical_impression?.content || ''
             },
+            medical_necessity: {
+              ...schema.assessment.fields.medical_necessity,
+              content: soapData.assessment?.medical_necessity?.content || ''
+            },
             goals_achieved: {
               ...schema.assessment.fields.goals_achieved,
               items: soapData.assessment?.goals_achieved?.items || []
@@ -205,6 +252,23 @@ Guidelines:
             prognosis: {
               ...schema.plan.fields.prognosis,
               content: soapData.plan?.prognosis?.content || ''
+            }
+          }
+        },
+        billing: {
+          ...schema.billing,
+          fields: {
+            cpt_codes: {
+              ...schema.billing.fields.cpt_codes,
+              items: soapData.billing?.cpt_codes || []
+            },
+            units: {
+              ...schema.billing.fields.units,
+              content: soapData.billing?.units || ''
+            },
+            icd10_codes: {
+              ...schema.billing.fields.icd10_codes,
+              items: soapData.billing?.icd10_codes || []
             }
           }
         }
