@@ -18,6 +18,7 @@ export default function RecordingInterface() {
   const [showNameInput, setShowNameInput] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [processingStatus, setProcessingStatus] = useState('');
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const mediaRecorderRef = useRef(null);
   const timerRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -291,12 +292,12 @@ export default function RecordingInterface() {
               onClick={handleStartRecording}
               className="mx-auto w-20 h-20 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-shadow"
               style={{
-                background: 'radial-gradient(circle at 30% 30%, #5AC8FA, #007AFF)'
+                background: 'radial-gradient(circle at 30% 30%, var(--blue-primary), var(--blue-dark))'
               }}
             >
               <Mic className="w-10 h-10 text-white" />
             </motion.button>
-            <p className="mt-4 text-grey-600 font-medium">Click to start recording</p>
+            <p className="mt-4 text-grey-600 dark:text-grey-400 font-medium">Click to start recording</p>
           </motion.div>
         )}
 
@@ -310,7 +311,7 @@ export default function RecordingInterface() {
             className="text-center space-y-6"
           >
             {/* Timer */}
-            <div className="text-4xl font-mono font-bold text-grey-900">
+            <div className="text-4xl font-mono font-bold text-grey-900 dark:text-grey-100">
               {formatTime(recordingTime)}
             </div>
 
@@ -327,8 +328,7 @@ export default function RecordingInterface() {
                     repeat: Infinity,
                     delay: i * 0.05,
                   }}
-                  className="w-1 rounded-full"
-                  style={{ backgroundColor: isPaused ? '#94A3B8' : '#007AFF' }}
+                  className={`w-1 rounded-full ${isPaused ? 'bg-grey-400 dark:bg-grey-500' : 'bg-blue-primary dark:bg-blue-primary'}`}
                 />
               ))}
             </div>
@@ -369,7 +369,7 @@ export default function RecordingInterface() {
                 <Square className="w-8 h-8 text-white fill-white" />
               </motion.button>
             </div>
-            <p className="text-grey-600 font-medium">{isPaused ? 'Paused' : 'Recording...'}</p>
+            <p className="text-grey-600 dark:text-grey-400 font-medium">{isPaused ? 'Paused' : 'Recording...'}</p>
           </motion.div>
         )}
 
@@ -380,39 +380,37 @@ export default function RecordingInterface() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white/80 backdrop-blur-12 rounded-2xl p-8 border border-grey-200 shadow-xl"
+            className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-8 border border-grey-200 dark:border-white/10 shadow-xl transition-colors"
           >
-            <h3 className="text-xl font-semibold text-grey-900 mb-4">Name this session</h3>
+            <h3 className="text-xl font-semibold text-grey-900 dark:text-grey-100 mb-4">Name this session</h3>
             <input
               type="text"
               value={sessionName}
               onChange={(e) => setSessionName(e.target.value)}
               placeholder="e.g., John D. - Initial Eval"
-              className="w-full px-4 py-3 border border-grey-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-primary focus:border-transparent mb-4"
+              className="w-full px-4 py-3 bg-white dark:bg-[#1f1f1f] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none focus:ring-2 focus:ring-blue-primary dark:focus:ring-blue-primary focus:border-transparent mb-4 transition-colors"
               autoFocus
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmitSession()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSubmitSession();
+                } else if (e.key === 'Escape') {
+                  setShowCancelConfirm(true);
+                }
+              }}
             />
-            <p className="text-sm text-grey-500 mb-4">
+            <p className="text-sm text-grey-500 dark:text-grey-400 mb-4">
               Note: Do not include patient identifiable information
             </p>
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  setShowNameInput(false);
-                  setAudioBlob(null);
-                  setRecordingTime(0);
-                  window.location.reload(); // Reset to template selection
-                }}
-                className="flex-1 px-4 py-2 border border-grey-300 rounded-lg hover:bg-grey-50 transition-colors"
+                onClick={() => setShowCancelConfirm(true)}
+                className="flex-1 px-4 py-2 border border-grey-300 dark:border-grey-600 rounded-lg hover:bg-grey-50 dark:hover:bg-grey-700 text-grey-900 dark:text-grey-100 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmitSession}
-                className="flex-1 px-4 py-2 text-white rounded-lg transition-colors"
-                style={{ backgroundColor: '#007AFF' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#0051D5'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#007AFF'}
+                className="flex-1 px-4 py-2 text-white rounded-lg transition-colors bg-blue-primary dark:bg-blue-primary hover:bg-blue-dark dark:hover:bg-blue-dark"
               >
                 Generate SOAP Note
               </button>
@@ -429,9 +427,55 @@ export default function RecordingInterface() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="text-center"
           >
-            <Loader2 className="w-12 h-12 mx-auto animate-spin mb-4" style={{ color: '#007AFF' }} />
-            <p className="text-grey-600 font-medium">{processingStatus || 'Processing...'}</p>
-            <p className="text-sm text-grey-500 mt-2">This may take a few moments</p>
+            <Loader2 className="w-12 h-12 mx-auto animate-spin mb-4 text-blue-primary dark:text-blue-primary" />
+            <p className="text-grey-600 dark:text-grey-400 font-medium">{processingStatus || 'Processing...'}</p>
+            <p className="text-sm text-grey-500 dark:text-grey-400 mt-2">This may take a few moments</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cancel Confirmation Dialog */}
+      <AnimatePresence>
+        {showCancelConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowCancelConfirm(false)}
+            className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-xl shadow-xl max-w-md w-full p-6 transition-colors"
+            >
+              <h3 className="text-xl font-semibold text-grey-900 dark:text-grey-100 mb-2">Cancel Recording?</h3>
+              <p className="text-grey-600 dark:text-grey-300 mb-6">
+                Your recording will be lost. Are you sure you want to cancel?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="flex-1 px-4 py-2 border border-grey-300 dark:border-white/15 rounded-lg hover:bg-grey-50 dark:hover:bg-[#1f1f1f] text-grey-900 dark:text-grey-100 transition-colors"
+                >
+                  Keep Recording
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCancelConfirm(false);
+                    setShowNameInput(false);
+                    setAudioBlob(null);
+                    setRecordingTime(0);
+                    window.location.reload(); // Reset to template selection
+                  }}
+                  className="flex-1 px-4 py-2 text-white rounded-lg transition-colors bg-red-500 hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600"
+                >
+                  Cancel Recording
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

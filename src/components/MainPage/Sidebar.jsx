@@ -8,7 +8,7 @@ import { Menu, X, Search, FileText, Calendar } from 'lucide-react';
 import { useAppState } from './StateManager';
 import Image from 'next/image';
 
-const BLUE_PRIMARY = '#007AFF';
+// Using CSS variable for blue-primary instead of hardcoded value
 
 // All templates use the same note icon, just color-coded
 
@@ -77,11 +77,10 @@ export default function Sidebar() {
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-white/90 backdrop-blur-12 rounded-lg shadow-sm"
-        style={{ border: '1px solid rgba(0, 0, 0, 0.06)' }}
+        className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-white/90 dark:bg-grey-800/90 backdrop-blur-12 rounded-lg shadow-sm border border-black/5 dark:border-white/10 transition-colors"
         aria-label={isOpen ? "Close menu" : "Open menu"}
       >
-        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        {isOpen ? <X className="w-6 h-6 text-grey-900 dark:text-grey-100" /> : <Menu className="w-6 h-6 text-grey-900 dark:text-grey-100" />}
       </button>
 
       {/* Sidebar */}
@@ -103,8 +102,7 @@ export default function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 h-full w-80 bg-grey-50 z-40 flex flex-col"
-              style={{ borderRight: '1px solid #E5E7EB' }}
+              className="fixed left-0 top-0 h-full w-80 bg-grey-50 dark:bg-[#1a1a1a] z-40 flex flex-col border-r border-grey-200 dark:border-white/10 transition-colors"
             >
               {/* Header */}
               <div className="p-4 space-y-4">
@@ -118,43 +116,54 @@ export default function Sidebar() {
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <h1 className="text-xl font-semibold text-grey-900">Doctors Orders</h1>
+                  <h1 className="text-xl font-semibold text-grey-900 dark:text-grey-100">Doctors Orders</h1>
                 </div>
 
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-500 dark:text-grey-400" />
                   <input
                     type="text"
                     placeholder="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-grey-200 rounded-lg text-sm text-grey-900 placeholder-grey-500 focus:outline-none focus:ring-2 focus:ring-blue-primary/20 focus:border-blue-primary transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1f1f1f] border border-grey-200 dark:border-white/15 rounded-lg text-sm text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none focus:ring-2 focus:ring-blue-primary/20 dark:focus:ring-blue-primary/30 focus:border-blue-primary transition-all"
                   />
                 </div>
               </div>
 
               {/* Divider */}
               <div className="px-6 py-2">
-                <div className="h-px bg-grey-200" />
+                <div className="h-px bg-grey-200 dark:bg-white/10" />
               </div>
 
               {/* Recent Notes Header */}
               <div className="px-6 py-2">
-                <h3 className="text-xs font-semibold text-grey-500 uppercase tracking-wide">Recent Notes</h3>
+                <h3 className="text-xs font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide">Recent Notes</h3>
               </div>
 
               {/* Notes List */}
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {loading ? (
-                  <div className="text-center py-8 text-grey-500">
-                    <div className="animate-spin w-6 h-6 border-2 border-blue-primary border-t-transparent rounded-full mx-auto mb-2" />
+                  <div className="text-center py-8 text-grey-500 dark:text-grey-400">
+                    <div className="animate-spin w-6 h-6 border-2 border-blue-primary dark:border-blue-primary border-t-transparent rounded-full mx-auto mb-2" />
                     Loading notes...
                   </div>
                 ) : filteredNotes.length === 0 ? (
-                  <div className="text-center py-8 text-grey-500">
-                    <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No notes found</p>
+                  <div className="text-center py-8 text-grey-500 dark:text-grey-400">
+                    {searchQuery ? (
+                      <>
+                        <Search className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm font-medium mb-1">No notes match your search</p>
+                        <p className="text-xs">Try a different search term</p>
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm font-medium mb-1">No notes yet</p>
+                        <p className="text-xs">Start by selecting a template and recording a session</p>
+                      </>
+                    )}
                   </div>
                 ) : (
                   filteredNotes.map((note) => (
@@ -169,31 +178,28 @@ export default function Sidebar() {
                       }}
                       whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.02)' }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full p-3 text-left transition-all group"
-                      style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.04)' }}
+                      className="w-full p-3 text-left transition-all group border-b border-grey-200 dark:border-white/10 dark:hover:bg-[#1f1f1f]"
                     >
                       <div className="flex items-start gap-3">
                         {/* Template Icon */}
                         <div 
-                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{ backgroundColor: `${BLUE_PRIMARY}15`, color: BLUE_PRIMARY }}
+                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-primary/15 dark:bg-blue-primary/20 text-blue-primary dark:text-blue-primary"
                         >
                           <FileText className="w-5 h-5" />
                         </div>
 
                         {/* Note Info */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-grey-900 truncate transition-colors group-hover:text-[#007AFF]">
+                          <h3 className="font-medium text-grey-900 dark:text-grey-100 truncate transition-colors group-hover:text-blue-primary dark:group-hover:text-blue-primary">
                             {note.session_title || `${note.template_type} Evaluation`}
                           </h3>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-grey-500">
+                          <div className="flex items-center gap-2 mt-1 text-xs text-grey-500 dark:text-grey-400">
                             <Calendar className="w-3 h-3" />
                             <span>{formatDate(note.created_at)}</span>
                           </div>
                           <div className="mt-1">
                             <span 
-                              className="inline-block px-2 py-0.5 text-xs font-medium rounded-full"
-                              style={{ backgroundColor: `${BLUE_PRIMARY}15`, color: BLUE_PRIMARY }}
+                              className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-blue-primary/15 dark:bg-blue-primary/20 text-blue-primary dark:text-blue-primary"
                             >
                               {note.template_type}
                             </span>
@@ -206,8 +212,8 @@ export default function Sidebar() {
               </div>
 
               {/* Footer */}
-              <div className="p-4 bg-grey-50/50" style={{ borderTop: '1px solid rgba(0, 0, 0, 0.06)' }}>
-                <p className="text-xs text-grey-500 text-center">
+              <div className="p-4 bg-grey-50/50 dark:bg-[#1a1a1a] border-t border-grey-200 dark:border-white/10">
+                <p className="text-xs text-grey-500 dark:text-grey-400 text-center">
                   {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
                 </p>
               </div>

@@ -146,9 +146,9 @@ const ObjectiveTable = memo(({
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full text-left px-3 py-2 bg-white/20 backdrop-blur-8 border border-white/20 rounded-lg hover:bg-white/30 transition-colors flex items-center justify-between"
+          className="w-full text-left px-3 py-2 bg-white dark:bg-[#1f1f1f] border border-white/20 dark:border-white/10 rounded-lg hover:bg-white/30 dark:hover:bg-[#2a2a2a] transition-colors flex items-center justify-between"
         >
-          <span className={value ? 'text-grey-900' : 'text-grey-500'}>
+          <span className={value ? 'text-grey-900 dark:text-grey-100' : 'text-grey-500 dark:text-grey-400'}>
             {value || 'Select result...'}
           </span>
           <ChevronDown className="w-4 h-4" />
@@ -160,7 +160,7 @@ const ObjectiveTable = memo(({
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute top-full left-0 right-0 mt-1 bg-white/90 backdrop-blur-20 border border-white/30 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto"
+              className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto transition-colors"
             >
               {tableData.commonResults.map((result) => (
                 <button
@@ -169,18 +169,18 @@ const ObjectiveTable = memo(({
                     onChange(result);
                     setIsOpen(false);
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-blue-light/50 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                  className="w-full text-left px-3 py-2 text-grey-900 dark:text-grey-100 hover:bg-blue-light/50 dark:hover:bg-blue-primary/20 transition-colors first:rounded-t-lg last:rounded-b-lg"
                 >
                   {result}
                 </button>
               ))}
-              <div className="border-t border-grey-200 mt-1 pt-1">
+              <div className="border-t border-grey-200 dark:border-white/10 mt-1 pt-1">
                 <button
                   onClick={() => {
                     setEditingCell(`${rowIndex}-result`);
                     setIsOpen(false);
                   }}
-                  className="w-full text-left px-3 py-2 text-blue-primary hover:bg-blue-light/50 transition-colors rounded-b-lg"
+                  className="w-full text-left px-3 py-2 text-blue-primary dark:text-blue-primary hover:bg-blue-light/50 dark:hover:bg-blue-primary/20 transition-colors rounded-b-lg"
                 >
                   Custom result...
                 </button>
@@ -221,7 +221,7 @@ const ObjectiveTable = memo(({
             }
           }}
           autoFocus
-          className="w-full px-3 py-2 bg-white/30 backdrop-blur-8 border border-blue-primary/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-primary/20"
+          className="w-full px-3 py-2 bg-white dark:bg-[#1f1f1f] border border-blue-primary/50 dark:border-blue-primary/30 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary/20 dark:focus:ring-blue-primary/30"
           placeholder={`Enter ${columnKey}...`}
         />
       );
@@ -244,9 +244,9 @@ const ObjectiveTable = memo(({
           setEditingCell(cellId);
           setEditingValue(value || '');
         }}
-        className="w-full px-3 py-2 min-h-[40px] cursor-text hover:bg-white/20 rounded-lg transition-colors flex items-center"
+        className="w-full px-3 py-2 min-h-[40px] cursor-text hover:bg-white/20 dark:hover:bg-[#1f1f1f] rounded-lg transition-colors flex items-center"
       >
-        <span className={value ? 'text-grey-900' : 'text-grey-500'}>
+        <span className={value ? 'text-grey-900 dark:text-grey-100' : 'text-grey-500 dark:text-grey-400'}>
           {value || `Enter ${columnKey}...`}
         </span>
       </div>
@@ -257,13 +257,13 @@ const ObjectiveTable = memo(({
     <div className={`objective-table ${className}`}>
       {/* Table Header - Hidden on mobile, shown on desktop */}
       <div className="hidden md:grid grid-cols-12 gap-4 mb-3 px-4 py-2">
-        <div className="col-span-4 text-sm font-medium text-grey-700">
+        <div className="col-span-4 text-sm font-medium text-grey-700 dark:text-grey-300">
           {tableData.headers[0] || 'Test/Measurement'}
         </div>
-        <div className="col-span-3 text-sm font-medium text-grey-700">
+        <div className="col-span-3 text-sm font-medium text-grey-700 dark:text-grey-300">
           {tableData.headers[1] || 'Result'}
         </div>
-        <div className="col-span-4 text-sm font-medium text-grey-700">
+        <div className="col-span-4 text-sm font-medium text-grey-700 dark:text-grey-300">
           {tableData.headers[2] || 'Notes'}
         </div>
         <div className="col-span-1"></div>
@@ -276,8 +276,8 @@ const ObjectiveTable = memo(({
             <div key={categoryIndex}>
               {/* Category Header */}
               <div className="flex items-center justify-between mb-3">
-                <h4 className="text-base font-semibold text-grey-800 flex items-center gap-2">
-                  <div className="w-1 h-5 bg-blue-primary rounded-full" />
+                <h4 className="text-base font-semibold text-grey-800 dark:text-grey-200 flex items-center gap-2">
+                  <div className="w-1 h-5 bg-blue-primary dark:bg-blue-primary rounded-full" />
                   {category.name}
                 </h4>
                 {tableData.allowAddRows && (
@@ -301,12 +301,12 @@ const ObjectiveTable = memo(({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="bg-white/15 backdrop-blur-8 border border-white/20 rounded-xl hover:bg-white/25 transition-colors group"
+                      className="bg-white dark:bg-[#1a1a1a] border border-white/20 dark:border-white/10 rounded-xl hover:bg-white/25 dark:hover:bg-[#1f1f1f] transition-colors group"
                     >
                       {/* Mobile Layout - Stacked */}
                       <div className="md:hidden p-4 space-y-3">
                         <div>
-                          <div className="text-xs font-medium text-grey-600 mb-1">{tableData.headers[0] || 'Test/Measurement'}</div>
+                          <div className="text-xs font-medium text-grey-600 dark:text-grey-400 mb-1">{tableData.headers[0] || 'Test/Measurement'}</div>
                           <CellContent
                             row={row}
                             categoryIndex={categoryIndex}
@@ -338,7 +338,7 @@ const ObjectiveTable = memo(({
                         <div className="flex justify-end">
                           <button
                             onClick={() => handleRemoveRow(categoryIndex, rowIndex)}
-                            className="p-2 text-grey-400 hover:text-red-500 transition-colors"
+                            className="p-2 text-grey-400 dark:text-grey-500 hover:text-red-500 transition-colors"
                             title="Remove row"
                           >
                             <X className="w-4 h-4" />
@@ -378,7 +378,7 @@ const ObjectiveTable = memo(({
                         <div className="col-span-1 flex items-center justify-center">
                           <button
                             onClick={() => handleRemoveRow(categoryIndex, rowIndex)}
-                            className="opacity-0 group-hover:opacity-100 p-1 text-grey-400 hover:text-red-500 transition-all duration-200"
+                            className="opacity-0 group-hover:opacity-100 p-1 text-grey-400 dark:text-grey-500 hover:text-red-500 transition-all duration-200"
                             title="Remove row"
                           >
                             <X className="w-4 h-4" />
@@ -391,7 +391,7 @@ const ObjectiveTable = memo(({
 
                 {/* Empty State */}
                 {category.rows.length === 0 && (
-                  <div className="text-center py-4 text-grey-500 text-sm italic">
+                  <div className="text-center py-4 text-grey-500 dark:text-grey-400 text-sm italic">
                     No tests added yet.
                   </div>
                 )}
@@ -410,7 +410,7 @@ const ObjectiveTable = memo(({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="bg-white/15 backdrop-blur-8 border border-white/20 rounded-xl hover:bg-white/25 transition-colors group"
+                className="bg-white dark:bg-[#1a1a1a] border border-white/20 dark:border-white/10 rounded-xl hover:bg-white/25 dark:hover:bg-[#1f1f1f] transition-colors group"
               >
                 {/* Mobile Layout - Stacked */}
                 <div className="md:hidden p-4 space-y-3">
@@ -447,7 +447,7 @@ const ObjectiveTable = memo(({
                   <div className="flex justify-end">
                     <button
                       onClick={() => handleRemoveRow(null, rowIndex)}
-                      className="p-2 text-grey-400 hover:text-red-500 transition-colors"
+                      className="p-2 text-grey-400 dark:text-grey-500 hover:text-red-500 transition-colors"
                       title="Remove row"
                     >
                       <X className="w-4 h-4" />
@@ -509,7 +509,7 @@ const ObjectiveTable = memo(({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 onClick={() => setShowAddRow(true)}
-                className="flex items-center gap-2 px-4 py-3 text-blue-primary hover:text-blue-dark bg-blue-light/20 hover:bg-blue-light/30 backdrop-blur-8 border border-blue-primary/20 rounded-xl transition-colors w-full"
+                className="flex items-center gap-2 px-4 py-3 text-blue-primary dark:text-blue-primary hover:text-blue-dark dark:hover:text-blue-primary bg-blue-light/20 dark:bg-blue-primary/10 hover:bg-blue-light/30 dark:hover:bg-blue-primary/20 border border-blue-primary/20 dark:border-blue-primary/30 rounded-xl transition-colors w-full"
               >
                 <Plus className="w-4 h-4" />
                 Add test or measurement
@@ -519,14 +519,14 @@ const ObjectiveTable = memo(({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="bg-white/25 backdrop-blur-16 border border-white/30 rounded-xl p-4"
+                className="bg-white dark:bg-[#1a1a1a] border border-white/30 dark:border-white/10 rounded-xl p-4 transition-colors"
               >
                 <div className="grid grid-cols-12 gap-4">
                   <div className="col-span-4">
                     <input
                       type="text"
                       placeholder="Test name..."
-                      className="w-full px-3 py-2 bg-white/30 backdrop-blur-8 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-primary/20"
+                      className="w-full px-3 py-2 bg-white dark:bg-[#1f1f1f] border border-white/20 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary/20 dark:focus:ring-blue-primary/30"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleAddRow({ test: e.target.value });
@@ -547,7 +547,7 @@ const ObjectiveTable = memo(({
                     </button>
                     <button
                       onClick={() => setShowAddRow(false)}
-                      className="px-3 py-2 text-grey-600 hover:text-grey-800 transition-colors"
+                      className="px-3 py-2 text-grey-600 dark:text-grey-400 hover:text-grey-800 dark:hover:text-grey-200 transition-colors"
                     >
                       Cancel
                     </button>
@@ -562,7 +562,7 @@ const ObjectiveTable = memo(({
       {/* Empty State */}
       {tableData.rows.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-grey-500 mb-4">No tests or measurements recorded</div>
+          <div className="text-grey-500 dark:text-grey-400 mb-4">No tests or measurements recorded</div>
           <button
             onClick={() => handleAddRow()}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-primary text-white rounded-lg hover:bg-blue-dark transition-colors"

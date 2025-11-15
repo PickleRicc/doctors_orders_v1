@@ -392,7 +392,7 @@ ${formatBillingForText(soap.billing)}`;
     <div className={`soap-editor max-w-7xl mx-auto ${className}`}>
       {/* Header with Session Name and Actions */}
       <motion.div 
-        className="mb-8 bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6 shadow-lg"
+        className="mb-8 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 shadow-lg transition-colors"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -400,9 +400,9 @@ ${formatBillingForText(soap.billing)}`;
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           {/* Session Name Input */}
           <div className="flex-1 max-w-md">
-            <label className="block text-sm font-medium text-grey-700 mb-2">
+            <label className="block text-sm font-medium text-grey-700 dark:text-grey-300 mb-2">
               Session Name
-              <span className="text-xs text-grey-500 block mt-1">
+              <span className="text-xs text-grey-500 dark:text-grey-400 block mt-1">
                 Use a memorable name (no patient details)
               </span>
             </label>
@@ -411,9 +411,9 @@ ${formatBillingForText(soap.billing)}`;
               value={localSessionName}
               onChange={(e) => handleSessionNameChange(e.target.value)}
               placeholder="e.g., Knee eval session 1, Shoulder follow-up..."
-              className="w-full px-4 py-3 bg-white/50 backdrop-blur-8 border border-white/30 rounded-xl 
-                         text-grey-900 placeholder-grey-500 focus:outline-none focus:ring-2 
-                         focus:ring-blue-primary/50 focus:border-blue-primary transition-all"
+              className="w-full px-4 py-3 bg-white dark:bg-[#1f1f1f] border border-grey-200 dark:border-white/15 rounded-xl 
+                         text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none focus:ring-2 
+                         focus:ring-blue-primary/50 dark:focus:ring-blue-primary/30 focus:border-blue-primary transition-all"
             />
           </div>
 
@@ -423,32 +423,32 @@ ${formatBillingForText(soap.billing)}`;
             <div className="flex items-center gap-2">
               {saveStatus === 'saving' && (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-primary" />
-                  <span className="text-sm text-grey-600">Saving...</span>
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-primary dark:text-blue-primary" />
+                  <span className="text-sm text-grey-600 dark:text-grey-400">Saving...</span>
                 </>
               )}
               {saveStatus === 'saved' && (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span className="text-sm text-grey-600">Saved</span>
+                  <span className="text-sm text-grey-600 dark:text-grey-400">Saved</span>
                 </>
               )}
               {saveStatus === 'copied' && (
                 <>
-                  <CheckCircle2 className="w-4 h-4 text-blue-primary" />
-                  <span className="text-sm text-grey-600">Copied!</span>
+                  <CheckCircle2 className="w-4 h-4 text-blue-primary dark:text-blue-primary" />
+                  <span className="text-sm text-grey-600 dark:text-grey-400">Copied!</span>
                 </>
               )}
               {saveStatus === 'exported' && (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span className="text-sm text-grey-600">PDF Downloaded!</span>
+                  <span className="text-sm text-grey-600 dark:text-grey-400">PDF Downloaded!</span>
                 </>
               )}
               {saveStatus === 'error' && (
                 <>
                   <AlertCircle className="w-4 h-4 text-red-500" />
-                  <span className="text-sm text-grey-600">Error</span>
+                  <span className="text-sm text-grey-600 dark:text-grey-400">Error</span>
                 </>
               )}
             </div>
@@ -460,19 +460,8 @@ ${formatBillingForText(soap.billing)}`;
                 disabled={(!hasUnsavedChanges && !localSessionName) || saveStatus === 'saving'}
                 className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
                            transition-all duration-200 disabled:opacity-50 
-                           disabled:cursor-not-allowed shadow-lg hover:shadow-xl font-medium"
-                style={{ 
-                  backgroundColor: '#007AFF',
-                  opacity: ((!hasUnsavedChanges && !localSessionName) || saveStatus === 'saving') ? 0.5 : 1
-                }}
-                onMouseEnter={(e) => {
-                  if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.backgroundColor = '#0051D5';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#007AFF';
-                }}
+                           disabled:cursor-not-allowed shadow-lg hover:shadow-xl font-medium
+                           bg-blue-primary dark:bg-blue-primary hover:bg-blue-dark dark:hover:bg-blue-dark"
               >
                 <Save className="w-4 h-4" />
                 Save Note
@@ -481,10 +470,8 @@ ${formatBillingForText(soap.billing)}`;
               <button
                 onClick={handleCopyToClipboard}
                 className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
-                           transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
-                style={{ backgroundColor: '#007AFF' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0051D5'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#007AFF'}
+                           transition-all duration-200 shadow-lg hover:shadow-xl font-medium
+                           bg-blue-primary dark:bg-blue-primary hover:bg-blue-dark dark:hover:bg-blue-dark"
               >
                 <Copy className="w-4 h-4" />
                 Copy
@@ -493,10 +480,7 @@ ${formatBillingForText(soap.billing)}`;
               <button
                 onClick={handlePDFExport}
                 className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
-                           transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
-                style={{ backgroundColor: '#007AFF' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0051D5'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#007AFF'}
+                           transition-all duration-200 shadow-lg hover:shadow-xl font-medium bg-blue-primary dark:bg-blue-primary hover:bg-blue-dark dark:hover:bg-blue-dark"
               >
                 <Download className="w-4 h-4" />
                 PDF
@@ -517,9 +501,9 @@ ${formatBillingForText(soap.billing)}`;
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <div className="bg-white/25 backdrop-blur-20 border border-white/30 rounded-2xl p-8 flex items-center gap-4">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-primary" />
-                <span className="text-lg font-medium text-grey-900">Generating SOAP note...</span>
+              <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-8 flex items-center gap-4 transition-colors">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-primary dark:text-blue-primary" />
+                <span className="text-lg font-medium text-grey-900 dark:text-grey-100">Generating SOAP note...</span>
               </div>
             </motion.div>
           )}
@@ -535,17 +519,17 @@ ${formatBillingForText(soap.billing)}`;
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-semibold text-grey-900">Subjective</h2>
+              <h2 className="text-2xl font-semibold text-grey-900 dark:text-grey-100">Subjective</h2>
               {confidenceScores.subjective && getSectionIcon(confidenceScores.subjective)}
             </div>
             {confidenceScores.subjective && (
-              <div className="text-sm text-grey-500">
+              <div className="text-sm text-grey-500 dark:text-grey-400">
                 Confidence: {Math.round(confidenceScores.subjective * 100)}%
               </div>
             )}
           </div>
           
-          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 transition-colors">
             <WYSIWYGEditor
               content={soapData.subjective?.content || ''}
               placeholder={soapData.subjective?.placeholder || 'Patient history, pain description, functional limitations...'}
@@ -567,17 +551,17 @@ ${formatBillingForText(soap.billing)}`;
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-semibold text-grey-900">Objective</h2>
+              <h2 className="text-2xl font-semibold text-grey-900 dark:text-grey-100">Objective</h2>
               {confidenceScores.objective && getSectionIcon(confidenceScores.objective)}
             </div>
             {confidenceScores.objective && (
-              <div className="text-sm text-grey-500">
+              <div className="text-sm text-grey-500 dark:text-grey-400">
                 Confidence: {Math.round(confidenceScores.objective * 100)}%
               </div>
             )}
           </div>
           
-          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 transition-colors">
             <ObjectiveTable
               data={soapData.objective || { headers: [], rows: [] }}
               onChange={(objectiveData) => {
@@ -601,24 +585,24 @@ ${formatBillingForText(soap.billing)}`;
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-semibold text-grey-900">Assessment</h2>
+              <h2 className="text-2xl font-semibold text-grey-900 dark:text-grey-100">Assessment</h2>
               {confidenceScores.assessment && getSectionIcon(confidenceScores.assessment)}
             </div>
             {confidenceScores.assessment && (
-              <div className="text-sm text-grey-500">
+              <div className="text-sm text-grey-500 dark:text-grey-400">
                 Confidence: {Math.round(confidenceScores.assessment * 100)}%
               </div>
             )}
           </div>
           
-          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6 space-y-6">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 space-y-6 transition-colors">
             {/* Check if assessment has the new structure (with goals) or old structure (just content) */}
             {soapData.assessment?.clinical_impression !== undefined ? (
               // New structure with goals
               <>
                 {/* Clinical Impression */}
                 <div>
-                  <h3 className="text-lg font-medium text-grey-900 mb-3">Clinical Impression</h3>
+                  <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">Clinical Impression</h3>
                   <WYSIWYGEditor
                     content={soapData.assessment.clinical_impression?.content || ''}
                     placeholder="Clinical reasoning, diagnosis, contributing factors, prognosis..."
@@ -634,7 +618,7 @@ ${formatBillingForText(soap.billing)}`;
                 {/* Medical Necessity */}
                 {soapData.assessment.medical_necessity !== undefined && (
                   <div>
-                    <h3 className="text-lg font-medium text-grey-900 mb-3">Medical Necessity</h3>
+                    <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">Medical Necessity</h3>
                     <WYSIWYGEditor
                       content={soapData.assessment.medical_necessity?.content || ''}
                       placeholder="Why PT is needed: functional limitations, safety concerns, impact on ADLs..."
@@ -650,7 +634,7 @@ ${formatBillingForText(soap.billing)}`;
 
                 {/* Short Term Goals */}
                 <div>
-                  <h3 className="text-lg font-medium text-grey-900 mb-3">Short Term Goals (2-4 weeks)</h3>
+                  <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">Short Term Goals (2-4 weeks)</h3>
                   <GoalsList
                     goals={soapData.assessment.short_term_goals?.items || []}
                     placeholder="e.g., Reduce pain to 3/10, Improve ROM to 120°"
@@ -663,7 +647,7 @@ ${formatBillingForText(soap.billing)}`;
 
                 {/* Long Term Goals */}
                 <div>
-                  <h3 className="text-lg font-medium text-grey-900 mb-3">Long Term Goals (6-12 weeks)</h3>
+                  <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">Long Term Goals (6-12 weeks)</h3>
                   <GoalsList
                     goals={soapData.assessment.long_term_goals?.items || []}
                     placeholder="e.g., Return to sport, Independent with HEP"
@@ -698,24 +682,24 @@ ${formatBillingForText(soap.billing)}`;
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-semibold text-grey-900">Plan</h2>
+              <h2 className="text-2xl font-semibold text-grey-900 dark:text-grey-100">Plan</h2>
               {confidenceScores.plan && getSectionIcon(confidenceScores.plan)}
             </div>
             {confidenceScores.plan && (
-              <div className="text-sm text-grey-500">
+              <div className="text-sm text-grey-500 dark:text-grey-400">
                 Confidence: {Math.round(confidenceScores.plan * 100)}%
               </div>
             )}
           </div>
           
-          <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6 space-y-6">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 space-y-6 transition-colors">
             {/* Check if plan has the new structure (with interventions) or old structure (just content) */}
             {soapData.plan?.interventions !== undefined ? (
               // New structure with interventions, progressions, regressions
               <>
                 {/* Interventions */}
                 <div>
-                  <h3 className="text-lg font-medium text-grey-900 mb-3">Interventions</h3>
+                  <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">Interventions</h3>
                   <InterventionsList
                     items={soapData.plan.interventions?.items || []}
                     placeholder="e.g., Patellar mobilizations, Quad strengthening"
@@ -729,7 +713,7 @@ ${formatBillingForText(soap.billing)}`;
 
                 {/* Progressions */}
                 <div>
-                  <h3 className="text-lg font-medium text-grey-900 mb-3">Progressions</h3>
+                  <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">Progressions</h3>
                   <InterventionsList
                     items={soapData.plan.progressions?.items || []}
                     placeholder="e.g., Increase resistance, progress to single leg"
@@ -743,7 +727,7 @@ ${formatBillingForText(soap.billing)}`;
 
                 {/* Regressions */}
                 <div>
-                  <h3 className="text-lg font-medium text-grey-900 mb-3">Regressions</h3>
+                  <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">Regressions</h3>
                   <InterventionsList
                     items={soapData.plan.regressions?.items || []}
                     placeholder="e.g., Reduce ROM if pain increases"
@@ -757,7 +741,7 @@ ${formatBillingForText(soap.billing)}`;
 
                 {/* Frequency & Duration */}
                 <div>
-                  <h3 className="text-lg font-medium text-grey-900 mb-3">Frequency & Duration</h3>
+                  <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">Frequency & Duration</h3>
                   <WYSIWYGEditor
                     content={soapData.plan.frequency_duration?.content || ''}
                     placeholder="Treatment frequency, session duration, expected timeline..."
@@ -772,7 +756,7 @@ ${formatBillingForText(soap.billing)}`;
 
                 {/* Patient Education */}
                 <div>
-                  <h3 className="text-lg font-medium text-grey-900 mb-3">Patient Education</h3>
+                  <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">Patient Education</h3>
                   <WYSIWYGEditor
                     content={soapData.plan.patient_education?.content || ''}
                     placeholder="Home exercise program, activity modifications, precautions..."
@@ -810,14 +794,14 @@ ${formatBillingForText(soap.billing)}`;
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-semibold text-grey-900">Billing</h2>
+                <h2 className="text-2xl font-semibold text-grey-900 dark:text-grey-100">Billing</h2>
               </div>
             </div>
             
-            <div className="bg-white/25 backdrop-blur-16 border border-white/20 rounded-2xl p-6 space-y-6">
+            <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 space-y-6 transition-colors">
               {/* CPT Codes */}
               <div>
-                <h3 className="text-lg font-medium text-grey-900 mb-3">CPT Codes</h3>
+                <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">CPT Codes</h3>
                 <InterventionsList
                   items={soapData.billing.cpt_codes?.items || []}
                   placeholder="e.g., 97110 - Therapeutic Exercise"
@@ -831,7 +815,7 @@ ${formatBillingForText(soap.billing)}`;
 
               {/* Units */}
               <div>
-                <h3 className="text-lg font-medium text-grey-900 mb-3">Time Units</h3>
+                <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">Time Units</h3>
                 <WYSIWYGEditor
                   content={soapData.billing.units?.content || ''}
                   placeholder="Time-based units (1 unit = 15 minutes). Example: 97110 (2 units, 30 min)"
@@ -846,7 +830,7 @@ ${formatBillingForText(soap.billing)}`;
 
               {/* ICD-10 Codes */}
               <div>
-                <h3 className="text-lg font-medium text-grey-900 mb-3">ICD-10 Diagnosis Codes</h3>
+                <h3 className="text-lg font-medium text-grey-900 dark:text-grey-100 mb-3">ICD-10 Diagnosis Codes</h3>
                 <InterventionsList
                   items={soapData.billing.icd10_codes?.items || []}
                   placeholder="e.g., M25.561 - Pain in right knee"

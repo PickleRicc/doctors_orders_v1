@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, X, ChevronRight, ChevronLeft, Check, Home, FileText, Settings, Mic, Template, Calendar, ArrowRight } from 'lucide-react';
-import { useRouter } from 'next/router';
 
 /**
  * Tutorial Module Component
@@ -10,7 +9,6 @@ import { useRouter } from 'next/router';
 const TutorialModule = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState([]);
-  const router = useRouter();
 
   // Tutorial steps with content and actions
   const tutorialSteps = [
@@ -168,7 +166,8 @@ const TutorialModule = ({ isOpen, onClose }) => {
   const handleAction = () => {
     const action = tutorialSteps[currentStep].action;
     if (action && action.path) {
-      router.push(action.path);
+      // Since this is a single-page app, we'll just close the tutorial
+      // Navigation actions are informational only in this context
       onClose();
     }
   };

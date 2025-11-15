@@ -83,7 +83,7 @@ const WYSIWYGEditor = ({
         p-2 rounded-lg transition-all duration-200
         ${isActive 
           ? 'bg-blue-primary text-white shadow-md' 
-          : 'bg-white/25 backdrop-blur-8 border border-white/20 hover:bg-white/35'
+          : 'bg-white/25 dark:bg-[#1f1f1f] border border-white/20 dark:border-white/10 hover:bg-white/35 dark:hover:bg-[#2a2a2a]'
         }
       `}
       title={label}
@@ -111,7 +111,7 @@ const WYSIWYGEditor = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute -top-16 left-0 z-20 flex items-center gap-1 bg-white/80 backdrop-blur-20 border border-white/30 rounded-xl px-3 py-2 shadow-lg"
+            className="absolute -top-16 left-0 z-20 flex items-center gap-1 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-xl px-3 py-2 shadow-lg transition-colors"
           >
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBold().run()}
@@ -126,7 +126,7 @@ const WYSIWYGEditor = ({
               label="Italic"
             />
             
-            <div className="w-px h-6 bg-grey-300 mx-2" />
+            <div className="w-px h-6 bg-grey-300 dark:bg-white/10 mx-2" />
             
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -141,7 +141,7 @@ const WYSIWYGEditor = ({
               label="Numbered List"
             />
             
-            <div className="w-px h-6 bg-grey-300 mx-2" />
+            <div className="w-px h-6 bg-grey-300 dark:bg-white/10 mx-2" />
             
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBlockquote().run()}
@@ -150,7 +150,7 @@ const WYSIWYGEditor = ({
               label="Quote"
             />
             
-            <div className="w-px h-6 bg-grey-300 mx-2" />
+            <div className="w-px h-6 bg-grey-300 dark:bg-white/10 mx-2" />
             
             <ToolbarButton
               onClick={() => editor.chain().focus().undo().run()}
@@ -170,11 +170,11 @@ const WYSIWYGEditor = ({
 
       {/* Editor Content */}
       <div 
-        className={`
+          className={`
           editor-content transition-all duration-300 rounded-lg
           ${isFocused 
-            ? 'ring-2 ring-blue-primary/20 bg-white/30' 
-            : 'bg-white/10 hover:bg-white/20'
+            ? 'ring-2 ring-blue-primary/20 dark:ring-blue-primary/30 bg-white/30 dark:bg-[#1f1f1f]' 
+            : 'bg-white/10 dark:bg-[#1f1f1f]/50 hover:bg-white/20 dark:hover:bg-[#1f1f1f]'
           }
         `}
       >
@@ -186,7 +186,7 @@ const WYSIWYGEditor = ({
 
       {/* Character Count (if content exists) */}
       {content && content.length > 50 && (
-        <div className="absolute bottom-2 right-3 text-xs text-grey-500">
+        <div className="absolute bottom-2 right-3 text-xs text-grey-500 dark:text-grey-400">
           {editor.storage.characterCount?.characters() || content.length} characters
         </div>
       )}
@@ -201,12 +201,20 @@ const WYSIWYGEditor = ({
           color: #111827;
         }
 
+        .dark .wysiwyg-editor .ProseMirror {
+          color: #e5e5e5;
+        }
+
         .wysiwyg-editor .ProseMirror.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           float: left;
           color: #9ca3af;
           pointer-events: none;
           height: 0;
+        }
+
+        .dark .wysiwyg-editor .ProseMirror.is-editor-empty:first-child::before {
+          color: #6a6a6a;
         }
 
         .wysiwyg-editor .ProseMirror p {
@@ -239,14 +247,27 @@ const WYSIWYGEditor = ({
           color: #4b5563;
         }
 
+        .dark .wysiwyg-editor .ProseMirror blockquote {
+          border-left-color: var(--blue-primary);
+          color: #9a9a9a;
+        }
+
         .wysiwyg-editor .ProseMirror strong {
           font-weight: 600;
           color: #111827;
         }
 
+        .dark .wysiwyg-editor .ProseMirror strong {
+          color: #e5e5e5;
+        }
+
         .wysiwyg-editor .ProseMirror em {
           font-style: italic;
           color: #374151;
+        }
+
+        .dark .wysiwyg-editor .ProseMirror em {
+          color: #9a9a9a;
         }
 
         .wysiwyg-editor .ProseMirror h1,
@@ -255,6 +276,12 @@ const WYSIWYGEditor = ({
           font-weight: 600;
           color: #111827;
           margin: 1rem 0 0.5rem 0;
+        }
+
+        .dark .wysiwyg-editor .ProseMirror h1,
+        .dark .wysiwyg-editor .ProseMirror h2,
+        .dark .wysiwyg-editor .ProseMirror h3 {
+          color: #e5e5e5;
         }
 
         .wysiwyg-editor .ProseMirror h1 {

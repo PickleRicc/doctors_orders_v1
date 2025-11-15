@@ -1,6 +1,27 @@
+const withOpacityValue = (variable) => ({ opacityValue } = {}) => {
+  if (opacityValue === undefined) {
+    return `rgb(var(${variable}))`;
+  }
+  return `rgb(var(${variable}) / ${opacityValue})`;
+};
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
+  safelist: [
+    'text-blue-primary',
+    'dark:text-blue-primary',
+    'bg-blue-primary',
+    'dark:bg-blue-primary',
+    'bg-blue-primary/15',
+    'bg-blue-primary/20',
+    'text-blue-primary/80',
+    'border-blue-primary',
+    'border-blue-primary/20',
+    'border-blue-primary/30',
+    'ring-blue-primary',
+    'ring-blue-primary/20',
+  ],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -14,12 +35,11 @@ module.exports = {
         sans: ['var(--font-sans)', 'Roboto', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
       colors: {
-        // Primary colors from style guide
-        blue: {
-          primary: '#007AFF', // Apple Blue per style guide
-          light: 'rgba(0, 122, 255, 0.1)',
-          dark: '#0056b3', // Darker shade of Apple Blue
-        },
+        // Theme-aware accent colors (works in both light/dark via CSS vars)
+        'blue-primary': withOpacityValue('--blue-primary-rgb'),
+        'blue-light': withOpacityValue('--blue-light-rgb'),
+        'blue-dark': withOpacityValue('--blue-dark-rgb'),
+        'blue-accent': withOpacityValue('--blue-accent-rgb'),
         // Glassmorphism palette
         glass: {
           light: 'rgba(255, 255, 255, 0.25)',
@@ -36,6 +56,14 @@ module.exports = {
           500: '#a8a29e',
           700: '#454440',
           900: '#1f1f1f',
+          // Dark mode variants
+          '50-dark': '#0f0f0f',
+          '100-dark': '#1a1a1a',
+          '300-dark': '#2a2a2a',
+          '500-dark': '#4a4a4a',
+          '700-dark': '#6a6a6a',
+          '800-dark': '#1f1f1f',
+          '900-dark': '#e5e5e5',
         },
         // UI semantic colors
         background: '#fbfbfa', // Notion Grey 50

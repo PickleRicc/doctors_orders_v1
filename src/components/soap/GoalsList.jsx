@@ -86,8 +86,8 @@ const GoalsList = ({
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
                     onKeyDown={(e) => handleKeyPress(e, () => handleSaveEdit(index))}
-                    className="flex-1 px-3 py-2 bg-white/50 backdrop-blur-8 border border-blue-primary/50 
-                               rounded-lg text-grey-900 focus:outline-none focus:ring-2 focus:ring-blue-primary/30"
+                    className="flex-1 px-3 py-2 bg-white dark:bg-[#1f1f1f] border border-blue-primary/50 dark:border-blue-primary/30 
+                               rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary/30 dark:focus:ring-blue-primary/20"
                     autoFocus
                   />
                   <button
@@ -101,9 +101,9 @@ const GoalsList = ({
               ) : (
                 <div
                   onClick={() => handleEditGoal(index)}
-                  className="px-3 py-2 rounded-lg hover:bg-white/30 cursor-pointer transition-colors"
+                  className="px-3 py-2 rounded-lg hover:bg-white/30 dark:hover:bg-[#1f1f1f] cursor-pointer transition-colors"
                 >
-                  <p className="text-grey-900">{goal}</p>
+                  <p className="text-grey-900 dark:text-grey-100">{goal}</p>
                 </div>
               )}
             </div>
@@ -111,8 +111,8 @@ const GoalsList = ({
             {/* Remove Button */}
             <button
               onClick={() => handleRemoveGoal(index)}
-              className="opacity-0 group-hover:opacity-100 p-1.5 text-grey-500 hover:text-red-500 
-                         hover:bg-red-50 rounded-lg transition-all"
+              className="opacity-0 group-hover:opacity-100 p-1.5 text-grey-500 dark:text-grey-400 hover:text-red-500 
+                         hover:bg-red-50 dark:hover:bg-red-500/20 rounded-lg transition-all"
               title="Remove goal"
             >
               <X className="w-4 h-4" />
@@ -135,9 +135,9 @@ const GoalsList = ({
             onChange={(e) => setNewGoalText(e.target.value)}
             onKeyDown={(e) => handleKeyPress(e, handleAddGoal)}
             placeholder={placeholder}
-            className="flex-1 px-3 py-2 bg-white/50 backdrop-blur-8 border border-blue-primary/50 
-                       rounded-lg text-grey-900 placeholder-grey-500 focus:outline-none focus:ring-2 
-                       focus:ring-blue-primary/30"
+            className="flex-1 px-3 py-2 bg-white dark:bg-[#1f1f1f] border border-blue-primary/50 dark:border-blue-primary/30 
+                       rounded-lg text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none focus:ring-2 
+                       focus:ring-blue-primary/30 dark:focus:ring-blue-primary/20"
             autoFocus
           />
           <button
@@ -152,7 +152,7 @@ const GoalsList = ({
               setIsAddingNew(false);
               setNewGoalText('');
             }}
-            className="p-2 text-grey-500 hover:text-grey-700 hover:bg-grey-100 rounded-lg transition-colors"
+            className="p-2 text-grey-500 dark:text-grey-400 hover:text-grey-700 dark:hover:text-grey-300 hover:bg-grey-100 dark:hover:bg-[#1f1f1f] rounded-lg transition-colors"
             title="Cancel"
           >
             <X className="w-4 h-4" />
@@ -171,7 +171,7 @@ const GoalsList = ({
 
       {/* Empty State */}
       {goals.length === 0 && !isAddingNew && (
-        <p className="text-grey-500 text-sm italic py-2">No goals added yet. Click "Add Goal" to start.</p>
+        <p className="text-grey-500 dark:text-grey-400 text-sm italic py-2">No goals added yet. Click "Add Goal" to start.</p>
       )}
     </div>
   );

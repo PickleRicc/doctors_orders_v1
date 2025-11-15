@@ -24,7 +24,7 @@ const TEMPLATES = [
   { id: 'neck', name: 'Neck', icon: Wind, description: 'Cervical spine', category: 'bodyPart' }
 ];
 
-const BLUE_PRIMARY = '#007AFF';
+// Using CSS variable for blue-primary instead of hardcoded value
 
 export default function TemplateSelector() {
   const { appState, selectedTemplate, selectTemplate, finishProcessing } = useAppState();
@@ -229,10 +229,10 @@ export default function TemplateSelector() {
         transition={{ delay: 0.2 }}
         className="text-center mb-10"
       >
-        <h2 className="text-2xl font-semibold text-grey-900 mb-2">
+        <h2 className="text-2xl font-semibold text-grey-900 dark:text-grey-100 mb-2">
           {selectedTemplate ? 'Template Selected' : 'Select Template to Begin'}
         </h2>
-        <p className="text-base text-grey-600">
+        <p className="text-base text-grey-600 dark:text-grey-400">
           {selectedTemplate
             ? 'Ready to start recording'
             : 'Choose the body region for this evaluation'}
@@ -241,7 +241,7 @@ export default function TemplateSelector() {
 
       {/* Universal Templates Section */}
       <div className="mb-8">
-        <h3 className="text-sm font-semibold text-grey-500 uppercase tracking-wide mb-4">Universal Templates</h3>
+        <h3 className="text-sm font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide mb-4">Universal Templates</h3>
         <div className="grid grid-cols-2 gap-4">
           {TEMPLATES.filter(t => t.category === 'universal').map((template, index) => {
             const isSelected = selectedTemplate === template.id;
@@ -259,31 +259,30 @@ export default function TemplateSelector() {
                 className={`
                   relative rounded-xl transition-all text-left overflow-hidden
                   ${isSelected
-                    ? 'bg-white shadow-lg ring-2'
-                    : 'bg-white hover:shadow-md border border-grey-100'
+                    ? 'bg-white dark:bg-[#1a1a1a] shadow-lg ring-2 ring-blue-primary dark:ring-blue-primary'
+                    : 'bg-white dark:bg-[#1a1a1a] hover:shadow-md border border-grey-100 dark:border-white/10'
                   }
                 `}
-                style={isSelected ? { borderColor: BLUE_PRIMARY } : {}}
               >
                 <div className="p-5 pb-4">
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
-                      style={{
-                        backgroundColor: isSelected ? `${BLUE_PRIMARY}15` : '#F9FAFB',
-                        color: isSelected ? BLUE_PRIMARY : '#6B7280'
-                      }}
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-primary/15 dark:bg-blue-primary/20 text-blue-primary dark:text-blue-primary' 
+                          : 'bg-grey-50 dark:bg-[#1f1f1f] text-grey-500 dark:text-grey-400'
+                      }`}
                     >
                       <Icon className="w-5 h-5" strokeWidth={2} />
                     </div>
-                    <div className="text-base font-semibold text-grey-900">
+                    <div className="text-base font-semibold text-grey-900 dark:text-grey-100">
                       {template.name}
                     </div>
                   </div>
                 </div>
-                <div className="h-px bg-grey-100" />
+                <div className="h-px bg-grey-100 dark:bg-white/10" />
                 <div className="p-5 pt-4">
-                  <div className="text-sm text-grey-600">
+                  <div className="text-sm text-grey-600 dark:text-grey-400">
                     {template.description}
                   </div>
                   
@@ -300,10 +299,9 @@ export default function TemplateSelector() {
                           }
                         }
                       }}
-                      className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 ${
+                      className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 text-blue-primary dark:text-blue-primary ${
                         isGenerating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                       }`}
-                      style={{ color: BLUE_PRIMARY }}
                     >
                       {isGenerating ? (
                         <>
@@ -323,8 +321,7 @@ export default function TemplateSelector() {
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm"
-                    style={{ backgroundColor: BLUE_PRIMARY }}
+                    className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm bg-blue-primary dark:bg-blue-primary"
                   >
                     ✓
                   </motion.div>
@@ -337,7 +334,7 @@ export default function TemplateSelector() {
 
       {/* Body-Part Specific Templates Section */}
       <div>
-        <h3 className="text-sm font-semibold text-grey-500 uppercase tracking-wide mb-4">Body-Part Evaluations</h3>
+        <h3 className="text-sm font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide mb-4">Body-Part Evaluations</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {TEMPLATES.filter(t => t.category === 'bodyPart').map((template, index) => {
             const isSelected = selectedTemplate === template.id;
@@ -355,36 +352,35 @@ export default function TemplateSelector() {
               className={`
                 relative rounded-xl transition-all text-left overflow-hidden
                 ${isSelected
-                  ? 'bg-white shadow-lg ring-2'
-                  : 'bg-white hover:shadow-md border border-grey-100'
+                  ? 'bg-white dark:bg-[#1a1a1a] shadow-lg ring-2 ring-blue-primary dark:ring-blue-primary'
+                  : 'bg-white dark:bg-[#1a1a1a] hover:shadow-md border border-grey-100 dark:border-white/10'
                 }
               `}
-              style={isSelected ? { borderColor: BLUE_PRIMARY } : {}}
             >
               {/* Icon & Name Section */}
               <div className="p-5 pb-4">
                 <div className="flex items-center gap-3">
                   <div 
-                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
-                    style={{
-                      backgroundColor: isSelected ? `${BLUE_PRIMARY}15` : '#F9FAFB',
-                      color: isSelected ? BLUE_PRIMARY : '#6B7280'
-                    }}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                      isSelected 
+                        ? 'bg-blue-primary/15 dark:bg-blue-primary/20 text-blue-primary dark:text-blue-primary' 
+                        : 'bg-grey-50 dark:bg-[#1f1f1f] text-grey-500 dark:text-grey-400'
+                    }`}
                   >
                     <Icon className="w-5 h-5" strokeWidth={2} />
                   </div>
-                  <div className="text-base font-semibold text-grey-900">
+                  <div className="text-base font-semibold text-grey-900 dark:text-grey-100">
                     {template.name}
                   </div>
                 </div>
               </div>
 
               {/* Divider */}
-              <div className="h-px bg-grey-100" />
+              <div className="h-px bg-grey-100 dark:bg-white/10" />
 
               {/* Description Section */}
               <div className="p-5 pt-4">
-                <div className="text-sm text-grey-600">
+                <div className="text-sm text-grey-600 dark:text-grey-400">
                   {template.description}
                 </div>
                 
@@ -397,10 +393,9 @@ export default function TemplateSelector() {
                         handleTestMode();
                       }
                     }}
-                    className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 ${
+                    className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 text-blue-primary dark:text-blue-primary ${
                       isGenerating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                     }`}
-                    style={{ color: BLUE_PRIMARY }}
                   >
                     {isGenerating ? (
                       <>
@@ -422,8 +417,7 @@ export default function TemplateSelector() {
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm"
-                  style={{ backgroundColor: BLUE_PRIMARY }}
+                  className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm bg-blue-primary dark:bg-blue-primary"
                 >
                   ✓
                 </motion.div>
