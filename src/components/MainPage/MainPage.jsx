@@ -19,10 +19,14 @@ import { authenticatedFetch } from '../../lib/authHeaders';
 
 export default function MainPage() {
   const { appState, createNewNote, currentNote, sessionName, setSessionName, triggerRefresh, updateCurrentNote } = useAppState();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [greeting, setGreeting] = useState('Good Morning');
+  
+  // Get user's last name for personalized greeting
+  const userLastName = user?.user_metadata?.last_name || '';
+  const doctorName = userLastName ? `Dr. ${userLastName}` : 'Doctor';
 
   // Update greeting based on time of day
   useEffect(() => {
@@ -207,7 +211,7 @@ export default function MainPage() {
                   </div>
 
                   <h1 className="text-4xl font-semibold text-grey-900 dark:text-grey-100">
-                    {greeting}, Doctor
+                    {greeting}, {doctorName}
                   </h1>
                   <p className="text-xl text-blue-primary font-medium">
                     Ready to <span className="text-blue-primary">Document Your Session?</span>

@@ -10,6 +10,7 @@ import { transcribeAudio } from '../../services/transcriptionService';
 import { useTemplateManager } from '../../hooks/templates/useTemplateManager';
 import { createAIService } from '../../services/structuredAI';
 import { authenticatedFetch } from '../../lib/authHeaders';
+import GenerationProgress from '../recording/GenerationProgress';
 
 export default function RecordingInterface() {
   const { appState, selectedTemplate, startRecording, stopRecording, finishProcessing, sessionName, setSessionName, triggerRefresh } = useAppState();
@@ -431,17 +432,11 @@ export default function RecordingInterface() {
 
         {/* Processing */}
         {showProcessing && (
-          <motion.div
-            key="processing"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="text-center"
-          >
-            <Loader2 className="w-12 h-12 mx-auto animate-spin mb-4" style={{ color: 'rgb(var(--blue-primary-rgb))' }} />
-            <p className="text-grey-600 dark:text-grey-400 font-medium">{processingStatus || 'Processing...'}</p>
-            <p className="text-sm text-grey-500 dark:text-grey-400 mt-2">This may take a few moments</p>
-          </motion.div>
+          <GenerationProgress 
+            onComplete={() => {
+              // Component will handle its own cleanup
+            }}
+          />
         )}
       </AnimatePresence>
 

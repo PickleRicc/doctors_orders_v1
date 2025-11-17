@@ -3,13 +3,14 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, User, Heart, Zap, Footprints, Wind, Loader2, Calendar, CheckCircle, Sparkles } from 'lucide-react';
 import { useAppState, APP_STATES } from './StateManager';
 import { useTemplateManager } from '../../hooks/templates/useTemplateManager';
 import { createAIService } from '../../services/structuredAI';
 import { sampleTranscriptions } from '../../utils/testData';
 import { authenticatedFetch } from '../../lib/authHeaders';
+import GenerationProgress from '../recording/GenerationProgress';
 
 const TEMPLATES = [
   // Universal Templates
@@ -38,6 +39,17 @@ export default function TemplateSelector() {
 
   if (appState !== APP_STATES.IDLE && appState !== APP_STATES.TEMPLATE_SELECTED) {
     return null;
+  }
+
+  // Show generation progress when generating
+  if (generatingTemplateId) {
+    return (
+      <GenerationProgress 
+        onComplete={() => {
+          // Component will handle its own cleanup
+        }}
+      />
+    );
   }
 
   const handleTestMode = async () => {
