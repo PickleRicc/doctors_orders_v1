@@ -6,8 +6,16 @@
 import { motion } from 'framer-motion';
 import { useAppState, APP_STATES } from './StateManager';
 
+// Helper to get CSS variable color value
+const getCSSColor = (varName) => {
+  if (typeof window !== 'undefined') {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#007AFF';
+  }
+  return '#007AFF';
+};
+
 const TEMPLATE_COLORS = {
-  knee: '#007AFF',
+  knee: () => getCSSColor('--blue-primary'),
   shoulder: '#5856D6',
   back: '#34C759',
   hip: '#FF9500',
@@ -20,9 +28,13 @@ export default function BlobPlaceholder() {
 
   const getColor = () => {
     if (selectedTemplate) {
-      return TEMPLATE_COLORS[selectedTemplate] || '#007AFF';
+      const colorValue = TEMPLATE_COLORS[selectedTemplate];
+      if (colorValue) {
+        return typeof colorValue === 'function' ? colorValue() : colorValue;
+      }
+      return getCSSColor('--blue-primary');
     }
-    return '#007AFF';
+    return getCSSColor('--blue-primary');
   };
 
   const getBlobState = () => {

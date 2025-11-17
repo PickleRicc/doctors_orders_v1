@@ -127,7 +127,18 @@ export default function Sidebar() {
                     placeholder="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1f1f1f] border border-grey-200 dark:border-white/15 rounded-lg text-sm text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none focus:ring-2 focus:ring-blue-primary/20 dark:focus:ring-blue-primary/30 focus:border-blue-primary transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1f1f1f] border border-grey-200 dark:border-white/15 rounded-lg text-sm text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none transition-all"
+                    style={{
+                      '--tw-ring-color': 'rgba(var(--blue-primary-rgb), 0.2)'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'rgb(var(--blue-primary-rgb))';
+                      e.target.style.boxShadow = `0 0 0 3px rgba(var(--blue-primary-rgb), 0.1)`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '';
+                      e.target.style.boxShadow = '';
+                    }}
                   />
                 </div>
               </div>
@@ -146,7 +157,13 @@ export default function Sidebar() {
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {loading ? (
                   <div className="text-center py-8 text-grey-500 dark:text-grey-400">
-                    <div className="animate-spin w-6 h-6 border-2 border-blue-primary dark:border-blue-primary border-t-transparent rounded-full mx-auto mb-2" />
+                    <div 
+                      className="animate-spin w-6 h-6 border-2 border-t-transparent rounded-full mx-auto mb-2"
+                      style={{
+                        borderColor: 'rgb(var(--blue-primary-rgb))',
+                        borderTopColor: 'transparent'
+                      }}
+                    />
                     Loading notes...
                   </div>
                 ) : filteredNotes.length === 0 ? (
@@ -183,14 +200,18 @@ export default function Sidebar() {
                       <div className="flex items-start gap-3">
                         {/* Template Icon */}
                         <div 
-                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-primary/15 dark:bg-blue-primary/20 text-blue-primary dark:text-blue-primary"
+                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{
+                            backgroundColor: 'rgba(var(--blue-primary-rgb), 0.15)',
+                            color: 'rgb(var(--blue-primary-rgb))'
+                          }}
                         >
                           <FileText className="w-5 h-5" />
                         </div>
 
                         {/* Note Info */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-grey-900 dark:text-grey-100 truncate transition-colors group-hover:text-blue-primary dark:group-hover:text-blue-primary">
+                          <h3 className="font-medium text-grey-900 dark:text-grey-100 truncate transition-colors group-hover:text-blue-primary">
                             {note.session_title || `${note.template_type} Evaluation`}
                           </h3>
                           <div className="flex items-center gap-2 mt-1 text-xs text-grey-500 dark:text-grey-400">
@@ -199,7 +220,11 @@ export default function Sidebar() {
                           </div>
                           <div className="mt-1">
                             <span 
-                              className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-blue-primary/15 dark:bg-blue-primary/20 text-blue-primary dark:text-blue-primary"
+                              className="inline-block px-2 py-0.5 text-xs font-medium rounded-full"
+                              style={{
+                                backgroundColor: 'rgba(var(--blue-primary-rgb), 0.15)',
+                                color: 'rgb(var(--blue-primary-rgb))'
+                              }}
                             >
                               {note.template_type}
                             </span>

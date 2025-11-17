@@ -26,7 +26,7 @@ import { ArrowRightCircle, CheckCircle } from 'lucide-react';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#007AFF', // Apple Blue to match our dashboard
+      main: 'var(--blue-primary)', // Theme-aware blue using CSS variable
     },
     background: {
       default: '#ffffff',
@@ -367,7 +367,7 @@ const SetupForm = ({
                 alignItems: 'flex-start',
                 gap: 1
               }}>
-                <CheckCircle size={18} color="#007AFF" />
+                <CheckCircle size={18} color="primary" />
                 <Box>
                   <Typography variant="body2" fontWeight={600} mb={0.5} color="text.primary">
                     {filteredTemplates[0]?.name || 'None'}
@@ -390,14 +390,12 @@ const SetupForm = ({
                 size="large"
                 endIcon={<ArrowRightCircle size={20} />}
                 sx={{
-                  bgcolor: '#007AFF', // Apple Blue to match dashboard
                   px: 4,
                   py: 1.5,
                   transition: 'all 0.2s ease',
                   '&:hover': {
-                    bgcolor: '#0068D9',
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 5px 15px rgba(0, 122, 255, 0.3)'
+                    boxShadow: 3
                   }
                 }}
               >

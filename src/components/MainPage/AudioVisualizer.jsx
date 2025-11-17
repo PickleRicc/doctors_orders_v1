@@ -10,8 +10,16 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useAppState, APP_STATES } from './StateManager';
 import * as THREE from 'three';
 
+// Helper to get CSS variable color value
+const getCSSColor = (varName) => {
+  if (typeof window !== 'undefined') {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#007AFF';
+  }
+  return '#007AFF';
+};
+
 const TEMPLATE_COLORS = {
-  knee: '#007AFF',
+  knee: () => getCSSColor('--blue-primary'),
   shoulder: '#5856D6',
   back: '#34C759',
   hip: '#FF9500',
@@ -159,7 +167,12 @@ export default function AudioVisualizer() {
   const analyserRef = useRef(null);
   const animationFrameRef = useRef(null);
 
-  const color = selectedTemplate ? TEMPLATE_COLORS[selectedTemplate] : TEMPLATE_COLORS.default;
+  const getTemplateColor = (template) => {
+    const colorValue = TEMPLATE_COLORS[template] || TEMPLATE_COLORS.default;
+    return typeof colorValue === 'function' ? colorValue() : colorValue;
+  };
+  
+  const color = selectedTemplate ? getTemplateColor(selectedTemplate) : TEMPLATE_COLORS.default;
 
   // Audio setup
   useEffect(() => {

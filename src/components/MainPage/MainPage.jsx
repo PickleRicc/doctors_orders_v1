@@ -131,7 +131,12 @@ export default function MainPage() {
         {/* Content Area */}
         <div className="max-w-4xl mx-auto px-8 py-12 relative">
           {/* Decorative gradient blob - BeeBot style */}
-          <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-br from-blue-primary/20 dark:from-blue-primary/30 via-purple-500/10 dark:via-purple-500/20 to-transparent rounded-full blur-3xl pointer-events-none transition-colors" />
+          <div 
+            className="absolute top-20 right-0 w-96 h-96 rounded-full blur-3xl pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle at 50% 50%, rgba(var(--blue-primary-rgb), 0.15), transparent)'
+            }}
+          />
           
           <AnimatePresence mode="wait">
             {/* Blob + Template Selection + Recording */}
@@ -160,7 +165,7 @@ export default function MainPage() {
                       }}
                       className="w-32 h-32 mx-auto rounded-full blur-2xl"
                       style={{ 
-                        background: 'radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.4), rgba(88, 86, 214, 0.3))'
+                        background: 'radial-gradient(circle at 30% 30%, rgba(var(--blue-primary-rgb), 0.4), rgba(var(--blue-primary-rgb), 0.2))'
                       }}
                     />
                     <motion.div
@@ -174,8 +179,8 @@ export default function MainPage() {
                       }}
                       className="absolute inset-0 w-24 h-24 mx-auto my-auto rounded-full shadow-lg"
                       style={{
-                        background: 'radial-gradient(circle at 30% 30%, var(--blue-primary), var(--blue-dark))',
-                        boxShadow: '0 0 60px rgba(59, 130, 246, 0.5), 0 0 120px rgba(59, 130, 246, 0.3)'
+                        background: 'radial-gradient(circle at 30% 30%, rgb(var(--blue-primary-rgb)), rgb(var(--blue-dark-rgb)))',
+                        boxShadow: `0 0 60px rgba(var(--blue-primary-rgb), 0.5), 0 0 120px rgba(var(--blue-primary-rgb), 0.3)`
                       }}
                     />
                     {/* Logo on top of blob - synced animation */}

@@ -57,13 +57,22 @@ export const DashboardCard = React.forwardRef(
         {...props}
       >
         {/* Blue accent top border */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-blue-primary" />
+        <div 
+          className="absolute top-0 inset-x-0 h-1" 
+          style={{ backgroundColor: 'rgb(var(--blue-primary-rgb))' }}
+        />
         
         {/* Icon container */}
         {icon && (
-          <div className="absolute top-4 right-4 p-2 rounded-full bg-blue-primary/10">
+          <div 
+            className="absolute top-4 right-4 p-2 rounded-full"
+            style={{ backgroundColor: 'rgba(var(--blue-primary-rgb), 0.1)' }}
+          >
             {React.isValidElement(icon) ? 
-              React.cloneElement(icon, { className: cn("w-6 h-6 text-blue-primary", icon.props.className) }) : 
+              React.cloneElement(icon, { 
+                className: cn("w-6 h-6", icon.props.className),
+                style: { color: 'rgb(var(--blue-primary-rgb))' }
+              }) : 
               icon
             }
           </div>

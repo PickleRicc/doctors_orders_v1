@@ -412,8 +412,15 @@ ${formatBillingForText(soap.billing)}`;
               onChange={(e) => handleSessionNameChange(e.target.value)}
               placeholder="e.g., Knee eval session 1, Shoulder follow-up..."
               className="w-full px-4 py-3 bg-white dark:bg-[#1f1f1f] border border-grey-200 dark:border-white/15 rounded-xl 
-                         text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none focus:ring-2 
-                         focus:ring-blue-primary/50 dark:focus:ring-blue-primary/30 focus:border-blue-primary transition-all"
+                         text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none transition-all"
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgb(var(--blue-primary-rgb))';
+                e.target.style.boxShadow = `0 0 0 3px rgba(var(--blue-primary-rgb), 0.1)`;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '';
+                e.target.style.boxShadow = '';
+              }}
             />
           </div>
 
@@ -423,7 +430,7 @@ ${formatBillingForText(soap.billing)}`;
             <div className="flex items-center gap-2">
               {saveStatus === 'saving' && (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-primary dark:text-blue-primary" />
+                  <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'rgb(var(--blue-primary-rgb))' }} />
                   <span className="text-sm text-grey-600 dark:text-grey-400">Saving...</span>
                 </>
               )}
@@ -435,7 +442,7 @@ ${formatBillingForText(soap.billing)}`;
               )}
               {saveStatus === 'copied' && (
                 <>
-                  <CheckCircle2 className="w-4 h-4 text-blue-primary dark:text-blue-primary" />
+                  <CheckCircle2 className="w-4 h-4" style={{ color: 'rgb(var(--blue-primary-rgb))' }} />
                   <span className="text-sm text-grey-600 dark:text-grey-400">Copied!</span>
                 </>
               )}
@@ -460,8 +467,8 @@ ${formatBillingForText(soap.billing)}`;
                 disabled={(!hasUnsavedChanges && !localSessionName) || saveStatus === 'saving'}
                 className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
                            transition-all duration-200 disabled:opacity-50 
-                           disabled:cursor-not-allowed shadow-lg hover:shadow-xl font-medium
-                           bg-blue-primary dark:bg-blue-primary hover:bg-blue-dark dark:hover:bg-blue-dark"
+                           disabled:cursor-not-allowed shadow-lg hover:shadow-xl font-medium hover:opacity-90"
+                style={{ backgroundColor: 'rgb(var(--blue-primary-rgb))' }}
               >
                 <Save className="w-4 h-4" />
                 Save Note
@@ -470,8 +477,8 @@ ${formatBillingForText(soap.billing)}`;
               <button
                 onClick={handleCopyToClipboard}
                 className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
-                           transition-all duration-200 shadow-lg hover:shadow-xl font-medium
-                           bg-blue-primary dark:bg-blue-primary hover:bg-blue-dark dark:hover:bg-blue-dark"
+                           transition-all duration-200 shadow-lg hover:shadow-xl font-medium hover:opacity-90"
+                style={{ backgroundColor: 'rgb(var(--blue-primary-rgb))' }}
               >
                 <Copy className="w-4 h-4" />
                 Copy
@@ -480,7 +487,8 @@ ${formatBillingForText(soap.billing)}`;
               <button
                 onClick={handlePDFExport}
                 className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
-                           transition-all duration-200 shadow-lg hover:shadow-xl font-medium bg-blue-primary dark:bg-blue-primary hover:bg-blue-dark dark:hover:bg-blue-dark"
+                           transition-all duration-200 shadow-lg hover:shadow-xl font-medium hover:opacity-90"
+                style={{ backgroundColor: 'rgb(var(--blue-primary-rgb))' }}
               >
                 <Download className="w-4 h-4" />
                 PDF
@@ -502,7 +510,7 @@ ${formatBillingForText(soap.billing)}`;
               exit={{ opacity: 0 }}
             >
               <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-8 flex items-center gap-4 transition-colors">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-primary dark:text-blue-primary" />
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'rgb(var(--blue-primary-rgb))' }} />
                 <span className="text-lg font-medium text-grey-900 dark:text-grey-100">Generating SOAP note...</span>
               </div>
             </motion.div>

@@ -15,19 +15,19 @@ const StyleGuideReference = () => {
         <h3 className="text-sm font-medium text-[#a8a29e] uppercase tracking-wider mb-3">Primary Colors</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex flex-col">
-            <div className="h-16 bg-[#007AFF] rounded-lg mb-2"></div>
+            <div className="h-16 bg-blue-primary rounded-lg mb-2"></div>
             <span className="text-xs font-medium">Blue Primary</span>
-            <span className="text-xs text-[#a8a29e]">#007AFF</span>
+            <span className="text-xs text-[#a8a29e]">Theme-aware</span>
           </div>
           <div className="flex flex-col">
-            <div className="h-16 bg-[rgba(0,122,255,0.1)] rounded-lg mb-2"></div>
+            <div className="h-16 bg-blue-primary/10 rounded-lg mb-2"></div>
             <span className="text-xs font-medium">Blue Light</span>
-            <span className="text-xs text-[#a8a29e]">rgba(0,122,255,0.1)</span>
+            <span className="text-xs text-[#a8a29e]">Theme-aware/10</span>
           </div>
           <div className="flex flex-col">
-            <div className="h-16 bg-gradient-to-r from-[#007AFF] to-[#5856D6] rounded-lg mb-2"></div>
+            <div className="h-16 bg-gradient-to-r from-blue-primary to-[#5856D6] rounded-lg mb-2"></div>
             <span className="text-xs font-medium">Blue Gradient</span>
-            <span className="text-xs text-[#a8a29e]">Linear Gradient</span>
+            <span className="text-xs text-[#a8a29e]">Theme gradient</span>
           </div>
         </div>
       </div>
@@ -105,8 +105,8 @@ const StyleGuideReference = () => {
         <p className="text-[#1f1f1f] mb-2">This is primary text using Grey 900 (#1f1f1f)</p>
         <p className="text-[#454440] mb-2">This is secondary text using Grey 700 (#454440)</p>
         <p className="text-[#a8a29e] mb-2">This is muted text using Grey 500 (#a8a29e)</p>
-        <p className="text-[#007AFF] mb-2">This is accent text using Blue Primary (#007AFF)</p>
-        <button className="bg-[#007AFF] hover:bg-[#0056b3] text-white px-4 py-2 rounded-lg transition-colors">
+        <p className="text-blue-primary mb-2">This is accent text using Blue Primary (theme-aware)</p>
+        <button className="bg-blue-primary hover:bg-blue-dark text-white px-4 py-2 rounded-lg transition-colors">
           Primary Button
         </button>
         <button className="ml-3 bg-[#ffffff] border border-[#f1f1ef] text-[#1f1f1f] hover:bg-[#fbfbfa] px-4 py-2 rounded-lg transition-colors">

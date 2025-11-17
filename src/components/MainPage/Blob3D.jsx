@@ -10,14 +10,22 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useAppState, APP_STATES } from './StateManager';
 import * as THREE from 'three';
 
+// Helper to get CSS variable color value
+const getCSSColor = (varName) => {
+  if (typeof window !== 'undefined') {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#007AFF';
+  }
+  return '#007AFF';
+};
+
 const TEMPLATE_COLORS = {
-  knee: '#007AFF',
+  knee: () => getCSSColor('--blue-primary'),
   shoulder: '#5856D6',
   back: '#34C759',
   hip: '#FF9500',
   'ankle-foot': '#5AC8FA',
   neck: '#FF2D55',
-  default: '#007AFF'
+  default: () => getCSSColor('--blue-primary')
 };
 
 function AudioReactiveIcosahedron({ audioLevel }) {
@@ -26,7 +34,11 @@ function AudioReactiveIcosahedron({ audioLevel }) {
 
   // Get color based on selected template
   const color = useMemo(() => {
-    return selectedTemplate ? TEMPLATE_COLORS[selectedTemplate] : TEMPLATE_COLORS.default;
+    const getTemplateColor = (template) => {
+      const colorValue = TEMPLATE_COLORS[template] || TEMPLATE_COLORS.default;
+      return typeof colorValue === 'function' ? colorValue() : colorValue;
+    };
+    return selectedTemplate ? getTemplateColor(selectedTemplate) : getTemplateColor('default');
   }, [selectedTemplate]);
 
   // Create custom shader material with perlin noise

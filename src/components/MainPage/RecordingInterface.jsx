@@ -328,7 +328,10 @@ export default function RecordingInterface() {
                     repeat: Infinity,
                     delay: i * 0.05,
                   }}
-                  className={`w-1 rounded-full ${isPaused ? 'bg-grey-400 dark:bg-grey-500' : 'bg-blue-primary dark:bg-blue-primary'}`}
+                  className="w-1 rounded-full"
+                  style={{
+                    backgroundColor: isPaused ? '#9ca3af' : 'rgb(var(--blue-primary-rgb))'
+                  }}
                 />
               ))}
             </div>
@@ -388,7 +391,15 @@ export default function RecordingInterface() {
               value={sessionName}
               onChange={(e) => setSessionName(e.target.value)}
               placeholder="e.g., John D. - Initial Eval"
-              className="w-full px-4 py-3 bg-white dark:bg-[#1f1f1f] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none focus:ring-2 focus:ring-blue-primary dark:focus:ring-blue-primary focus:border-transparent mb-4 transition-colors"
+              className="w-full px-4 py-3 bg-white dark:bg-[#1f1f1f] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none mb-4 transition-colors"
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgb(var(--blue-primary-rgb))';
+                e.target.style.boxShadow = `0 0 0 3px rgba(var(--blue-primary-rgb), 0.1)`;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '';
+                e.target.style.boxShadow = '';
+              }}
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -410,7 +421,8 @@ export default function RecordingInterface() {
               </button>
               <button
                 onClick={handleSubmitSession}
-                className="flex-1 px-4 py-2 text-white rounded-lg transition-colors bg-blue-primary dark:bg-blue-primary hover:bg-blue-dark dark:hover:bg-blue-dark"
+                className="flex-1 px-4 py-2 text-white rounded-lg transition-opacity hover:opacity-90"
+                style={{ backgroundColor: 'rgb(var(--blue-primary-rgb))' }}
               >
                 Generate SOAP Note
               </button>
@@ -427,7 +439,7 @@ export default function RecordingInterface() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="text-center"
           >
-            <Loader2 className="w-12 h-12 mx-auto animate-spin mb-4 text-blue-primary dark:text-blue-primary" />
+            <Loader2 className="w-12 h-12 mx-auto animate-spin mb-4" style={{ color: 'rgb(var(--blue-primary-rgb))' }} />
             <p className="text-grey-600 dark:text-grey-400 font-medium">{processingStatus || 'Processing...'}</p>
             <p className="text-sm text-grey-500 dark:text-grey-400 mt-2">This may take a few moments</p>
           </motion.div>

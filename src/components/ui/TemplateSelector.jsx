@@ -43,11 +43,18 @@ const TemplateSelector = ({
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className="mb-3 p-3 bg-gradient-to-r from-blue-primary/10 to-purple-600/10 backdrop-blur-8 border border-blue-primary/20 rounded-xl"
+            className="mb-3 p-3 backdrop-blur-8 rounded-xl"
+            style={{
+              background: 'linear-gradient(to right, rgba(var(--blue-primary-rgb), 0.1), rgba(139, 92, 246, 0.1))',
+              border: '1px solid rgba(var(--blue-primary-rgb), 0.2)'
+            }}
           >
             <div className="flex items-center gap-3">
-              <div className="p-1.5 bg-blue-primary/20 rounded-lg">
-                <Sparkles className="w-4 h-4 text-blue-primary" />
+              <div 
+                className="p-1.5 rounded-lg"
+                style={{ backgroundColor: 'rgba(var(--blue-primary-rgb), 0.2)' }}
+              >
+                <Sparkles className="w-4 h-4" style={{ color: 'rgb(var(--blue-primary-rgb))' }} />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-grey-900">
@@ -59,7 +66,8 @@ const TemplateSelector = ({
               </div>
               <button
                 onClick={() => handleTemplateSelect(suggestion.suggested)}
-                className="px-3 py-1.5 bg-blue-primary text-white text-xs font-medium rounded-lg hover:bg-blue-dark transition-colors"
+                className="px-3 py-1.5 text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: 'rgb(var(--blue-primary-rgb))' }}
               >
                 Use This
               </button>
@@ -75,8 +83,11 @@ const TemplateSelector = ({
           className="w-full flex items-center justify-between p-4 bg-white/25 backdrop-blur-16 border border-white/20 rounded-xl hover:bg-white/30 transition-colors"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-primary/20 rounded-lg flex items-center justify-center">
-              <span className="text-sm font-semibold text-blue-primary">
+            <div 
+              className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(var(--blue-primary-rgb), 0.2)' }}
+            >
+              <span className="text-sm font-semibold" style={{ color: 'rgb(var(--blue-primary-rgb))' }}>
                 {selectedTemplateData?.bodyRegion?.charAt(0).toUpperCase() || 'K'}
               </span>
             </div>
@@ -113,13 +124,16 @@ const TemplateSelector = ({
                       ${selectedTemplate === template.key ? 'bg-blue-light/30' : ''}
                     `}
                   >
-                    <div className={`
-                      w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold
-                      ${selectedTemplate === template.key 
-                        ? 'bg-blue-primary text-white' 
-                        : 'bg-grey-100 text-grey-600'
-                      }
-                    `}>
+                    <div 
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold"
+                      style={selectedTemplate === template.key ? {
+                        backgroundColor: 'rgb(var(--blue-primary-rgb))',
+                        color: 'white'
+                      } : {
+                        backgroundColor: '#f1f1ef',
+                        color: '#a8a29e'
+                      }}
+                    >
                       {template.bodyRegion?.charAt(0).toUpperCase() || 'T'}
                     </div>
                     <div className="flex-1 text-left">
@@ -127,12 +141,15 @@ const TemplateSelector = ({
                       <p className="text-xs text-grey-600">{template.description}</p>
                     </div>
                     {selectedTemplate === template.key && (
-                      <Check className="w-4 h-4 text-blue-primary" />
+                      <Check className="w-4 h-4" style={{ color: 'rgb(var(--blue-primary-rgb))' }} />
                     )}
                     {suggestion && suggestion.suggested === template.key && suggestion.confidence > 0.3 && (
-                      <div className="flex items-center gap-1 px-2 py-1 bg-blue-primary/10 rounded-full">
-                        <Sparkles className="w-3 h-3 text-blue-primary" />
-                        <span className="text-xs text-blue-primary font-medium">AI</span>
+                      <div 
+                        className="flex items-center gap-1 px-2 py-1 rounded-full"
+                        style={{ backgroundColor: 'rgba(var(--blue-primary-rgb), 0.1)' }}
+                      >
+                        <Sparkles className="w-3 h-3" style={{ color: 'rgb(var(--blue-primary-rgb))' }} />
+                        <span className="text-xs font-medium" style={{ color: 'rgb(var(--blue-primary-rgb))' }}>AI</span>
                       </div>
                     )}
                   </button>

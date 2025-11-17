@@ -30,8 +30,14 @@ export function ProtectedRoute({ children }) {
         <div className="flex flex-col items-center space-y-4">
           <div className="relative w-16 h-16">
             {/* Glass morphism loading spinner per style guide */}
-            <div className="absolute inset-0 rounded-full bg-blue-light/30 backdrop-blur-sm"></div>
-            <div className="absolute inset-[2px] rounded-full border-2 border-t-blue-primary border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+            <div 
+              className="absolute inset-0 rounded-full backdrop-blur-sm"
+              style={{ backgroundColor: 'rgba(var(--blue-primary-rgb), 0.1)' }}
+            ></div>
+            <div 
+              className="absolute inset-[2px] rounded-full border-2 border-r-transparent border-b-transparent border-l-transparent animate-spin"
+              style={{ borderTopColor: 'rgb(var(--blue-primary-rgb))' }}
+            ></div>
           </div>
           <p className="text-body-medium text-muted-foreground">Verifying session...</p>
         </div>

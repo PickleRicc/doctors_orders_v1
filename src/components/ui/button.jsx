@@ -16,10 +16,33 @@ const Button = React.forwardRef(({
 }, ref) => {
   
   // Style guide colors and variants
-  const variants = {
-    primary: 'bg-blue-primary text-white hover:bg-blue-dark active:bg-blue-dark active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)]',
-    secondary: 'bg-white border border-border text-foreground hover:bg-muted active:bg-border',
-    ghost: 'bg-transparent text-blue-primary hover:bg-blue-light active:bg-blue-light/80',
+  const getVariantStyles = (variant) => {
+    switch(variant) {
+      case 'primary':
+        return {
+          backgroundColor: 'rgb(var(--blue-primary-rgb))',
+          color: 'white'
+        };
+      case 'secondary':
+        return {
+          backgroundColor: 'white',
+          color: 'var(--foreground)',
+          border: '1px solid var(--border)'
+        };
+      case 'ghost':
+        return {
+          backgroundColor: 'transparent',
+          color: 'rgb(var(--blue-primary-rgb))'
+        };
+      default:
+        return {};
+    }
+  };
+  
+  const variantClasses = {
+    primary: 'hover:opacity-90 active:opacity-95 active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)]',
+    secondary: 'hover:bg-muted active:bg-border',
+    ghost: 'hover:bg-blue-light/10 active:bg-blue-light/20',
   };
 
   // Style guide sizes
@@ -40,9 +63,10 @@ const Button = React.forwardRef(({
       ref={ref}
       type={type}
       disabled={disabled}
+      style={getVariantStyles(variant)}
       className={`
         ${baseStyles}
-        ${variants[variant]}
+        ${variantClasses[variant]}
         ${sizes[size]}
         ${disabledStyles}
         ${className}

@@ -258,20 +258,25 @@ export default function TemplateSelector() {
                 onClick={() => selectTemplate(template.id)}
                 className={`
                   relative rounded-xl transition-all text-left overflow-hidden
-                  ${isSelected
-                    ? 'bg-white dark:bg-[#1a1a1a] shadow-lg ring-2 ring-blue-primary dark:ring-blue-primary'
-                    : 'bg-white dark:bg-[#1a1a1a] hover:shadow-md border border-grey-100 dark:border-white/10'
-                  }
+                  bg-white dark:bg-[#1a1a1a] border
+                  ${isSelected ? 'shadow-lg' : 'hover:shadow-md border-grey-100 dark:border-white/10'}
                 `}
+                style={isSelected ? {
+                  borderWidth: '2px',
+                  borderColor: 'rgb(var(--blue-primary-rgb))'
+                } : {}}
               >
                 <div className="p-5 pb-4">
                   <div className="flex items-center gap-3">
                     <div 
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                        isSelected 
-                          ? 'bg-blue-primary/15 dark:bg-blue-primary/20 text-blue-primary dark:text-blue-primary' 
-                          : 'bg-grey-50 dark:bg-[#1f1f1f] text-grey-500 dark:text-grey-400'
-                      }`}
+                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                      style={isSelected ? {
+                        backgroundColor: 'rgba(var(--blue-primary-rgb), 0.15)',
+                        color: 'rgb(var(--blue-primary-rgb))'
+                      } : {
+                        backgroundColor: 'var(--grey-50)',
+                        color: 'var(--grey-500)'
+                      }}
                     >
                       <Icon className="w-5 h-5" strokeWidth={2} />
                     </div>
@@ -299,9 +304,10 @@ export default function TemplateSelector() {
                           }
                         }
                       }}
-                      className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 text-blue-primary dark:text-blue-primary ${
+                      className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 ${
                         isGenerating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                       }`}
+                      style={{ color: 'rgb(var(--blue-primary-rgb))' }}
                     >
                       {isGenerating ? (
                         <>
@@ -321,7 +327,8 @@ export default function TemplateSelector() {
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm bg-blue-primary dark:bg-blue-primary"
+                    className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm"
+                    style={{ backgroundColor: 'rgb(var(--blue-primary-rgb))' }}
                   >
                     ✓
                   </motion.div>
@@ -351,21 +358,26 @@ export default function TemplateSelector() {
               onClick={() => selectTemplate(template.id)}
               className={`
                 relative rounded-xl transition-all text-left overflow-hidden
-                ${isSelected
-                  ? 'bg-white dark:bg-[#1a1a1a] shadow-lg ring-2 ring-blue-primary dark:ring-blue-primary'
-                  : 'bg-white dark:bg-[#1a1a1a] hover:shadow-md border border-grey-100 dark:border-white/10'
-                }
+                bg-white dark:bg-[#1a1a1a] border
+                ${isSelected ? 'shadow-lg' : 'hover:shadow-md border-grey-100 dark:border-white/10'}
               `}
+              style={isSelected ? {
+                borderWidth: '2px',
+                borderColor: 'rgb(var(--blue-primary-rgb))'
+              } : {}}
             >
               {/* Icon & Name Section */}
               <div className="p-5 pb-4">
                 <div className="flex items-center gap-3">
                   <div 
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                      isSelected 
-                        ? 'bg-blue-primary/15 dark:bg-blue-primary/20 text-blue-primary dark:text-blue-primary' 
-                        : 'bg-grey-50 dark:bg-[#1f1f1f] text-grey-500 dark:text-grey-400'
-                    }`}
+                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                    style={isSelected ? {
+                      backgroundColor: 'rgba(var(--blue-primary-rgb), 0.15)',
+                      color: 'rgb(var(--blue-primary-rgb))'
+                    } : {
+                      backgroundColor: 'var(--grey-50)',
+                      color: 'var(--grey-500)'
+                    }}
                   >
                     <Icon className="w-5 h-5" strokeWidth={2} />
                   </div>
@@ -393,9 +405,10 @@ export default function TemplateSelector() {
                         handleTestMode();
                       }
                     }}
-                    className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 text-blue-primary dark:text-blue-primary ${
+                    className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 ${
                       isGenerating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                     }`}
+                    style={{ color: 'rgb(var(--blue-primary-rgb))' }}
                   >
                     {isGenerating ? (
                       <>
@@ -417,7 +430,8 @@ export default function TemplateSelector() {
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm bg-blue-primary dark:bg-blue-primary"
+                  className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm"
+                  style={{ backgroundColor: 'rgb(var(--blue-primary-rgb))' }}
                 >
                   ✓
                 </motion.div>
