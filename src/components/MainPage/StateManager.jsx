@@ -4,6 +4,7 @@
  */
 
 import { createContext, useContext, useState } from 'react';
+import authService from '../../services/supabase';
 
 const StateContext = createContext();
 
@@ -43,8 +44,20 @@ export function StateProvider({ children }) {
 
   const viewNote = async (note) => {
     try {
+      // Get the auth token
+      const { session } = await authService.getSession();
+      const accessToken = session?.access_token;
+      
+      if (!accessToken) {
+        throw new Error('Not authenticated');
+      }
+      
       // Fetch full encounter data including SOAP
-      const response = await fetch(`/api/phi/encounters?id=${note.id}`);
+      const response = await fetch(`/api/phi/encounters?id=${note.id}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch encounter');

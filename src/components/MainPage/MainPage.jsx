@@ -15,6 +15,7 @@ import TutorialModule from '../tutorial/TutorialModule';
 import { ArrowLeft, LogOut, HelpCircle, Settings } from 'lucide-react';
 import Image from 'next/image';
 import ThemeToggle from '../ui/ThemeToggle';
+import { authenticatedFetch } from '../../lib/authHeaders';
 
 export default function MainPage() {
   const { appState, createNewNote, currentNote, sessionName, setSessionName, triggerRefresh, updateCurrentNote } = useAppState();
@@ -248,9 +249,8 @@ export default function MainPage() {
                     console.log('💾 Saving SOAP note to Azure:', data);
                     try {
                       // Save to Azure PostgreSQL via API
-                      const response = await fetch('/api/phi/encounters', {
+                      const response = await authenticatedFetch('/api/phi/encounters', {
                         method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
                           id: currentNote.id,
                           soap: data,

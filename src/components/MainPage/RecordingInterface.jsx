@@ -9,6 +9,7 @@ import { useAppState, APP_STATES } from './StateManager';
 import { transcribeAudio } from '../../services/transcriptionService';
 import { useTemplateManager } from '../../hooks/templates/useTemplateManager';
 import { createAIService } from '../../services/structuredAI';
+import { authenticatedFetch } from '../../lib/authHeaders';
 
 export default function RecordingInterface() {
   const { appState, selectedTemplate, startRecording, stopRecording, finishProcessing, sessionName, setSessionName, triggerRefresh } = useAppState();
@@ -177,9 +178,8 @@ export default function RecordingInterface() {
       setProcessingStatus('Saving to database...');
 
       // Step 3: Save to Azure PostgreSQL
-      const saveResponse = await fetch('/api/phi/encounters', {
+      const saveResponse = await authenticatedFetch('/api/phi/encounters', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           templateType: selectedTemplate,
           sessionTitle: sessionName
@@ -193,9 +193,8 @@ export default function RecordingInterface() {
       const encounter = await saveResponse.json();
 
       // Step 4: Update with SOAP data
-      const updateResponse = await fetch('/api/phi/encounters', {
+      const updateResponse = await authenticatedFetch('/api/phi/encounters', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: encounter.id,
           soap: soapResult.data,

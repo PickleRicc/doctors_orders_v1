@@ -2,10 +2,12 @@
  * Sidebar - Collapsible sidebar with note list
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Search, FileText, Calendar } from 'lucide-react';
 import { useAppState } from './StateManager';
+import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../services/supabase';
 import Image from 'next/image';
 
 // Using CSS variable for blue-primary instead of hardcoded value
@@ -16,38 +18,102 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [notes, setNotes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false, will be set to true when fetching
   const { viewNote, appState, refreshTrigger } = useAppState();
+  const { user } = useAuth();
+  const isFetchingRef = useRef(false);
+  const tokenCacheRef = useRef({ token: null, expiresAt: 0 });
 
-  // Fetch notes from Azure API on mount and when refreshTrigger changes
-  useEffect(() => {
-    fetchNotes();
-  }, [refreshTrigger]);
+  // Fast token getter with caching
+  const getAccessToken = useCallback(async () => {
+    // Check cache first (valid for 5 minutes)
+    const now = Date.now();
+    if (tokenCacheRef.current.token && tokenCacheRef.current.expiresAt > now) {
+      return tokenCacheRef.current.token;
+    }
+    
+    // Get fresh token from Supabase (reads from localStorage, very fast)
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (token) {
+        // Cache token for 5 minutes
+        tokenCacheRef.current = {
+          token,
+          expiresAt: now + (5 * 60 * 1000)
+        };
+        return token;
+      }
+    } catch (error) {
+      console.error('Error getting session:', error);
+    }
+    
+    return null;
+  }, []);
 
-  const fetchNotes = async () => {
+  // Memoized fetch function to prevent infinite loops
+  const fetchNotes = useCallback(async () => {
+    // Prevent multiple concurrent fetches
+    if (isFetchingRef.current) {
+      return;
+    }
+    
     try {
       // Only fetch if we're in the browser
       if (typeof window === 'undefined') return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       
+      isFetchingRef.current = true;
       setLoading(true);
       
-      // Fetch from Azure PostgreSQL API
-      const response = await fetch('/api/phi/encounters?limit=50');
+      // Get access token (cached for performance)
+      const accessToken = await getAccessToken();
+      
+      if (!accessToken) {
+        console.error('No access token available');
+        setNotes([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch from Azure PostgreSQL API with auth token
+      const response = await fetch('/api/phi/encounters?limit=50', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
       
       if (response.ok) {
         const data = await response.json();
         setNotes(data.encounters || []);
+      } else if (response.status === 401) {
+        // Token expired, clear cache and retry once
+        tokenCacheRef.current = { token: null, expiresAt: 0 };
+        console.error('Unauthorized - token may have expired');
+        setNotes([]);
       } else {
         console.error('Failed to fetch encounters:', response.statusText);
-        setNotes([]); // Set empty array on error
+        setNotes([]);
       }
     } catch (error) {
       console.error('Error fetching notes:', error);
-      setNotes([]); // Set empty array on error
+      setNotes([]);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  };
+  }, [user, getAccessToken]);
+
+  // Fetch notes from Azure API on mount and when refreshTrigger changes
+  useEffect(() => {
+    if (user) {
+      fetchNotes();
+    }
+  }, [refreshTrigger, user, fetchNotes]);
 
   const filteredNotes = notes.filter(note => {
     const query = searchQuery.toLowerCase();

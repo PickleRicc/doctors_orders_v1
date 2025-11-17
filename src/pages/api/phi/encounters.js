@@ -1,4 +1,37 @@
 import { query } from '../../../lib/db';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client for verifying JWT tokens
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
+/**
+ * Get the current authenticated user from the request
+ * Extracts and verifies the JWT token from the Authorization header
+ */
+async function getCurrentUser(req) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+    
+    const token = authHeader.substring(7);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      console.error('Failed to verify token:', error?.message);
+      return null;
+    }
+    
+    return user;
+  } catch (error) {
+    console.error('Error getting current user:', error.message);
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
   try {
@@ -6,11 +39,17 @@ export default async function handler(req, res) {
       case 'GET': {
         const { limit = '50', id } = req.query;
         
-        // If ID provided, get single encounter
+        // Get current authenticated user
+        const user = await getCurrentUser(req);
+        if (!user) {
+          return res.status(401).json({ error: 'Unauthorized - Please log in' });
+        }
+        
+        // If ID provided, get single encounter - verify user owns it
         if (id) {
           const result = await query(
-            'SELECT * FROM phi.encounters WHERE id = $1',
-            [id]
+            'SELECT * FROM phi.encounters WHERE id = $1 AND clinician_id = $2',
+            [id, user.id]
           );
           
           if (result.rows.length === 0) {
@@ -25,10 +64,10 @@ export default async function handler(req, res) {
           return res.json(encounter);
         }
         
-        // Otherwise list encounters
+        // Otherwise list encounters for current user only
         const result = await query(
-          'SELECT id, template_type, session_title, status, created_at FROM phi.encounters ORDER BY created_at DESC LIMIT $1',
-          [parseInt(limit)]
+          'SELECT id, template_type, session_title, status, created_at FROM phi.encounters WHERE clinician_id = $1 ORDER BY created_at DESC LIMIT $2',
+          [user.id, parseInt(limit)]
         );
         
         return res.json({
@@ -40,13 +79,20 @@ export default async function handler(req, res) {
       
       case 'POST': {
         const { templateType = 'knee', sessionTitle = 'New Session' } = req.body;
-        const testUserId = '00000000-0000-0000-0000-000000000001';
+        
+        // Get current authenticated user
+        const user = await getCurrentUser(req);
+        if (!user) {
+          return res.status(401).json({ error: 'Unauthorized - Please log in' });
+        }
+        
+        // For now, use a placeholder org_id. In production, this would be fetched from user profile
         const testOrgId = '00000000-0000-0000-0000-000000000002';
         
         const result = await query(
           `INSERT INTO phi.encounters (org_id, clinician_id, status, template_type, session_title, soap)
            VALUES ($1, $2, 'draft', $3, $4, $5) RETURNING *`,
-          [testOrgId, testUserId, templateType, sessionTitle, '{}']
+          [testOrgId, user.id, templateType, sessionTitle, '{}']
         );
         
         return res.status(201).json(result.rows[0]);
@@ -57,6 +103,22 @@ export default async function handler(req, res) {
         
         if (!id) {
           return res.status(400).json({ error: 'Encounter ID required' });
+        }
+        
+        // Get current authenticated user
+        const user = await getCurrentUser(req);
+        if (!user) {
+          return res.status(401).json({ error: 'Unauthorized - Please log in' });
+        }
+        
+        // Verify user owns this encounter
+        const ownerCheck = await query(
+          'SELECT id FROM phi.encounters WHERE id = $1 AND clinician_id = $2',
+          [id, user.id]
+        );
+        
+        if (ownerCheck.rows.length === 0) {
+          return res.status(403).json({ error: 'Forbidden - You do not own this encounter' });
         }
         
         const updates = ['updated_at = NOW()'];

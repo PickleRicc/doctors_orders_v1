@@ -9,6 +9,7 @@ import { useAppState, APP_STATES } from './StateManager';
 import { useTemplateManager } from '../../hooks/templates/useTemplateManager';
 import { createAIService } from '../../services/structuredAI';
 import { sampleTranscriptions } from '../../utils/testData';
+import { authenticatedFetch } from '../../lib/authHeaders';
 
 const TEMPLATES = [
   // Universal Templates
@@ -28,7 +29,7 @@ const TEMPLATES = [
 
 export default function TemplateSelector() {
   const { appState, selectedTemplate, selectTemplate, finishProcessing } = useAppState();
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingTemplateId, setGeneratingTemplateId] = useState(null);
   
   // Initialize all template managers at component level
   const kneeManager = useTemplateManager('knee');
@@ -40,7 +41,7 @@ export default function TemplateSelector() {
   }
 
   const handleTestMode = async () => {
-    setIsGenerating(true);
+    setGeneratingTemplateId('knee');
     
     try {
       console.log('🧪 Generating test SOAP note with template manager...');
@@ -64,9 +65,8 @@ export default function TemplateSelector() {
       
       // Save to Azure PostgreSQL
       console.log('💾 Saving to Azure database...');
-      const saveResponse = await fetch('/api/phi/encounters', {
+      const saveResponse = await authenticatedFetch('/api/phi/encounters', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           templateType: 'knee',
           sessionTitle: 'AI Generated Knee Evaluation'
@@ -80,9 +80,8 @@ export default function TemplateSelector() {
       const encounter = await saveResponse.json();
       
       // Now update it with the SOAP data
-      const updateResponse = await fetch('/api/phi/encounters', {
+      const updateResponse = await authenticatedFetch('/api/phi/encounters', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: encounter.id,
           soap: soapResult.data,
@@ -103,12 +102,12 @@ export default function TemplateSelector() {
       console.error('❌ Failed to generate SOAP note:', error);
       alert(`Failed to generate SOAP note: ${error.message}\n\nMake sure you have set NEXT_PUBLIC_OPENAI_API_KEY in your .env.local file.`);
     } finally {
-      setIsGenerating(false);
+      setGeneratingTemplateId(null);
     }
   };
 
   const handleTestDailyNote = async () => {
-    setIsGenerating(true);
+    setGeneratingTemplateId('daily-note');
     
     try {
       console.log('📅 Generating Daily Note with sample data...');
@@ -128,9 +127,8 @@ export default function TemplateSelector() {
         throw new Error(soapResult.error || 'Daily Note generation failed');
       }
       
-      const saveResponse = await fetch('/api/phi/encounters', {
+      const saveResponse = await authenticatedFetch('/api/phi/encounters', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           templateType: 'daily-note',
           sessionTitle: 'AI Generated Daily Note'
@@ -141,9 +139,8 @@ export default function TemplateSelector() {
       
       const encounter = await saveResponse.json();
       
-      const updateResponse = await fetch('/api/phi/encounters', {
+      const updateResponse = await authenticatedFetch('/api/phi/encounters', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: encounter.id,
           soap: soapResult.data,
@@ -160,12 +157,12 @@ export default function TemplateSelector() {
       console.error('❌ Failed to generate Daily Note:', error);
       alert(`Failed to generate Daily Note: ${error.message}`);
     } finally {
-      setIsGenerating(false);
+      setGeneratingTemplateId(null);
     }
   };
 
   const handleTestDischarge = async () => {
-    setIsGenerating(true);
+    setGeneratingTemplateId('discharge');
     
     try {
       console.log('✅ Generating Discharge Note with sample data...');
@@ -185,9 +182,8 @@ export default function TemplateSelector() {
         throw new Error(soapResult.error || 'Discharge Note generation failed');
       }
       
-      const saveResponse = await fetch('/api/phi/encounters', {
+      const saveResponse = await authenticatedFetch('/api/phi/encounters', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           templateType: 'discharge',
           sessionTitle: 'AI Generated Discharge Note'
@@ -198,9 +194,8 @@ export default function TemplateSelector() {
       
       const encounter = await saveResponse.json();
       
-      const updateResponse = await fetch('/api/phi/encounters', {
+      const updateResponse = await authenticatedFetch('/api/phi/encounters', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: encounter.id,
           soap: soapResult.data,
@@ -217,7 +212,7 @@ export default function TemplateSelector() {
       console.error('❌ Failed to generate Discharge Note:', error);
       alert(`Failed to generate Discharge Note: ${error.message}`);
     } finally {
-      setIsGenerating(false);
+      setGeneratingTemplateId(null);
     }
   };
 
@@ -296,7 +291,7 @@ export default function TemplateSelector() {
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (!isGenerating) {
+                        if (!generatingTemplateId) {
                           if (template.id === 'daily-note') {
                             handleTestDailyNote();
                           } else if (template.id === 'discharge') {
@@ -305,11 +300,11 @@ export default function TemplateSelector() {
                         }
                       }}
                       className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 ${
-                        isGenerating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                        generatingTemplateId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                       }`}
                       style={{ color: 'rgb(var(--blue-primary-rgb))' }}
                     >
-                      {isGenerating ? (
+                      {generatingTemplateId === template.id ? (
                         <>
                           <Loader2 className="w-3 h-3 animate-spin" />
                           Generating...
@@ -401,16 +396,16 @@ export default function TemplateSelector() {
                   <div
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (!isGenerating) {
+                      if (!generatingTemplateId) {
                         handleTestMode();
                       }
                     }}
                     className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 ${
-                      isGenerating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      generatingTemplateId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                     }`}
                     style={{ color: 'rgb(var(--blue-primary-rgb))' }}
                   >
-                    {isGenerating ? (
+                    {generatingTemplateId === template.id ? (
                       <>
                         <Loader2 className="w-3 h-3 animate-spin" />
                         Generating...

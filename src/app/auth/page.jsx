@@ -82,7 +82,11 @@ export default function AuthPage() {
         return;
       }
       
-      setAuthSuccess('Account created! Please check your email to verify your account.');
+      setAuthSuccess('Account created successfully! Redirecting...');
+      // Auto-redirect after success message
+      setTimeout(() => {
+        router.push('/');
+      }, 1500);
     } catch (err) {
       setAuthError('An unexpected error occurred. Please try again.');
       console.error('Signup error:', err);
