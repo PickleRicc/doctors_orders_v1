@@ -116,7 +116,7 @@ export default function GenerationProgress({ onComplete }) {
       transition={{ duration: 0.3 }}
       className="w-full max-w-2xl mx-auto"
     >
-      <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-8 shadow-xl transition-colors">
+      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:via-[#0f0f0f] dark:to-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-8 shadow-xl transition-colors">
         {/* Header */}
         <div className="text-center mb-8">
           <motion.div
@@ -168,7 +168,7 @@ export default function GenerationProgress({ onComplete }) {
         {/* Timer and Time Saved */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           {/* Elapsed Time */}
-          <div className="bg-grey-50 dark:bg-[#1f1f1f] rounded-xl p-4 transition-colors">
+          <div className="bg-grey-50 dark:bg-[#0f0f0f] rounded-xl p-4 transition-colors border border-transparent dark:border-white/5">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5" style={{ color: 'rgb(var(--blue-primary-rgb))' }} />
               <span className="text-sm font-medium text-grey-700 dark:text-grey-300">
@@ -181,7 +181,7 @@ export default function GenerationProgress({ onComplete }) {
           </div>
 
           {/* Time Saved */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800/30">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-[#001428] dark:via-[#000814] dark:to-[#001428] rounded-xl p-4 border border-blue-200 dark:border-[#007AFF]/30">
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-5 h-5" style={{ color: 'rgb(var(--blue-primary-rgb))' }} />
               <span className="text-sm font-medium text-grey-700 dark:text-grey-300">
@@ -202,7 +202,7 @@ export default function GenerationProgress({ onComplete }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.5 }}
-            className="text-center p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 rounded-xl border border-blue-100 dark:border-blue-800/20"
+            className="text-center p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-[#001428]/30 dark:to-[#000814]/30 rounded-xl border border-blue-100 dark:border-white/10"
           >
             <p className="text-base font-medium text-grey-800 dark:text-grey-200 italic">
               "{currentQuote}"

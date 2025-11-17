@@ -105,7 +105,7 @@
   --backdrop-blur: 20px;
 
   /* Neutral Palette - Dark mode - Much darker for proper dark mode */
-  --white: #0f0f0f;
+  --white: #000000;
   --grey-50: #1a1a1a;
   --grey-100: #1f1f1f;
   --grey-300: #2a2a2a;
@@ -115,7 +115,7 @@
   --black: #ffffff;
 
   /* UI Colors */
-  --background: #0f0f0f;
+  --background: #000000;
   --foreground: #e5e5e5;
   --muted: #1a1a1a;
   --muted-foreground: #6a6a6a;
@@ -135,7 +135,7 @@
   --popover: #1a1a1a;
   --popover-foreground: #e5e5e5;
   --primary: var(--blue-primary);
-  --primary-foreground: #0f0f0f;
+  --primary-foreground: #000000;
   --secondary: #1f1f1f;
   --secondary-foreground: #e5e5e5;
   --accent: #1a1a1a;
@@ -150,10 +150,10 @@
   --chart-5: #f59e0b;
 
   /* Sidebar */
-  --sidebar: #1a1a1a;
+  --sidebar: #000000;
   --sidebar-foreground: #e5e5e5;
   --sidebar-primary: var(--blue-primary);
-  --sidebar-primary-foreground: #0f0f0f;
+  --sidebar-primary-foreground: #000000;
   --sidebar-accent: var(--blue-light);
   --sidebar-accent-foreground: #e5e5e5;
   --sidebar-border: rgba(255, 255, 255, 0.15);

@@ -168,7 +168,7 @@ export default function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 h-full w-80 bg-grey-50 dark:bg-[#1a1a1a] z-40 flex flex-col border-r border-grey-200 dark:border-white/10 transition-colors"
+              className="fixed left-0 top-0 h-full w-80 bg-grey-50 dark:bg-gradient-to-b dark:from-[#000814] dark:via-black dark:to-[#000814] z-40 flex flex-col border-r border-grey-200 dark:border-white/10 transition-colors"
             >
               {/* Header */}
               <div className="p-4 space-y-4">
@@ -303,7 +303,7 @@ export default function Sidebar() {
               </div>
 
               {/* Footer */}
-              <div className="p-4 bg-grey-50/50 dark:bg-[#1a1a1a] border-t border-grey-200 dark:border-white/10">
+              <div className="p-4 bg-grey-50/50 dark:bg-black/50 border-t border-grey-200 dark:border-white/10">
                 <p className="text-xs text-grey-500 dark:text-grey-400 text-center">
                   {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
                 </p>

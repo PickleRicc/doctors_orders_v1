@@ -81,14 +81,14 @@ export default function MainPage() {
   ].includes(appState);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0f0f0f] transition-colors">
+    <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-black dark:via-[#000814] dark:to-black transition-colors">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
       <main className="lg:ml-80 min-h-screen">
         {/* Top Navbar */}
-        <nav className="sticky top-0 z-30 bg-white/80 dark:bg-[#1a1a1a]/95 backdrop-blur-lg border-b border-black/5 dark:border-white/10 transition-colors">
+        <nav className="sticky top-0 z-30 bg-white/80 dark:bg-gradient-to-r dark:from-[#000814]/95 dark:via-black/95 dark:to-[#000814]/95 backdrop-blur-lg border-b border-black/5 dark:border-[#007AFF]/20 transition-colors">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             {/* Left side - Back button with space for hamburger menu on mobile */}
             <div className="flex items-center gap-2">

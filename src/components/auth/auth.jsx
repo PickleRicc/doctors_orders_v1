@@ -67,7 +67,7 @@ const AuthComponent = ({
   }
 
   return (
-    <div className="min-h-screen bg-grey-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4 font-sans">
+    <div className="min-h-screen bg-grey-50 dark:bg-black flex items-center justify-center p-4 font-sans">
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
