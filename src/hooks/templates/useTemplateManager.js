@@ -1,7 +1,7 @@
 /**
  * Template Manager Hook
  * Dynamically loads and manages template hooks based on body region
- * Replaces database template system with code-based template selection
+ * Supports both system templates and custom user templates
  */
 
 import { useState, useEffect } from 'react';
@@ -16,10 +16,13 @@ import {
   useDischarge,
   TEMPLATE_METADATA
 } from './index';
+import { useCustomTemplate } from './useCustomTemplate';
+import { authenticatedFetch } from '../../lib/authHeaders';
 
 export const useTemplateManager = (templateType = 'knee') => {
   const [currentTemplate, setCurrentTemplate] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [customTemplateConfig, setCustomTemplateConfig] = useState(null);
 
   // Initialize template hooks
   const kneeTemplate = useKneeEvaluation();
@@ -43,19 +46,56 @@ export const useTemplateManager = (templateType = 'knee') => {
     discharge: dischargeTemplate
   };
 
+  // Create custom template hook if we have config
+  const customTemplate = useCustomTemplate(customTemplateConfig);
+
   // Load template based on type
   useEffect(() => {
-    setIsLoading(true);
-    
-    const template = templateHooks[templateType];
-    if (template) {
-      setCurrentTemplate(template);
-    } else {
-      console.warn(`Template type "${templateType}" not found, defaulting to knee`);
-      setCurrentTemplate(templateHooks.knee);
-    }
-    
-    setIsLoading(false);
+    const loadTemplate = async () => {
+      setIsLoading(true);
+      
+      // Check if this is a custom template
+      if (templateType && templateType.startsWith('custom-')) {
+        const customTemplateId = templateType.replace('custom-', '');
+        
+        try {
+          // Fetch custom template configuration
+          const response = await authenticatedFetch(`/api/phi/custom-templates?id=${customTemplateId}`);
+          
+          if (response.ok) {
+            const customTemplateData = await response.json();
+            console.log('📋 Loaded custom template:', customTemplateData);
+            
+            // Set the configuration which will be used by useCustomTemplate
+            setCustomTemplateConfig(customTemplateData.template_config);
+            setCurrentTemplate(null); // Clear system template
+          } else {
+            console.error('Failed to load custom template, falling back to knee');
+            setCurrentTemplate(templateHooks.knee);
+            setCustomTemplateConfig(null);
+          }
+        } catch (error) {
+          console.error('Error loading custom template:', error);
+          setCurrentTemplate(templateHooks.knee);
+          setCustomTemplateConfig(null);
+        }
+      } else {
+        // System template
+        const template = templateHooks[templateType];
+        if (template) {
+          setCurrentTemplate(template);
+          setCustomTemplateConfig(null);
+        } else {
+          console.warn(`Template type "${templateType}" not found, defaulting to knee`);
+          setCurrentTemplate(templateHooks.knee);
+          setCustomTemplateConfig(null);
+        }
+      }
+      
+      setIsLoading(false);
+    };
+
+    loadTemplate();
   }, [templateType]);
 
   /**
@@ -92,6 +132,11 @@ export const useTemplateManager = (templateType = 'knee') => {
    * Generate SOAP note using current template
    */
   const generateSOAP = async (transcript, aiService) => {
+    // Use custom template if available
+    if (customTemplateConfig && customTemplate) {
+      return await customTemplate.generateSOAP(transcript, aiService);
+    }
+    
     if (!currentTemplate) {
       throw new Error('No template loaded');
     }
@@ -102,6 +147,11 @@ export const useTemplateManager = (templateType = 'knee') => {
    * Get empty SOAP structure for current template
    */
   const getEmptySOAP = () => {
+    // Use custom template if available
+    if (customTemplateConfig && customTemplate) {
+      return customTemplate.getEmptySOAP();
+    }
+    
     if (!currentTemplate) {
       return templateHooks.knee.getEmptySOAP(); // Fallback to knee
     }
@@ -112,6 +162,11 @@ export const useTemplateManager = (templateType = 'knee') => {
    * Validate SOAP data using current template
    */
   const validateSOAP = (soapData) => {
+    // Use custom template if available
+    if (customTemplateConfig && customTemplate) {
+      return customTemplate.validateSOAP(soapData);
+    }
+    
     if (!currentTemplate) {
       return { isValid: false, errors: ['No template loaded'] };
     }
@@ -175,10 +230,11 @@ export const useTemplateManager = (templateType = 'knee') => {
 
   return {
     // Current template
-    currentTemplate,
-    templateType: currentTemplate?.templateType || templateType,
+    currentTemplate: customTemplateConfig ? customTemplate : currentTemplate,
+    templateType: customTemplateConfig ? 'custom' : (currentTemplate?.templateType || templateType),
     metadata: getCurrentTemplateMetadata(),
     isLoading,
+    isCustomTemplate: !!customTemplateConfig,
     
     // Template management
     getAvailableTemplates,

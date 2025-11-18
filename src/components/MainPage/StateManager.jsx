@@ -5,6 +5,7 @@
 
 import { createContext, useContext, useState } from 'react';
 import authService from '../../services/supabase';
+import { transformCustomTemplateForEditor, isCustomTemplateFormat } from '../../utils/customTemplateTransformer';
 
 const StateContext = createContext();
 
@@ -25,8 +26,14 @@ export function StateProvider({ children }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const selectTemplate = (template) => {
-    setSelectedTemplate(template);
-    setAppState(APP_STATES.TEMPLATE_SELECTED);
+    // Toggle selection - if clicking the same template, deselect it
+    if (selectedTemplate === template) {
+      setSelectedTemplate(null);
+      setAppState(APP_STATES.IDLE);
+    } else {
+      setSelectedTemplate(template);
+      setAppState(APP_STATES.TEMPLATE_SELECTED);
+    }
   };
 
   const startRecording = () => {
@@ -37,7 +44,38 @@ export function StateProvider({ children }) {
     setAppState(APP_STATES.PROCESSING);
   };
 
-  const finishProcessing = (note) => {
+  const finishProcessing = async (note) => {
+    try {
+      // Check if this is a custom template
+      if (note.custom_template_id && isCustomTemplateFormat(note.soap)) {
+        console.log('🔄 Processing custom template data for editor...');
+        
+        // Fetch the custom template configuration
+        const { session } = await authService.getSession();
+        const accessToken = session?.access_token;
+        
+        if (accessToken) {
+          const templateResponse = await fetch(`/api/phi/custom-templates?id=${note.custom_template_id}`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+          
+          if (templateResponse.ok) {
+            const templateData = await templateResponse.json();
+            console.log('📄 Fetched custom template config:', templateData);
+            
+            // Transform the SOAP data for the editor
+            const transformedSOAP = transformCustomTemplateForEditor(note.soap, templateData.template_config);
+            console.log('✅ Transformed SOAP for editor:', transformedSOAP);
+            
+            note.soap = transformedSOAP;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('⚠️ Error transforming custom template data:', error);
+      // Continue with original data if transformation fails
+    }
+    
     setCurrentNote(note);
     setAppState(APP_STATES.EDITING);
   };
@@ -66,6 +104,31 @@ export function StateProvider({ children }) {
       const fullNote = await response.json();
       
       console.log('📋 Loaded full encounter:', fullNote);
+      
+      // Check if this is a custom template and transform the data
+      if (fullNote.custom_template_id && isCustomTemplateFormat(fullNote.soap)) {
+        console.log('🔄 Detected custom template format, fetching template config...');
+        
+        try {
+          const templateResponse = await fetch(`/api/phi/custom-templates?id=${fullNote.custom_template_id}`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+          
+          if (templateResponse.ok) {
+            const templateData = await templateResponse.json();
+            console.log('📄 Fetched custom template config:', templateData);
+            
+            // Transform the SOAP data for the editor
+            const transformedSOAP = transformCustomTemplateForEditor(fullNote.soap, templateData.template_config);
+            console.log('✅ Transformed SOAP for editor:', transformedSOAP);
+            
+            fullNote.soap = transformedSOAP;
+          }
+        } catch (transformError) {
+          console.error('⚠️ Error transforming custom template data:', transformError);
+          // Continue with original data if transformation fails
+        }
+      }
       
       setCurrentNote(fullNote);
       setSelectedTemplate(fullNote.template_type);

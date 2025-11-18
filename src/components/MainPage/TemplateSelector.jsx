@@ -4,9 +4,10 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, User, Heart, Zap, Footprints, Wind, Loader2, Calendar, CheckCircle, Sparkles } from 'lucide-react';
+import { Activity, User, Heart, Zap, Footprints, Wind, Loader2, Calendar, CheckCircle, Sparkles, FileText, Star } from 'lucide-react';
 import { useAppState, APP_STATES } from './StateManager';
 import { useTemplateManager } from '../../hooks/templates/useTemplateManager';
+import { useCustomTemplates } from '../../hooks/useCustomTemplates';
 import { createAIService } from '../../services/structuredAI';
 import { sampleTranscriptions } from '../../utils/testData';
 import { authenticatedFetch } from '../../lib/authHeaders';
@@ -36,6 +37,10 @@ export default function TemplateSelector() {
   const kneeManager = useTemplateManager('knee');
   const dailyNoteManager = useTemplateManager('daily-note');
   const dischargeManager = useTemplateManager('discharge');
+  
+  // Fetch custom templates
+  const { templates: customTemplates, loading: loadingCustomTemplates } = useCustomTemplates();
+  const [testingCustomTemplateId, setTestingCustomTemplateId] = useState(null);
 
   if (appState !== APP_STATES.IDLE && appState !== APP_STATES.TEMPLATE_SELECTED) {
     return null;
@@ -225,6 +230,97 @@ export default function TemplateSelector() {
       alert(`Failed to generate Discharge Note: ${error.message}`);
     } finally {
       setGeneratingTemplateId(null);
+    }
+  };
+
+  const handleTestCustomTemplate = async (customTemplateId, customTemplate) => {
+    setTestingCustomTemplateId(customTemplateId);
+    setGeneratingTemplateId(`custom-${customTemplateId}`);
+    
+    try {
+      console.log('🧪 Generating SOAP with custom template...');
+      
+      // Use ACL post-surgical transcript for custom template testing
+      const transcript = sampleTranscriptions.acl_postsurgical;
+      
+      if (!transcript) {
+        throw new Error('ACL postsurgical test transcript not found in test data');
+      }
+      
+      console.log('📄 Using ACL postsurgical transcript:', transcript.substring(0, 150) + '...');
+      
+      // Fetch custom template configuration
+      const templateResponse = await authenticatedFetch(`/api/phi/custom-templates?id=${customTemplateId}`);
+      
+      if (!templateResponse.ok) {
+        throw new Error('Failed to load custom template configuration');
+      }
+      
+      const templateData = await templateResponse.json();
+      console.log('📋 Loaded custom template:', templateData);
+      
+      // Use custom template generation directly
+      const { buildCustomPrompt } = await import('../../hooks/templates/useCustomTemplate');
+      
+      const aiService = createAIService();
+      const prompt = buildCustomPrompt(transcript, templateData.template_config);
+      
+      console.log('🤖 Generating with custom prompt...');
+      const aiResponse = await aiService.generateCompletion(prompt);
+      
+      // Parse the JSON response
+      let soapData;
+      try {
+        soapData = JSON.parse(aiResponse);
+      } catch (parseError) {
+        console.error('Failed to parse AI response:', aiResponse);
+        throw new Error('AI returned invalid JSON: ' + parseError.message);
+      }
+      
+      console.log('✅ SOAP generated successfully:', soapData);
+      
+      // Save to Azure PostgreSQL
+      console.log('💾 Saving to Azure database...');
+      const saveResponse = await authenticatedFetch('/api/phi/encounters', {
+        method: 'POST',
+        body: JSON.stringify({
+          templateType: `custom-${customTemplateId}`,
+          sessionTitle: `AI Generated ${customTemplate.name}`,
+          customTemplateId: customTemplateId
+        })
+      });
+      
+      if (!saveResponse.ok) {
+        throw new Error('Failed to save encounter to database');
+      }
+      
+      const encounter = await saveResponse.json();
+      
+      // Now update it with the SOAP data
+      const updateResponse = await authenticatedFetch('/api/phi/encounters', {
+        method: 'PUT',
+        body: JSON.stringify({
+          id: encounter.id,
+          soap: soapData,
+          status: 'draft'
+        })
+      });
+      
+      if (!updateResponse.ok) {
+        throw new Error('Failed to update encounter with SOAP data');
+      }
+      
+      const updatedEncounter = await updateResponse.json();
+      
+      console.log('📋 Encounter saved to Azure:', updatedEncounter);
+      finishProcessing(updatedEncounter);
+      
+    } catch (error) {
+      console.error('❌ Failed to generate SOAP with custom template:', error);
+      alert(`Failed to generate SOAP note: ${error.message}\n\nMake sure you have set NEXT_PUBLIC_OPENAI_API_KEY in your .env.local file.`);
+    } finally {
+      setGeneratingTemplateId(null);
+      setTestingCustomTemplateId(null);
     }
   };
 
@@ -448,6 +544,122 @@ export default function TemplateSelector() {
         })}
         </div>
       </div>
+
+      {/* Custom Templates Section */}
+      {customTemplates && customTemplates.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-sm font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide mb-4 flex items-center gap-2">
+            <Star className="w-4 h-4" />
+            My Custom Templates
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {customTemplates.map((template, index) => {
+              const isSelected = selectedTemplate === `custom-${template.id}`;
+              const Icon = FileText;
+
+              return (
+                <motion.button
+                  key={template.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 * index }}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => selectTemplate(`custom-${template.id}`)}
+                  className={`
+                    relative rounded-xl transition-all text-left overflow-hidden
+                    bg-white dark:bg-[#1a1a1a] border
+                    ${isSelected ? 'shadow-lg' : 'hover:shadow-md border-grey-100 dark:border-white/10'}
+                  `}
+                  style={isSelected ? {
+                    borderWidth: '2px',
+                    borderColor: 'rgb(var(--blue-primary-rgb))'
+                  } : {}}
+                >
+                  {/* Icon & Name Section */}
+                  <div className="p-5 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                        style={isSelected ? {
+                          backgroundColor: 'rgba(var(--blue-primary-rgb), 0.15)',
+                          color: 'rgb(var(--blue-primary-rgb))'
+                        } : {
+                          backgroundColor: 'var(--grey-50)',
+                          color: 'var(--grey-500)'
+                        }}
+                      >
+                        <Icon className="w-5 h-5" strokeWidth={2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-base font-semibold text-grey-900 dark:text-grey-100 truncate">
+                          {template.name}
+                        </div>
+                        {template.is_favorite && (
+                          <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 mt-1" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-px bg-grey-100 dark:bg-white/10" />
+
+                  {/* Description Section */}
+                  <div className="p-5 pt-4">
+                    <div className="text-sm text-grey-600 dark:text-grey-400 line-clamp-2">
+                      {template.description || 'Custom template'}
+                    </div>
+                    {template.body_region && (
+                      <div className="mt-2 text-xs text-grey-500 dark:text-grey-400 capitalize">
+                        {template.body_region.replace('-', '/')}
+                      </div>
+                    )}
+                    
+                    {/* Try Example Link */}
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!generatingTemplateId && !testingCustomTemplateId) {
+                          handleTestCustomTemplate(template.id, template);
+                        }
+                      }}
+                      className={`mt-3 text-xs font-medium flex items-center gap-1 transition-colors hover:gap-2 ${
+                        testingCustomTemplateId === template.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                      style={{ color: 'rgb(var(--blue-primary-rgb))' }}
+                    >
+                      {testingCustomTemplateId === template.id ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3" />
+                          Try Example
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Selected Indicator */}
+                  {isSelected && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-sm"
+                      style={{ backgroundColor: 'rgb(var(--blue-primary-rgb))' }}
+                    >
+                      ✓
+                    </motion.div>
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

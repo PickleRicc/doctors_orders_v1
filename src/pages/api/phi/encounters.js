@@ -65,8 +65,21 @@ export default async function handler(req, res) {
         }
         
         // Otherwise list encounters for current user only
+        // Join with custom_templates to get template name for custom templates
         const result = await query(
-          'SELECT id, template_type, session_title, status, created_at FROM phi.encounters WHERE clinician_id = $1 ORDER BY created_at DESC LIMIT $2',
+          `SELECT 
+            e.id, 
+            e.template_type, 
+            e.session_title, 
+            e.status, 
+            e.created_at,
+            e.custom_template_id,
+            ct.name as custom_template_name
+          FROM phi.encounters e
+          LEFT JOIN phi.custom_templates ct ON e.custom_template_id = ct.id
+          WHERE e.clinician_id = $1 
+          ORDER BY e.created_at DESC 
+          LIMIT $2`,
           [user.id, parseInt(limit)]
         );
         
@@ -78,7 +91,7 @@ export default async function handler(req, res) {
       }
       
       case 'POST': {
-        const { templateType = 'knee', sessionTitle = 'New Session' } = req.body;
+        const { templateType = 'knee', sessionTitle = 'New Session', customTemplateId } = req.body;
         
         // Get current authenticated user
         const user = await getCurrentUser(req);
@@ -90,9 +103,9 @@ export default async function handler(req, res) {
         const testOrgId = '00000000-0000-0000-0000-000000000002';
         
         const result = await query(
-          `INSERT INTO phi.encounters (org_id, clinician_id, status, template_type, session_title, soap)
-           VALUES ($1, $2, 'draft', $3, $4, $5) RETURNING *`,
-          [testOrgId, user.id, templateType, sessionTitle, '{}']
+          `INSERT INTO phi.encounters (org_id, clinician_id, status, template_type, session_title, soap, custom_template_id)
+           VALUES ($1, $2, 'draft', $3, $4, $5, $6) RETURNING *`,
+          [testOrgId, user.id, templateType, sessionTitle, '{}', customTemplateId || null]
         );
         
         return res.status(201).json(result.rows[0]);

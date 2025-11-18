@@ -12,6 +12,7 @@ import TemplateSelector from './TemplateSelector';
 import RecordingInterface from './RecordingInterface';
 import SOAPEditor from '../soap/SOAPEditor';
 import TutorialModule from '../tutorial/TutorialModule';
+import TemplatesModal from '../templates/TemplatesModal';
 import { ArrowLeft, LogOut, HelpCircle, Settings } from 'lucide-react';
 import Image from 'next/image';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -22,6 +23,7 @@ export default function MainPage() {
   const { signOut, user } = useAuth();
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
   const [greeting, setGreeting] = useState('Good Morning');
   
   // Get user's last name for personalized greeting
@@ -56,6 +58,9 @@ export default function MainPage() {
         if (isSettingsOpen) {
           setIsSettingsOpen(false);
         }
+        if (isTemplatesModalOpen) {
+          setIsTemplatesModalOpen(false);
+        }
       }
 
       // '?' key opens help/tutorial
@@ -66,7 +71,7 @@ export default function MainPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isTutorialOpen, isSettingsOpen]);
+  }, [isTutorialOpen, isSettingsOpen, isTemplatesModalOpen]);
 
   const showBlob = [
     APP_STATES.IDLE,
@@ -83,7 +88,7 @@ export default function MainPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-black dark:via-[#000814] dark:to-black transition-colors">
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar onOpenTemplates={() => setIsTemplatesModalOpen(true)} />
 
       {/* Main Content */}
       <main className="lg:ml-80 min-h-screen">
@@ -386,6 +391,15 @@ export default function MainPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Templates Modal */}
+      <TemplatesModal 
+        isOpen={isTemplatesModalOpen} 
+        onClose={() => {
+          setIsTemplatesModalOpen(false);
+          triggerRefresh(); // Refresh the sidebar when closing to show any new templates
+        }} 
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Search, FileText, Calendar } from 'lucide-react';
+import { Menu, X, Search, FileText, Calendar, Folder } from 'lucide-react';
 import { useAppState } from './StateManager';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../services/supabase';
@@ -14,7 +14,7 @@ import Image from 'next/image';
 
 // All templates use the same note icon, just color-coded
 
-export default function Sidebar() {
+export default function Sidebar({ onOpenTemplates }) {
   const [isOpen, setIsOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [notes, setNotes] = useState([]);
@@ -119,7 +119,8 @@ export default function Sidebar() {
     const query = searchQuery.toLowerCase();
     return (
       note.session_title?.toLowerCase().includes(query) ||
-      note.template_type?.toLowerCase().includes(query)
+      note.template_type?.toLowerCase().includes(query) ||
+      note.custom_template_name?.toLowerCase().includes(query)
     );
   });
 
@@ -136,6 +137,26 @@ export default function Sidebar() {
     } else {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     }
+  };
+
+  // Format template type for display - use custom template name if available
+  const formatTemplateType = (note) => {
+    // If it's a custom template and we have the name, use it
+    if (note.custom_template_id && note.custom_template_name) {
+      return note.custom_template_name;
+    }
+    
+    // Otherwise, format the template_type nicely
+    const templateType = note.template_type || 'Unknown';
+    
+    // Remove 'custom-' prefix if present (fallback)
+    const cleanType = templateType.replace(/^custom-[a-f0-9-]+$/, 'Custom Template');
+    
+    // Capitalize and format nicely
+    return cleanType
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   return (
@@ -214,6 +235,30 @@ export default function Sidebar() {
                 <div className="h-px bg-grey-200 dark:bg-white/10" />
               </div>
 
+              {/* My Templates Navigation */}
+              <div className="px-4 py-2">
+                <button
+                  onClick={() => {
+                    if (onOpenTemplates) {
+                      onOpenTemplates();
+                    }
+                    // Close sidebar on mobile
+                    if (window.innerWidth < 1024) {
+                      setIsOpen(false);
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-grey-700 dark:text-grey-300 hover:bg-grey-100 dark:hover:bg-[#1f1f1f] rounded-lg transition-colors group"
+                >
+                  <Folder className="w-5 h-5 text-grey-500 dark:text-grey-400 group-hover:text-blue-primary" />
+                  <span className="font-medium">My Templates</span>
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div className="px-6 py-2">
+                <div className="h-px bg-grey-200 dark:bg-white/10" />
+              </div>
+
               {/* Recent Notes Header */}
               <div className="px-6 py-2">
                 <h3 className="text-xs font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide">Recent Notes</h3>
@@ -278,7 +323,7 @@ export default function Sidebar() {
                         {/* Note Info */}
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-grey-900 dark:text-grey-100 truncate transition-colors group-hover:text-blue-primary">
-                            {note.session_title || `${note.template_type} Evaluation`}
+                            {note.session_title || `${formatTemplateType(note)} Evaluation`}
                           </h3>
                           <div className="flex items-center gap-2 mt-1 text-xs text-grey-500 dark:text-grey-400">
                             <Calendar className="w-3 h-3" />
@@ -292,7 +337,7 @@ export default function Sidebar() {
                                 color: 'rgb(var(--blue-primary-rgb))'
                               }}
                             >
-                              {note.template_type}
+                              {formatTemplateType(note)}
                             </span>
                           </div>
                         </div>
