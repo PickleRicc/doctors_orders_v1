@@ -8,7 +8,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, Zap, Shield, ArrowRight, Sparkles } from 'lucide-react';
+import { Mic, Zap, Shield, ArrowRight, Sparkles, FileText, Clock, Target } from 'lucide-react';
 import Image from 'next/image';
 import authService from '../../services/supabase';
 
@@ -41,6 +41,11 @@ export default function LandingPage() {
       icon: Shield,
       title: 'HIPAA Compliant',
       description: 'Enterprise-grade security with Azure infrastructure'
+    },
+    {
+      icon: Sparkles,
+      title: 'Custom Templates',
+      description: 'Create personalized SOAP note templates for any body region or session type'
     }
   ];
 
@@ -72,7 +77,7 @@ export default function LandingPage() {
               onClick={() => router.push('/auth')}
               className="px-6 py-2.5 bg-[#007AFF] text-white rounded-lg hover:bg-[#0056b3] transition-all font-medium shadow-lg shadow-[#007AFF]/20 hover:shadow-[#007AFF]/40"
             >
-              Login Into Account
+              Login
             </button>
           </div>
         </div>
@@ -149,7 +154,7 @@ export default function LandingPage() {
                 className="px-8 py-4 bg-[#007AFF] text-white rounded-lg hover:bg-[#0056b3] transition-all font-semibold text-lg flex items-center gap-2 shadow-lg shadow-[#007AFF]/30 hover:shadow-[#007AFF]/50 hover:scale-105 transform"
               >
                 <ArrowRight className="w-5 h-5" />
-                Login Into Account
+                Get Started
               </button>
               <button
                 onClick={() => router.push('/auth')}
@@ -162,9 +167,155 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Key Features Highlight */}
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Everything You Need to <span className="text-[#007AFF]">Streamline Documentation</span>
+          </h2>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            Powerful features designed specifically for physical therapists
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          {/* Custom Templates Feature */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gradient-to-br from-[#007AFF]/10 via-[#007AFF]/5 to-transparent backdrop-blur-xl border border-[#007AFF]/20 rounded-2xl p-8"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-[#007AFF]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <FileText className="w-6 h-6 text-[#007AFF]" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-semibold text-white mb-3">Custom Templates</h3>
+                <p className="text-gray-400 mb-4 leading-relaxed">
+                  Build personalized SOAP note templates for any body region, session type, or specialty. Define your own fields, measurements, and assessment criteria.
+                </p>
+                <ul className="space-y-2 text-gray-300">
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#007AFF] rounded-full"></div>
+                    Post-surgical protocols
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#007AFF] rounded-full"></div>
+                    Sport-specific evaluations
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#007AFF] rounded-full"></div>
+                    Discharge summaries
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Time Saving Feature */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="bg-gradient-to-br from-[#007AFF]/10 via-[#007AFF]/5 to-transparent backdrop-blur-xl border border-[#007AFF]/20 rounded-2xl p-8"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-[#007AFF]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Clock className="w-6 h-6 text-[#007AFF]" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-semibold text-white mb-3">Save Hours Every Week</h3>
+                <p className="text-gray-400 mb-4 leading-relaxed">
+                  Transform voice recordings into comprehensive SOAP notes in under 60 seconds. Spend more time with patients, less time on paperwork.
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div className="text-2xl font-bold text-[#007AFF] mb-1">75%</div>
+                    <div className="text-sm text-gray-400">Time Saved</div>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div className="text-2xl font-bold text-[#007AFF] mb-1">&lt;60s</div>
+                    <div className="text-sm text-gray-400">Generation Time</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Smart AI Feature */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="bg-gradient-to-br from-[#007AFF]/10 via-[#007AFF]/5 to-transparent backdrop-blur-xl border border-[#007AFF]/20 rounded-2xl p-8"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-[#007AFF]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Target className="w-6 h-6 text-[#007AFF]" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-semibold text-white mb-3">Intelligent Analysis</h3>
+                <p className="text-gray-400 mb-4 leading-relaxed">
+                  Advanced AI extracts key information, suggests goals, and generates evidence-based treatment plans tailored to your patient's needs.
+                </p>
+                <ul className="space-y-2 text-gray-300">
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#007AFF] rounded-full"></div>
+                    Automatic clinical impression
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#007AFF] rounded-full"></div>
+                    Smart goal generation
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#007AFF] rounded-full"></div>
+                    Evidence-based interventions
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Security Feature */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="bg-gradient-to-br from-[#007AFF]/10 via-[#007AFF]/5 to-transparent backdrop-blur-xl border border-[#007AFF]/20 rounded-2xl p-8"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-[#007AFF]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Shield className="w-6 h-6 text-[#007AFF]" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-semibold text-white mb-3">Enterprise Security</h3>
+                <p className="text-gray-400 mb-4 leading-relaxed">
+                  HIPAA-compliant infrastructure with Azure-backed security. Your data is encrypted, secure, and never shared.
+                </p>
+                <ul className="space-y-2 text-gray-300">
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#007AFF] rounded-full"></div>
+                    End-to-end encryption
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#007AFF] rounded-full"></div>
+                    HIPAA compliance
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#007AFF] rounded-full"></div>
+                    Azure infrastructure
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
