@@ -29,7 +29,7 @@ export default function HeroBackground() {
                     x: mousePosition.x * 20,
                     y: mousePosition.y * 20,
                 }}
-                className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-blue-600/20 rounded-full blur-[100px]"
+                className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-blue-primary/20 rounded-full blur-[100px]"
                 style={{
                     transition: 'transform 0.5s ease-out',
                 }}
@@ -40,7 +40,7 @@ export default function HeroBackground() {
                     x: mousePosition.x * -30,
                     y: mousePosition.y * -30,
                 }}
-                className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-indigo-600/10 rounded-full blur-[120px]"
+                className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-blue-dark/10 rounded-full blur-[120px]"
                 style={{
                     transition: 'transform 0.5s ease-out',
                 }}
