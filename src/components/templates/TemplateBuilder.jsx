@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { Plus, Trash2, Save, X, Star, GripVertical } from 'lucide-react';
 
 const BODY_REGIONS = [
-  'knee', 'shoulder', 'back', 'hip', 'ankle-foot', 'neck', 
+  'knee', 'shoulder', 'back', 'hip', 'ankle-foot', 'neck',
   'elbow', 'wrist', 'hand', 'other'
 ];
 
@@ -23,10 +23,10 @@ const FIELD_TYPES = [
   { value: 'date', label: 'Date' }
 ];
 
-export default function TemplateBuilder({ 
-  initialTemplate = null, 
-  onSave, 
-  onCancel 
+export default function TemplateBuilder({
+  initialTemplate = null,
+  onSave,
+  onCancel
 }) {
   const getDefaultTemplate = () => ({
     name: '',
@@ -67,11 +67,11 @@ export default function TemplateBuilder({
   // Validation
   const validate = () => {
     const newErrors = {};
-    
+
     if (!template.name.trim()) {
       newErrors.name = 'Template name is required';
     }
-    
+
     if (!template.template_type.trim()) {
       newErrors.template_type = 'Template type is required';
     }
@@ -90,7 +90,7 @@ export default function TemplateBuilder({
     try {
       console.log('💾 Saving template:', template);
       console.log('Template config:', JSON.stringify(template.template_config, null, 2));
-      
+
       // Ensure template_config is properly structured
       const templateToSave = {
         ...template,
@@ -101,7 +101,7 @@ export default function TemplateBuilder({
           plan: template.template_config?.plan || { sections: [] }
         }
       };
-      
+
       console.log('Cleaned template to save:', templateToSave);
       await onSave(templateToSave);
     } catch (error) {
@@ -305,12 +305,12 @@ export default function TemplateBuilder({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-[#1a1a1a] rounded-xl p-6 mb-6 border border-grey-200 dark:border-white/10"
+        className="bg-white/50 dark:bg-white/5 rounded-xl p-6 mb-6 border border-grey-200 dark:border-white/10 backdrop-blur-sm"
       >
         <h2 className="text-xl font-semibold text-grey-900 dark:text-grey-100 mb-4">
           Basic Information
         </h2>
-        
+
         <div className="space-y-4">
           {/* Template Name */}
           <div>
@@ -321,7 +321,7 @@ export default function TemplateBuilder({
               type="text"
               value={template.name}
               onChange={(e) => setTemplate({ ...template, name: e.target.value })}
-              className="w-full px-4 py-2 bg-white dark:bg-[#0f0f0f] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
+              className="w-full px-4 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary transition-all"
               placeholder="e.g., Post-Surgical Knee Protocol"
             />
             {errors.name && (
@@ -338,7 +338,7 @@ export default function TemplateBuilder({
               type="text"
               value={template.template_type}
               onChange={(e) => setTemplate({ ...template, template_type: e.target.value })}
-              className="w-full px-4 py-2 bg-white dark:bg-[#0f0f0f] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
+              className="w-full px-4 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary transition-all"
               placeholder="e.g., custom-knee-postsurgical"
             />
             {errors.template_type && (
@@ -355,7 +355,7 @@ export default function TemplateBuilder({
               <select
                 value={template.body_region}
                 onChange={(e) => setTemplate({ ...template, body_region: e.target.value })}
-                className="w-full px-4 py-2 bg-white dark:bg-[#0f0f0f] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
+                className="w-full px-4 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary transition-all"
               >
                 <option value="">Select...</option>
                 {BODY_REGIONS.map(region => (
@@ -373,7 +373,7 @@ export default function TemplateBuilder({
               <select
                 value={template.session_type}
                 onChange={(e) => setTemplate({ ...template, session_type: e.target.value })}
-                className="w-full px-4 py-2 bg-white dark:bg-[#0f0f0f] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
+                className="w-full px-4 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary transition-all"
               >
                 <option value="">Select...</option>
                 {SESSION_TYPES.map(type => (
@@ -394,7 +394,7 @@ export default function TemplateBuilder({
               value={template.description}
               onChange={(e) => setTemplate({ ...template, description: e.target.value })}
               rows={3}
-              className="w-full px-4 py-2 bg-white dark:bg-[#0f0f0f] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
+              className="w-full px-4 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary transition-all"
               placeholder="Brief description of when to use this template..."
             />
           </div>
@@ -406,7 +406,7 @@ export default function TemplateBuilder({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white dark:bg-[#1a1a1a] rounded-xl p-6 mb-6 border border-grey-200 dark:border-white/10"
+        className="bg-white/50 dark:bg-white/5 rounded-xl p-6 mb-6 border border-grey-200 dark:border-white/10 backdrop-blur-sm"
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-grey-900 dark:text-grey-100">
@@ -423,7 +423,7 @@ export default function TemplateBuilder({
 
         <div className="space-y-3">
           {(template.template_config?.subjective?.fields || []).map((field, index) => (
-            <div key={field.id} className="flex gap-3 items-start p-3 bg-grey-50 dark:bg-[#0f0f0f] rounded-lg">
+            <div key={field.id} className="flex gap-3 items-start p-3 bg-white/40 dark:bg-black/20 rounded-lg border border-grey-200/50 dark:border-white/5">
               <GripVertical className="w-5 h-5 text-grey-400 mt-2 flex-shrink-0" />
               <div className="flex-1 grid grid-cols-2 gap-3">
                 <input
@@ -431,12 +431,12 @@ export default function TemplateBuilder({
                   value={field.label}
                   onChange={(e) => updateSubjectiveField(index, { label: e.target.value })}
                   placeholder="Field label"
-                  className="px-3 py-2 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100"
+                  className="px-3 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
                 />
                 <select
                   value={field.type}
                   onChange={(e) => updateSubjectiveField(index, { type: e.target.value })}
-                  className="px-3 py-2 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100"
+                  className="px-3 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
                 >
                   {FIELD_TYPES.map(type => (
                     <option key={type.value} value={type.value}>{type.label}</option>
@@ -451,7 +451,7 @@ export default function TemplateBuilder({
               </button>
             </div>
           ))}
-          
+
           {(template.template_config?.subjective?.fields || []).length === 0 && (
             <p className="text-center text-grey-500 dark:text-grey-400 py-4">
               No fields added yet. Click "Add Field" to get started.
@@ -465,7 +465,7 @@ export default function TemplateBuilder({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-white dark:bg-[#1a1a1a] rounded-xl p-6 mb-6 border border-grey-200 dark:border-white/10"
+        className="bg-white/50 dark:bg-white/5 rounded-xl p-6 mb-6 border border-grey-200 dark:border-white/10 backdrop-blur-sm"
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-grey-900 dark:text-grey-100">
@@ -482,7 +482,7 @@ export default function TemplateBuilder({
 
         <div className="space-y-3">
           {(template.template_config?.objective?.measurements || []).map((measurement, index) => (
-            <div key={measurement.id} className="flex gap-3 items-start p-3 bg-grey-50 dark:bg-[#0f0f0f] rounded-lg">
+            <div key={measurement.id} className="flex gap-3 items-start p-3 bg-white/40 dark:bg-black/20 rounded-lg border border-grey-200/50 dark:border-white/5">
               <GripVertical className="w-5 h-5 text-grey-400 mt-2 flex-shrink-0" />
               <div className="flex-1 grid grid-cols-3 gap-3">
                 <input
@@ -490,19 +490,19 @@ export default function TemplateBuilder({
                   value={measurement.label}
                   onChange={(e) => updateObjectiveMeasurement(index, { label: e.target.value })}
                   placeholder="Measurement label"
-                  className="px-3 py-2 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100"
+                  className="px-3 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
                 />
                 <input
                   type="text"
                   value={measurement.unit || ''}
                   onChange={(e) => updateObjectiveMeasurement(index, { unit: e.target.value })}
                   placeholder="Unit (e.g., degrees)"
-                  className="px-3 py-2 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100"
+                  className="px-3 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
                 />
                 <select
                   value={measurement.type}
                   onChange={(e) => updateObjectiveMeasurement(index, { type: e.target.value })}
-                  className="px-3 py-2 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100"
+                  className="px-3 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
                 >
                   {FIELD_TYPES.map(type => (
                     <option key={type.value} value={type.value}>{type.label}</option>
@@ -517,7 +517,7 @@ export default function TemplateBuilder({
               </button>
             </div>
           ))}
-          
+
           {(template.template_config?.objective?.measurements || []).length === 0 && (
             <p className="text-center text-grey-500 dark:text-grey-400 py-4">
               No measurements added yet. Click "Add Measurement" to get started.
@@ -531,7 +531,7 @@ export default function TemplateBuilder({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-white dark:bg-[#1a1a1a] rounded-xl p-6 mb-6 border border-grey-200 dark:border-white/10"
+        className="bg-white/50 dark:bg-white/5 rounded-xl p-6 mb-6 border border-grey-200 dark:border-white/10 backdrop-blur-sm"
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-grey-900 dark:text-grey-100">
@@ -548,14 +548,14 @@ export default function TemplateBuilder({
 
         <div className="space-y-3">
           {(template.template_config?.assessment?.prompts || []).map((prompt, index) => (
-            <div key={index} className="flex gap-3 items-center p-3 bg-grey-50 dark:bg-[#0f0f0f] rounded-lg">
+            <div key={index} className="flex gap-3 items-center p-3 bg-white/40 dark:bg-black/20 rounded-lg border border-grey-200/50 dark:border-white/5">
               <GripVertical className="w-5 h-5 text-grey-400 flex-shrink-0" />
               <input
                 type="text"
                 value={prompt}
                 onChange={(e) => updateAssessmentPrompt(index, e.target.value)}
                 placeholder="Assessment prompt or question"
-                className="flex-1 px-3 py-2 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100"
+                className="flex-1 px-3 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
               />
               <button
                 onClick={() => removeAssessmentPrompt(index)}
@@ -565,7 +565,7 @@ export default function TemplateBuilder({
               </button>
             </div>
           ))}
-          
+
           {(template.template_config?.assessment?.prompts || []).length === 0 && (
             <p className="text-center text-grey-500 dark:text-grey-400 py-4">
               No prompts added yet. Click "Add Prompt" to get started.
@@ -579,7 +579,7 @@ export default function TemplateBuilder({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-white dark:bg-[#1a1a1a] rounded-xl p-6 mb-6 border border-grey-200 dark:border-white/10"
+        className="bg-white/50 dark:bg-white/5 rounded-xl p-6 mb-6 border border-grey-200 dark:border-white/10 backdrop-blur-sm"
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-grey-900 dark:text-grey-100">
@@ -596,14 +596,14 @@ export default function TemplateBuilder({
 
         <div className="space-y-3">
           {(template.template_config?.plan?.sections || []).map((section, index) => (
-            <div key={section.id} className="flex gap-3 items-center p-3 bg-grey-50 dark:bg-[#0f0f0f] rounded-lg">
+            <div key={section.id} className="flex gap-3 items-center p-3 bg-white/40 dark:bg-black/20 rounded-lg border border-grey-200/50 dark:border-white/5">
               <GripVertical className="w-5 h-5 text-grey-400 flex-shrink-0" />
               <input
                 type="text"
                 value={section.label}
                 onChange={(e) => updatePlanSection(index, { label: e.target.value })}
                 placeholder="Section label"
-                className="flex-1 px-3 py-2 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/15 rounded-lg text-grey-900 dark:text-grey-100"
+                className="flex-1 px-3 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary"
               />
               <button
                 onClick={() => removePlanSection(index)}
@@ -613,7 +613,7 @@ export default function TemplateBuilder({
               </button>
             </div>
           ))}
-          
+
           {(template.template_config?.plan?.sections || []).length === 0 && (
             <p className="text-center text-grey-500 dark:text-grey-400 py-4">
               No sections added yet. Click "Add Section" to get started.
@@ -627,7 +627,7 @@ export default function TemplateBuilder({
         <button
           onClick={onCancel}
           disabled={isSaving}
-          className="px-6 py-3 bg-grey-100 dark:bg-[#0f0f0f] text-grey-700 dark:text-grey-300 rounded-lg hover:bg-grey-200 dark:hover:bg-[#1a1a1a] transition-colors disabled:opacity-50"
+          className="px-6 py-3 bg-white/50 dark:bg-white/5 text-grey-700 dark:text-grey-300 rounded-xl hover:bg-white/80 dark:hover:bg-white/10 transition-colors disabled:opacity-50 border border-grey-200/50 dark:border-white/5"
         >
           <X className="w-5 h-5 inline mr-2" />
           Cancel
@@ -635,7 +635,7 @@ export default function TemplateBuilder({
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="px-6 py-3 bg-blue-primary hover:bg-blue-dark text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+          className="px-6 py-3 bg-blue-primary hover:bg-blue-dark text-white rounded-xl shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 transition-all disabled:opacity-50 flex items-center gap-2"
         >
           {isSaving ? (
             <>

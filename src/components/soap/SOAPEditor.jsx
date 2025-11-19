@@ -13,10 +13,10 @@ import ObjectiveTable from './ObjectiveTable';
 import GoalsList from './GoalsList';
 import InterventionsList from './InterventionsList';
 
-const SOAPEditor = ({ 
-  soapData, 
-  onSoapChange, 
-  onSave, 
+const SOAPEditor = ({
+  soapData,
+  onSoapChange,
+  onSave,
   onExport,
   isLoading = false,
   confidenceScores = {},
@@ -50,7 +50,7 @@ const SOAPEditor = ({
       ...soapData,
       [sectionType]: newData
     };
-    
+
     onSoapChange(updatedSOAP);
     setHasUnsavedChanges(true);
     setSaveStatus('idle');
@@ -58,7 +58,7 @@ const SOAPEditor = ({
 
   const handleSave = async () => {
     if (!hasUnsavedChanges && !localSessionName) return;
-    
+
     setSaveStatus('saving');
     try {
       const sessionData = {
@@ -68,12 +68,12 @@ const SOAPEditor = ({
       await onSave(sessionData);
       setSaveStatus('saved');
       setHasUnsavedChanges(false);
-      
+
       // Update parent with session name
       if (onSessionNameChange) {
         onSessionNameChange(localSessionName);
       }
-      
+
       // Reset saved status after 2 seconds
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
@@ -91,7 +91,7 @@ const SOAPEditor = ({
     try {
       const soapText = formatSOAPForText(soapData);
       await navigator.clipboard.writeText(soapText);
-      
+
       // Show success feedback
       setSaveStatus('copied');
       setTimeout(() => setSaveStatus('idle'), 2000);
@@ -107,7 +107,7 @@ const SOAPEditor = ({
       // Use browser's print dialog for PDF export (works with all browsers)
       const printWindow = window.open('', '_blank');
       const soapText = formatSOAPForText(soapData);
-      
+
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -136,14 +136,14 @@ const SOAPEditor = ({
           </body>
         </html>
       `);
-      
+
       printWindow.document.close();
-      
+
       // Wait for content to load, then trigger print
       setTimeout(() => {
         printWindow.print();
       }, 250);
-      
+
       // Show success feedback
       setSaveStatus('exported');
       setTimeout(() => setSaveStatus('idle'), 2000);
@@ -197,7 +197,7 @@ ${formatBillingForText(soap.billing)}`;
 
   const formatObjectiveForText = (objective) => {
     if (!objective) return 'No objective data';
-    
+
     // Handle categorized structure
     if (objective.categories && Array.isArray(objective.categories)) {
       let text = '';
@@ -213,7 +213,7 @@ ${formatBillingForText(soap.billing)}`;
       });
       return text || 'No objective data';
     }
-    
+
     // Fallback for old flat structure
     if (objective.rows && Array.isArray(objective.rows)) {
       let text = '';
@@ -224,13 +224,13 @@ ${formatBillingForText(soap.billing)}`;
       });
       return text || 'No objective data';
     }
-    
+
     return 'No objective data';
   };
 
   const formatObjectiveForPDF = (objective) => {
     if (!objective) return 'No objective data';
-    
+
     // Handle categorized structure
     if (objective.categories && Array.isArray(objective.categories)) {
       let text = '';
@@ -246,7 +246,7 @@ ${formatBillingForText(soap.billing)}`;
       });
       return text || 'No objective data';
     }
-    
+
     // Fallback for old flat structure
     if (objective.rows && Array.isArray(objective.rows)) {
       let text = '';
@@ -257,27 +257,27 @@ ${formatBillingForText(soap.billing)}`;
       });
       return text || 'No objective data';
     }
-    
+
     return 'No objective data';
   };
 
   const formatAssessmentForText = (assessment) => {
     if (!assessment) return 'No assessment data';
-    
+
     let text = '';
-    
+
     // Clinical Impression
     if (assessment.clinical_impression?.content) {
       text += 'Clinical Impression:\n';
       text += assessment.clinical_impression.content.replace(/<[^>]*>/g, '') + '\n\n';
     }
-    
+
     // Medical Necessity
     if (assessment.medical_necessity?.content) {
       text += 'Medical Necessity:\n';
       text += assessment.medical_necessity.content.replace(/<[^>]*>/g, '') + '\n\n';
     }
-    
+
     // Short-term Goals
     if (assessment.short_term_goals?.items && assessment.short_term_goals.items.length > 0) {
       text += 'Short-term Goals (2-4 weeks):\n';
@@ -286,7 +286,7 @@ ${formatBillingForText(soap.billing)}`;
       });
       text += '\n';
     }
-    
+
     // Long-term Goals
     if (assessment.long_term_goals?.items && assessment.long_term_goals.items.length > 0) {
       text += 'Long-term Goals (6-12 weeks):\n';
@@ -294,15 +294,15 @@ ${formatBillingForText(soap.billing)}`;
         text += `  • ${goal}\n`;
       });
     }
-    
+
     return text.trim() || 'No assessment data';
   };
 
   const formatPlanForText = (plan) => {
     if (!plan) return 'No plan data';
-    
+
     let text = '';
-    
+
     // Interventions
     if (plan.interventions?.items && plan.interventions.items.length > 0) {
       text += 'Interventions:\n';
@@ -311,7 +311,7 @@ ${formatBillingForText(soap.billing)}`;
       });
       text += '\n';
     }
-    
+
     // Progressions
     if (plan.progressions?.items && plan.progressions.items.length > 0) {
       text += 'Progressions:\n';
@@ -320,7 +320,7 @@ ${formatBillingForText(soap.billing)}`;
       });
       text += '\n';
     }
-    
+
     // Regressions
     if (plan.regressions?.items && plan.regressions.items.length > 0) {
       text += 'Regressions:\n';
@@ -329,27 +329,27 @@ ${formatBillingForText(soap.billing)}`;
       });
       text += '\n';
     }
-    
+
     // Frequency/Duration
     if (plan.frequency_duration?.content) {
       text += 'Frequency/Duration:\n';
       text += plan.frequency_duration.content.replace(/<[^>]*>/g, '') + '\n\n';
     }
-    
+
     // Patient Education
     if (plan.patient_education?.content) {
       text += 'Patient Education:\n';
       text += plan.patient_education.content.replace(/<[^>]*>/g, '');
     }
-    
+
     return text.trim() || 'No plan data';
   };
 
   const formatBillingForText = (billing) => {
     if (!billing) return 'No billing data';
-    
+
     let text = '';
-    
+
     // CPT Codes
     if (billing.cpt_codes?.items && billing.cpt_codes.items.length > 0) {
       text += 'CPT Codes:\n';
@@ -358,13 +358,13 @@ ${formatBillingForText(soap.billing)}`;
       });
       text += '\n';
     }
-    
+
     // Units
     if (billing.units?.content) {
       text += 'Time Units:\n';
       text += billing.units.content.replace(/<[^>]*>/g, '') + '\n\n';
     }
-    
+
     // ICD-10 Codes
     if (billing.icd10_codes?.items && billing.icd10_codes.items.length > 0) {
       text += 'ICD-10 Diagnosis Codes:\n';
@@ -372,7 +372,7 @@ ${formatBillingForText(soap.billing)}`;
         text += `  • ${code}\n`;
       });
     }
-    
+
     return text.trim() || 'No billing data';
   };
 
@@ -391,8 +391,8 @@ ${formatBillingForText(soap.billing)}`;
   return (
     <div className={`soap-editor max-w-7xl mx-auto ${className}`}>
       {/* Header with Session Name and Actions */}
-      <motion.div 
-        className="mb-8 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 shadow-lg transition-colors"
+      <motion.div
+        className="mb-8 bg-white/70 dark:bg-[#1a1a1a]/70 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-6 shadow-xl transition-colors"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -473,7 +473,7 @@ ${formatBillingForText(soap.billing)}`;
                 <Save className="w-4 h-4" />
                 Save Note
               </button>
-              
+
               <button
                 onClick={handleCopyToClipboard}
                 className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
@@ -483,7 +483,7 @@ ${formatBillingForText(soap.billing)}`;
                 <Copy className="w-4 h-4" />
                 Copy
               </button>
-              
+
               <button
                 onClick={handlePDFExport}
                 className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl 
@@ -536,8 +536,8 @@ ${formatBillingForText(soap.billing)}`;
               </div>
             )}
           </div>
-          
-          <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 transition-colors">
+
+          <div className="bg-white/70 dark:bg-[#1a1a1a]/70 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-6 shadow-lg transition-colors">
             <WYSIWYGEditor
               content={soapData.subjective?.content || ''}
               placeholder={soapData.subjective?.placeholder || 'Patient history, pain description, functional limitations...'}
@@ -568,8 +568,8 @@ ${formatBillingForText(soap.billing)}`;
               </div>
             )}
           </div>
-          
-          <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 transition-colors">
+
+          <div className="bg-white/70 dark:bg-[#1a1a1a]/70 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-6 shadow-lg transition-colors">
             <ObjectiveTable
               data={soapData.objective || { headers: [], rows: [] }}
               onChange={(objectiveData) => {
@@ -602,8 +602,8 @@ ${formatBillingForText(soap.billing)}`;
               </div>
             )}
           </div>
-          
-          <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 space-y-6 transition-colors">
+
+          <div className="bg-white/70 dark:bg-[#1a1a1a]/70 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-6 space-y-6 shadow-lg transition-colors">
             {/* Check if assessment has the new structure (with goals) or old structure (just content) */}
             {soapData.assessment?.clinical_impression !== undefined ? (
               // New structure with goals
@@ -699,8 +699,8 @@ ${formatBillingForText(soap.billing)}`;
               </div>
             )}
           </div>
-          
-          <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 space-y-6 transition-colors">
+
+          <div className="bg-white/70 dark:bg-[#1a1a1a]/70 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-6 space-y-6 shadow-lg transition-colors">
             {/* Check if plan has the new structure (with interventions) or old structure (just content) */}
             {soapData.plan?.interventions !== undefined ? (
               // New structure with interventions, progressions, regressions
@@ -805,7 +805,7 @@ ${formatBillingForText(soap.billing)}`;
                 <h2 className="text-2xl font-semibold text-grey-900 dark:text-grey-100">Billing</h2>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-2xl p-6 space-y-6 transition-colors">
               {/* CPT Codes */}
               <div>

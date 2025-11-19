@@ -11,6 +11,7 @@ import { useTemplateManager } from '../../hooks/templates/useTemplateManager';
 import { createAIService } from '../../services/structuredAI';
 import { authenticatedFetch } from '../../lib/authHeaders';
 import GenerationProgress from '../recording/GenerationProgress';
+import MagneticButton from '../ui/MagneticButton';
 
 export default function RecordingInterface() {
   const { appState, selectedTemplate, startRecording, stopRecording, finishProcessing, sessionName, setSessionName, triggerRefresh } = useAppState();
@@ -64,7 +65,7 @@ export default function RecordingInterface() {
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        
+
         // Validate audio blob has content
         if (audioBlob.size === 0) {
           console.error('❌ Audio blob is empty');
@@ -72,12 +73,12 @@ export default function RecordingInterface() {
           setAudioBlob(null);
           return;
         }
-        
+
         console.log('✅ Audio recorded successfully:', {
           size: audioBlob.size,
           type: audioBlob.type
         });
-        
+
         setAudioBlob(audioBlob);
         stream.getTracks().forEach(track => track.stop());
         setShowNameInput(true);
@@ -132,14 +133,14 @@ export default function RecordingInterface() {
     try {
       setShowNameInput(false);
       setProcessingStatus('Initializing AI service...');
-      
+
       // Step 0: Initialize AI service first (needed for both transcription and SOAP generation)
       console.log('🤖 Initializing AI service...');
       const aiService = createAIService();
       console.log('✅ AI service initialized');
-      
+
       setProcessingStatus('Transcribing audio...');
-      
+
       console.log('🎤 Starting transcription...', {
         audioSize: audioBlob.size,
         templateType: selectedTemplate
@@ -167,7 +168,7 @@ export default function RecordingInterface() {
         templateType: selectedTemplate,
         transcriptLength: transcript.length
       });
-      
+
       const soapResult = await templateManager.generateSOAP(transcript, aiService);
 
       if (!soapResult.success) {
@@ -220,47 +221,47 @@ export default function RecordingInterface() {
 
     } catch (error) {
       console.error('❌ Error processing recording:', error);
-      
+
       // Categorize errors and provide appropriate feedback
       const errorMessage = error.message || 'Unknown error occurred';
-      
+
       // Check if it's an insufficient audio error
-      if (errorMessage.includes('Insufficient audio') || 
-          errorMessage.includes('no speech detected') || 
-          errorMessage.includes('Empty transcription')) {
+      if (errorMessage.includes('Insufficient audio') ||
+        errorMessage.includes('no speech detected') ||
+        errorMessage.includes('Empty transcription')) {
         alert('⚠️ No speech detected in recording\n\nPlease record again and speak clearly into the microphone.');
-        
+
         // Reset to template selection
         setShowNameInput(false);
         setAudioBlob(null);
         setRecordingTime(0);
         setProcessingStatus('');
-        
+
         // Navigate back to template selection
         window.location.reload(); // Simple reload to reset state
         return;
       }
-      
+
       // Check if it's an API/network error
-      if (errorMessage.includes('network') || 
-          errorMessage.includes('timeout') || 
-          errorMessage.includes('API') ||
-          errorMessage.includes('fetch')) {
+      if (errorMessage.includes('network') ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('API') ||
+        errorMessage.includes('fetch')) {
         alert('🌐 Network Error\n\nUnable to connect to AI services. Please check your internet connection and try again.');
         setProcessingStatus('');
         setShowNameInput(true);
         return;
       }
-      
+
       // Check if it's an AI initialization error
-      if (errorMessage.includes('not initialized') || 
-          errorMessage.includes('API key')) {
+      if (errorMessage.includes('not initialized') ||
+        errorMessage.includes('API key')) {
         alert('⚙️ Configuration Error\n\nAI service is not properly configured. Please contact support.');
         setProcessingStatus('');
         setShowNameInput(true);
         return;
       }
-      
+
       // Generic error
       alert(`❌ Processing Failed\n\n${errorMessage}\n\nPlease try recording again.`);
       setProcessingStatus('');
@@ -286,18 +287,13 @@ export default function RecordingInterface() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="text-center"
           >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <MagneticButton
               onClick={handleStartRecording}
-              className="mx-auto w-20 h-20 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-shadow"
-              style={{
-                background: 'radial-gradient(circle at 30% 30%, var(--blue-primary), var(--blue-dark))'
-              }}
+              className="mx-auto w-24 h-24 rounded-full flex items-center justify-center shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] hover:shadow-[0_0_60px_-10px_rgba(37,99,235,0.6)] transition-shadow bg-gradient-to-br from-blue-600 to-indigo-700"
             >
               <Mic className="w-10 h-10 text-white" />
-            </motion.button>
-            <p className="mt-4 text-grey-600 dark:text-grey-400 font-medium">Click to start recording</p>
+            </MagneticButton>
+            <p className="mt-6 text-gray-600 dark:text-gray-300 font-medium text-lg">Click to start recording</p>
           </motion.div>
         )}
 
@@ -315,23 +311,22 @@ export default function RecordingInterface() {
               {formatTime(recordingTime)}
             </div>
 
-            {/* Waveform Placeholder */}
-            <div className="flex items-center justify-center gap-1 h-16">
-              {[...Array(20)].map((_, i) => (
+            {/* Waveform Placeholder - Enhanced */}
+            <div className="flex items-center justify-center gap-1.5 h-24">
+              {[...Array(30)].map((_, i) => (
                 <motion.div
                   key={i}
                   animate={{
-                    height: isPaused ? [20, 20, 20] : [20, Math.random() * 60 + 20, 20],
+                    height: isPaused ? [24, 24, 24] : [24, Math.random() * 80 + 24, 24],
+                    opacity: isPaused ? 0.5 : 1
                   }}
                   transition={{
-                    duration: 0.5,
+                    duration: 0.4,
                     repeat: Infinity,
-                    delay: i * 0.05,
+                    delay: i * 0.03,
+                    ease: "easeInOut"
                   }}
-                  className="w-1 rounded-full"
-                  style={{
-                    backgroundColor: isPaused ? '#9ca3af' : 'rgb(var(--blue-primary-rgb))'
-                  }}
+                  className="w-1.5 rounded-full bg-gradient-to-t from-blue-600 to-cyan-400 shadow-[0_0_10px_rgba(37,99,235,0.3)]"
                 />
               ))}
             </div>
@@ -340,37 +335,31 @@ export default function RecordingInterface() {
             <div className="flex items-center justify-center gap-4">
               {/* Pause/Resume Button */}
               {!isPaused ? (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <MagneticButton
                   onClick={handlePauseRecording}
-                  className="w-14 h-14 bg-grey-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+                  className="w-16 h-16 bg-gray-800/50 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800/70"
                   title="Pause recording"
                 >
-                  <Pause className="w-7 h-7 text-white fill-white" />
-                </motion.button>
+                  <Pause className="w-6 h-6 text-white fill-white" />
+                </MagneticButton>
               ) : (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <MagneticButton
                   onClick={handleResumeRecording}
-                  className="w-14 h-14 bg-green-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+                  className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center shadow-lg hover:bg-green-500"
                   title="Resume recording"
                 >
-                  <Play className="w-7 h-7 text-white fill-white" />
-                </motion.button>
+                  <Play className="w-6 h-6 text-white fill-white" />
+                </MagneticButton>
               )}
 
               {/* Stop Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <MagneticButton
                 onClick={handleStopRecording}
-                className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+                className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center shadow-xl hover:bg-red-600 shadow-red-500/30"
                 title="Stop recording"
               >
                 <Square className="w-8 h-8 text-white fill-white" />
-              </motion.button>
+              </MagneticButton>
             </div>
             <p className="text-grey-600 dark:text-grey-400 font-medium">{isPaused ? 'Paused' : 'Recording...'}</p>
           </motion.div>
@@ -432,7 +421,7 @@ export default function RecordingInterface() {
 
         {/* Processing */}
         {showProcessing && (
-          <GenerationProgress 
+          <GenerationProgress
             onComplete={() => {
               // Component will handle its own cleanup
             }}

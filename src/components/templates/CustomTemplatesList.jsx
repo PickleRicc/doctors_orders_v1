@@ -5,12 +5,13 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, Edit, Trash2, Star, Copy, Search, 
-  FileText, Calendar, TrendingUp 
+import {
+  Plus, Edit, Trash2, Star, Copy, Search,
+  FileText, Calendar, TrendingUp
 } from 'lucide-react';
 import { useCustomTemplates } from '../../hooks/useCustomTemplates';
 import TemplateBuilder from './TemplateBuilder';
+import SpotlightCard from '../ui/SpotlightCard';
 
 export default function CustomTemplatesList() {
   const {
@@ -43,7 +44,7 @@ export default function CustomTemplatesList() {
   // Handle create/edit
   const handleSaveTemplate = async (templateData) => {
     console.log('📝 CustomTemplatesList: Saving template data:', templateData);
-    
+
     let result;
     if (editingTemplate) {
       console.log('Updating template:', editingTemplate.id);
@@ -54,7 +55,7 @@ export default function CustomTemplatesList() {
     }
 
     console.log('Save result:', result);
-    
+
     if (result.success) {
       console.log('✅ Template saved successfully!');
       setIsBuilderOpen(false);
@@ -88,7 +89,7 @@ export default function CustomTemplatesList() {
   const handleEdit = async (template) => {
     console.log('✏️ Edit clicked for template:', template);
     console.log('Template config from list:', template.template_config);
-    
+
     // Fetch full template with config if not already present
     if (!template.template_config || Object.keys(template.template_config).length === 0) {
       console.log('⚠️ Template config missing, fetching full template...');
@@ -98,7 +99,7 @@ export default function CustomTemplatesList() {
     } else {
       setEditingTemplate(template);
     }
-    
+
     setIsBuilderOpen(true);
   };
 
@@ -111,10 +112,10 @@ export default function CustomTemplatesList() {
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
@@ -133,7 +134,7 @@ export default function CustomTemplatesList() {
   }
 
   return (
-    <div className="bg-white dark:bg-[#0a0a0a]">
+    <div className="bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -155,14 +156,14 @@ export default function CustomTemplatesList() {
               placeholder="Search templates..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 placeholder-grey-400 focus:outline-none focus:ring-2 focus:ring-blue-primary"
+              className="w-full pl-10 pr-4 py-3 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-xl text-grey-900 dark:text-grey-100 placeholder-grey-400 focus:outline-none focus:ring-2 focus:ring-blue-primary backdrop-blur-sm transition-all"
             />
           </div>
 
           {/* Create New Button */}
           <button
             onClick={handleNewTemplate}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-primary hover:bg-blue-dark text-white rounded-lg transition-colors whitespace-nowrap"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-primary hover:bg-blue-dark text-white rounded-xl shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 transition-all whitespace-nowrap"
           >
             <Plus className="w-5 h-5" />
             Create New Template
@@ -179,7 +180,7 @@ export default function CustomTemplatesList() {
         {/* Loading State */}
         {loading && templates.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12">
-            <div 
+            <div
               className="w-12 h-12 border-4 border-blue-primary border-t-transparent rounded-full animate-spin mb-4"
             />
             <p className="text-grey-500 dark:text-grey-400">Loading templates...</p>
@@ -222,92 +223,98 @@ export default function CustomTemplatesList() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-white dark:bg-[#1a1a1a] border border-grey-200 dark:border-white/10 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                  className="h-full"
                 >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-semibold text-grey-900 dark:text-grey-100">
-                          {template.name}
-                        </h3>
-                        {template.is_favorite && (
-                          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <SpotlightCard
+                    className="h-full bg-white/40 dark:bg-white/5 border-white/20 dark:border-white/10"
+                    spotlightColor="rgba(37, 99, 235, 0.15)"
+                  >
+                    <div className="p-6 h-full flex flex-col">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-semibold text-grey-900 dark:text-grey-100">
+                              {template.name}
+                            </h3>
+                            {template.is_favorite && (
+                              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                            )}
+                          </div>
+                          {template.description && (
+                            <p className="text-sm text-grey-600 dark:text-grey-400 line-clamp-2">
+                              {template.description}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => toggleFavorite(template.id, template.is_favorite)}
+                          className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors"
+                          title={template.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                          <Star
+                            className={`w-5 h-5 ${template.is_favorite
+                                ? 'text-yellow-500 fill-yellow-500'
+                                : 'text-grey-400'
+                              }`}
+                          />
+                        </button>
+                      </div>
+
+                      {/* Metadata */}
+                      <div className="space-y-2 mb-6 flex-1">
+                        {template.body_region && (
+                          <div className="flex items-center gap-2 text-sm text-grey-600 dark:text-grey-400">
+                            <FileText className="w-4 h-4" />
+                            <span className="capitalize">
+                              {template.body_region.replace('-', '/')}
+                              {template.session_type && ` • ${template.session_type}`}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 text-sm text-grey-600 dark:text-grey-400">
+                          <Calendar className="w-4 h-4" />
+                          <span>Created {formatDate(template.created_at)}</span>
+                        </div>
+                        {template.usage_count > 0 && (
+                          <div className="flex items-center gap-2 text-sm text-grey-600 dark:text-grey-400">
+                            <TrendingUp className="w-4 h-4" />
+                            <span>Used {template.usage_count} times</span>
+                          </div>
                         )}
                       </div>
-                      {template.description && (
-                        <p className="text-sm text-grey-600 dark:text-grey-400 line-clamp-2">
-                          {template.description}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => toggleFavorite(template.id, template.is_favorite)}
-                      className="p-2 hover:bg-grey-100 dark:hover:bg-[#0f0f0f] rounded-lg transition-colors"
-                      title={template.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
-                    >
-                      <Star 
-                        className={`w-5 h-5 ${
-                          template.is_favorite 
-                            ? 'text-yellow-500 fill-yellow-500' 
-                            : 'text-grey-400'
-                        }`} 
-                      />
-                    </button>
-                  </div>
 
-                  {/* Metadata */}
-                  <div className="space-y-2 mb-4">
-                    {template.body_region && (
-                      <div className="flex items-center gap-2 text-sm text-grey-600 dark:text-grey-400">
-                        <FileText className="w-4 h-4" />
-                        <span className="capitalize">
-                          {template.body_region.replace('-', '/')}
-                          {template.session_type && ` • ${template.session_type}`}
-                        </span>
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-4 border-t border-grey-200/50 dark:border-white/10">
+                        <button
+                          onClick={() => handleEdit(template)}
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white/50 dark:bg-white/5 text-grey-700 dark:text-grey-300 rounded-lg hover:bg-white/80 dark:hover:bg-white/10 transition-colors border border-grey-200/50 dark:border-white/5"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDuplicate(template.id)}
+                          className="flex items-center justify-center gap-2 px-3 py-2 bg-white/50 dark:bg-white/5 text-grey-700 dark:text-grey-300 rounded-lg hover:bg-white/80 dark:hover:bg-white/10 transition-colors border border-grey-200/50 dark:border-white/5"
+                          title="Duplicate template"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(template.id)}
+                          disabled={deletingId === template.id}
+                          className="flex items-center justify-center gap-2 px-3 py-2 bg-red-50/50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100/50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 border border-red-100/50 dark:border-red-900/10"
+                          title="Delete template"
+                        >
+                          {deletingId === template.id ? (
+                            <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
                       </div>
-                    )}
-                    <div className="flex items-center gap-2 text-sm text-grey-600 dark:text-grey-400">
-                      <Calendar className="w-4 h-4" />
-                      <span>Created {formatDate(template.created_at)}</span>
                     </div>
-                    {template.usage_count > 0 && (
-                      <div className="flex items-center gap-2 text-sm text-grey-600 dark:text-grey-400">
-                        <TrendingUp className="w-4 h-4" />
-                        <span>Used {template.usage_count} times</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 pt-4 border-t border-grey-200 dark:border-white/10">
-                    <button
-                      onClick={() => handleEdit(template)}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-grey-100 dark:bg-[#0f0f0f] text-grey-700 dark:text-grey-300 rounded-lg hover:bg-grey-200 dark:hover:bg-[#1f1f1f] transition-colors"
-                    >
-                      <Edit className="w-4 h-4" />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDuplicate(template.id)}
-                      className="flex items-center justify-center gap-2 px-3 py-2 bg-grey-100 dark:bg-[#0f0f0f] text-grey-700 dark:text-grey-300 rounded-lg hover:bg-grey-200 dark:hover:bg-[#1f1f1f] transition-colors"
-                      title="Duplicate template"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(template.id)}
-                      disabled={deletingId === template.id}
-                      className="flex items-center justify-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
-                      title="Delete template"
-                    >
-                      {deletingId === template.id ? (
-                        <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
+                  </SpotlightCard>
                 </motion.div>
               ))}
             </AnimatePresence>

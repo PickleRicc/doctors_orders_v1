@@ -25,13 +25,13 @@ export default function TemplatesModal({ isOpen, onClose }) {
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.2 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-6xl bg-white dark:bg-[#0a0a0a] rounded-2xl shadow-2xl flex flex-col"
+          className="relative w-full max-w-6xl bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl flex flex-col"
           style={{ maxHeight: '90vh' }}
         >
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-20 p-2 rounded-lg bg-grey-100 dark:bg-grey-800 hover:bg-grey-200 dark:hover:bg-grey-700 transition-colors"
+            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition-colors"
             aria-label="Close"
           >
             <X className="w-5 h-5 text-grey-700 dark:text-grey-300" />

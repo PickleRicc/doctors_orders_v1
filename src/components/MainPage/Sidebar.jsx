@@ -31,12 +31,12 @@ export default function Sidebar({ onOpenTemplates }) {
     if (tokenCacheRef.current.token && tokenCacheRef.current.expiresAt > now) {
       return tokenCacheRef.current.token;
     }
-    
+
     // Get fresh token from Supabase (reads from localStorage, very fast)
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      
+
       if (token) {
         // Cache token for 5 minutes
         tokenCacheRef.current = {
@@ -48,7 +48,7 @@ export default function Sidebar({ onOpenTemplates }) {
     } catch (error) {
       console.error('Error getting session:', error);
     }
-    
+
     return null;
   }, []);
 
@@ -58,7 +58,7 @@ export default function Sidebar({ onOpenTemplates }) {
     if (isFetchingRef.current) {
       return;
     }
-    
+
     try {
       // Only fetch if we're in the browser
       if (typeof window === 'undefined') return;
@@ -66,27 +66,27 @@ export default function Sidebar({ onOpenTemplates }) {
         setLoading(false);
         return;
       }
-      
+
       isFetchingRef.current = true;
       setLoading(true);
-      
+
       // Get access token (cached for performance)
       const accessToken = await getAccessToken();
-      
+
       if (!accessToken) {
         console.error('No access token available');
         setNotes([]);
         setLoading(false);
         return;
       }
-      
+
       // Fetch from Azure PostgreSQL API with auth token
       const response = await fetch('/api/phi/encounters?limit=50', {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setNotes(data.encounters || []);
@@ -145,13 +145,13 @@ export default function Sidebar({ onOpenTemplates }) {
     if (note.custom_template_id && note.custom_template_name) {
       return note.custom_template_name;
     }
-    
+
     // Otherwise, format the template_type nicely
     const templateType = note.template_type || 'Unknown';
-    
+
     // Remove 'custom-' prefix if present (fallback)
     const cleanType = templateType.replace(/^custom-[a-f0-9-]+$/, 'Custom Template');
-    
+
     // Capitalize and format nicely
     return cleanType
       .split('-')
@@ -162,13 +162,21 @@ export default function Sidebar({ onOpenTemplates }) {
   return (
     <>
       {/* Mobile Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-white/90 dark:bg-grey-800/90 backdrop-blur-12 rounded-lg shadow-sm border border-black/5 dark:border-white/10 transition-colors"
-        aria-label={isOpen ? "Close menu" : "Open menu"}
-      >
-        {isOpen ? <X className="w-6 h-6 text-grey-900 dark:text-grey-100" /> : <Menu className="w-6 h-6 text-grey-900 dark:text-grey-100" />}
-      </button>
+      {/* Mobile Toggle Button - Only show when closed */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => setIsOpen(true)}
+            className="fixed top-4 left-4 z-50 lg:hidden p-2.5 bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl rounded-xl shadow-lg border border-black/5 dark:border-white/10 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="w-6 h-6 text-grey-900 dark:text-grey-100" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
       <AnimatePresence>
@@ -185,25 +193,36 @@ export default function Sidebar({ onOpenTemplates }) {
 
             {/* Sidebar Content */}
             <motion.aside
-              initial={{ x: -280 }}
+              initial={{ x: -320 }}
               animate={{ x: 0 }}
-              exit={{ x: -280 }}
+              exit={{ x: -320 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 h-full w-80 bg-grey-50 dark:bg-gradient-to-b dark:from-[#000814] dark:via-black dark:to-[#000814] z-40 flex flex-col border-r border-grey-200 dark:border-white/10 transition-colors"
+              className="fixed left-4 top-4 bottom-4 w-[calc(100vw-2rem)] max-w-[20rem] lg:w-80 bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-2xl z-50 flex flex-col border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl transition-colors"
             >
               {/* Header */}
               <div className="p-4 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 flex-shrink-0">
-                    <Image 
-                      src="/u9354481378_Modern_logo_design_compact_robot_head_in_circular_98ac6e0b-5d09-4f6a-980b-cfc4d4af2c9c_3 - Edited.png"
-                      alt="Doctors Orders Logo"
-                      width={40}
-                      height={40}
-                      className="w-full h-full object-contain"
-                    />
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 flex-shrink-0">
+                      <Image
+                        src="/u9354481378_Modern_logo_design_compact_robot_head_in_circular_98ac6e0b-5d09-4f6a-980b-cfc4d4af2c9c_3 - Edited.png"
+                        alt="Doctors Orders Logo"
+                        width={40}
+                        height={40}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <h1 className="text-xl font-semibold text-grey-900 dark:text-grey-100">Doctors Orders</h1>
                   </div>
-                  <h1 className="text-xl font-semibold text-grey-900 dark:text-grey-100">Doctors Orders</h1>
+
+                  {/* Mobile Close Button */}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="lg:hidden p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    aria-label="Close menu"
+                  >
+                    <X className="w-6 h-6 text-grey-500 dark:text-grey-400" />
+                  </button>
                 </div>
 
                 {/* Search */}
@@ -214,7 +233,7 @@ export default function Sidebar({ onOpenTemplates }) {
                     placeholder="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1f1f1f] border border-grey-200 dark:border-white/15 rounded-lg text-sm text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-xl text-sm text-grey-900 dark:text-grey-100 placeholder-grey-500 dark:placeholder-grey-400 focus:outline-none transition-all"
                     style={{
                       '--tw-ring-color': 'rgba(var(--blue-primary-rgb), 0.2)'
                     }}
@@ -247,7 +266,7 @@ export default function Sidebar({ onOpenTemplates }) {
                       setIsOpen(false);
                     }
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-grey-700 dark:text-grey-300 hover:bg-grey-100 dark:hover:bg-[#1f1f1f] rounded-lg transition-colors group"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-grey-700 dark:text-grey-300 hover:bg-white/50 dark:hover:bg-white/5 rounded-xl transition-colors group"
                 >
                   <Folder className="w-5 h-5 text-grey-500 dark:text-grey-400 group-hover:text-blue-primary" />
                   <span className="font-medium">My Templates</span>
@@ -268,7 +287,7 @@ export default function Sidebar({ onOpenTemplates }) {
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {loading ? (
                   <div className="text-center py-8 text-grey-500 dark:text-grey-400">
-                    <div 
+                    <div
                       className="animate-spin w-6 h-6 border-2 border-t-transparent rounded-full mx-auto mb-2"
                       style={{
                         borderColor: 'rgb(var(--blue-primary-rgb))',
@@ -306,11 +325,11 @@ export default function Sidebar({ onOpenTemplates }) {
                       }}
                       whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.02)' }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full p-3 text-left transition-all group border-b border-grey-200 dark:border-white/10 dark:hover:bg-[#1f1f1f]"
+                      className="w-full p-3 text-left transition-all group border-b border-grey-200/50 dark:border-white/5 hover:bg-white/50 dark:hover:bg-white/5 rounded-xl mb-1"
                     >
                       <div className="flex items-start gap-3">
                         {/* Template Icon */}
-                        <div 
+                        <div
                           className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                           style={{
                             backgroundColor: 'rgba(var(--blue-primary-rgb), 0.15)',
@@ -330,7 +349,7 @@ export default function Sidebar({ onOpenTemplates }) {
                             <span>{formatDate(note.created_at)}</span>
                           </div>
                           <div className="mt-1">
-                            <span 
+                            <span
                               className="inline-block px-2 py-0.5 text-xs font-medium rounded-full"
                               style={{
                                 backgroundColor: 'rgba(var(--blue-primary-rgb), 0.15)',
@@ -348,7 +367,7 @@ export default function Sidebar({ onOpenTemplates }) {
               </div>
 
               {/* Footer */}
-              <div className="p-4 bg-grey-50/50 dark:bg-black/50 border-t border-grey-200 dark:border-white/10">
+              <div className="p-4 bg-transparent border-t border-grey-200/50 dark:border-white/10">
                 <p className="text-xs text-grey-500 dark:text-grey-400 text-center">
                   {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
                 </p>

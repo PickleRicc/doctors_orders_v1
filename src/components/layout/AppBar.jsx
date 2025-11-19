@@ -11,10 +11,10 @@ import { useRouter } from 'next/router';
 function AppBar({ onMenuClick, sidebarOpen }) {
   const { user, signOut } = useAuth();
   const router = useRouter();
-  
+
   // Use router path for active tab state
   const [activeTab, setActiveTab] = useState('dashboard');
-  
+
   // Set active tab based on current route
   useEffect(() => {
     const path = router.pathname;
@@ -28,25 +28,25 @@ function AppBar({ onMenuClick, sidebarOpen }) {
       setActiveTab('settings');
     }
   }, [router.pathname]);
-  
+
   // Handle logout
   const handleLogout = async () => {
     await signOut();
   };
-  
+
   return (
-    <header className="sticky top-0 z-50 transition-all duration-300 ease-in-out" 
+    <header className="transition-all duration-300 ease-in-out rounded-2xl"
       style={{
-        backgroundColor: 'rgba(219, 234, 254, 0.8)', // Blue Light with transparency
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
         backdropFilter: 'blur(20px)',
-        boxShadow: '0 4px 12px -2px rgba(37, 99, 235, 0.12), 0 2px 4px -1px rgba(37, 99, 235, 0.06)',
-        borderBottom: '1px solid rgba(241, 241, 239, 0.4)'
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+        border: '1px solid rgba(255, 255, 255, 0.18)'
       }}>
       <div className="w-full px-4 sm:px-6">
         <div className="flex justify-between items-center h-16">
           {/* Left side with logo */}
           <div className="flex items-center">
-            <button 
+            <button
               onClick={onMenuClick}
               className={`p-2 mr-2 rounded-lg text-[#4b5563] hover:bg-[rgba(255,255,255,0.3)] hover:text-[#1f1f1f] transition-colors ${sidebarOpen ? 'bg-[rgba(255,255,255,0.3)]' : ''}`}
               aria-label="Toggle menu"
@@ -63,7 +63,7 @@ function AppBar({ onMenuClick, sidebarOpen }) {
               </span>
             </Link>
           </div>
-          
+
           {/* Right Side Actions */}
           <div className="flex items-center">
             {/* Notification Bell */}
@@ -71,7 +71,7 @@ function AppBar({ onMenuClick, sidebarOpen }) {
               <Bell size={18} />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-[#2563eb] rounded-full"></span>
             </button>
-            
+
             {/* User Menu */}
             <div className="relative">
               <button className="flex items-center space-x-2 rounded-lg hover:bg-[rgba(255,255,255,0.3)] p-1.5 pr-1 sm:pr-2.5 transition-colors">
@@ -83,13 +83,13 @@ function AppBar({ onMenuClick, sidebarOpen }) {
                 </span>
                 <ChevronDown size={16} className="text-[#4b5563] hidden md:block" />
               </button>
-              
+
               {/* User dropdown menu would be implemented here with state */}
             </div>
-            
+
             {/* Logout Button */}
             {user && (
-              <button 
+              <button
                 onClick={handleLogout}
                 className="ml-1 sm:ml-2 flex items-center space-x-1 text-sm text-[#4b5563] hover:text-[#ef4444] transition-colors p-2 rounded-lg hover:bg-[rgba(239,68,68,0.05)]"
                 aria-label="Log out"

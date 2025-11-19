@@ -17,6 +17,7 @@ import { ArrowLeft, LogOut, HelpCircle, Settings } from 'lucide-react';
 import Image from 'next/image';
 import ThemeToggle from '../ui/ThemeToggle';
 import { authenticatedFetch } from '../../lib/authHeaders';
+import DashboardBackground from '../layout/DashboardBackground';
 
 export default function MainPage() {
   const { appState, createNewNote, currentNote, sessionName, setSessionName, triggerRefresh, updateCurrentNote } = useAppState();
@@ -25,7 +26,7 @@ export default function MainPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
   const [greeting, setGreeting] = useState('Good Morning');
-  
+
   // Get user's last name for personalized greeting
   const userLastName = user?.user_metadata?.last_name || '';
   const doctorName = userLastName ? `Dr. ${userLastName}` : 'Doctor';
@@ -86,15 +87,19 @@ export default function MainPage() {
   ].includes(appState);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-black dark:via-[#000814] dark:to-black transition-colors">
+    <div className="min-h-screen bg-transparent transition-colors relative">
+      <DashboardBackground />
+
       {/* Sidebar */}
       <Sidebar onOpenTemplates={() => setIsTemplatesModalOpen(true)} />
 
       {/* Main Content */}
-      <main className="lg:ml-80 min-h-screen">
-        {/* Top Navbar */}
-        <nav className="sticky top-0 z-30 bg-white/80 dark:bg-gradient-to-r dark:from-[#000814]/95 dark:via-black/95 dark:to-[#000814]/95 backdrop-blur-lg border-b border-black/5 dark:border-[#007AFF]/20 transition-colors">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <main className="lg:ml-[22rem] min-h-screen transition-all duration-300">
+        {/* Top Navbar - Hidden as we use the main AppBar now, or keep if it has specific controls */}
+        {/* <nav className="sticky top-0 z-30 bg-white/80 dark:bg-gradient-to-r dark:from-[#000814]/95 dark:via-black/95 dark:to-[#000814]/95 backdrop-blur-lg border-b border-black/5 dark:border-[#007AFF]/20 transition-colors"> */}
+        {/* Re-enabling specific controls bar if needed, but making it glass */}
+        <nav className="sticky top-0 z-30 bg-transparent backdrop-blur-none border-b border-transparent transition-colors pointer-events-none">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between pointer-events-auto">
             {/* Left side - Back button with space for hamburger menu on mobile */}
             <div className="flex items-center gap-2">
               {showSOAPEditor && (
@@ -110,21 +115,21 @@ export default function MainPage() {
 
             <div className="flex items-center gap-1 sm:gap-2">
               <ThemeToggle />
-              <button 
+              <button
                 onClick={() => setIsTutorialOpen(true)}
                 className="p-2 text-grey-600 dark:text-grey-400 hover:text-grey-900 dark:hover:text-grey-100 hover:bg-grey-50 dark:hover:bg-grey-800 rounded-lg transition-colors"
                 title="Help & Tutorial"
               >
                 <HelpCircle className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={() => setIsSettingsOpen(true)}
                 className="p-2 text-grey-600 dark:text-grey-400 hover:text-grey-900 dark:hover:text-grey-100 hover:bg-grey-50 dark:hover:bg-grey-800 rounded-lg transition-colors"
                 title="Settings"
               >
                 <Settings className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={async () => {
                   await signOut();
                 }}
@@ -141,13 +146,13 @@ export default function MainPage() {
         {/* Content Area */}
         <div className="max-w-4xl mx-auto px-8 py-12 relative">
           {/* Decorative gradient blob - BeeBot style */}
-          <div 
+          <div
             className="absolute top-20 right-0 w-96 h-96 rounded-full blur-3xl pointer-events-none"
             style={{
               background: 'radial-gradient(circle at 50% 50%, rgba(var(--blue-primary-rgb), 0.15), transparent)'
             }}
           />
-          
+
           <AnimatePresence mode="wait">
             {/* Blob + Template Selection + Recording */}
             {showBlob && (
@@ -174,7 +179,7 @@ export default function MainPage() {
                         ease: "easeInOut"
                       }}
                       className="w-32 h-32 mx-auto rounded-full blur-2xl"
-                      style={{ 
+                      style={{
                         background: 'radial-gradient(circle at 30% 30%, rgba(var(--blue-primary-rgb), 0.4), rgba(var(--blue-primary-rgb), 0.2))'
                       }}
                     />
@@ -194,7 +199,7 @@ export default function MainPage() {
                       }}
                     />
                     {/* Logo on top of blob - synced animation */}
-                    <motion.div 
+                    <motion.div
                       className="absolute inset-0 flex items-center justify-center"
                       animate={{
                         scale: [1, 1.1, 1],
@@ -205,7 +210,7 @@ export default function MainPage() {
                         ease: "easeInOut"
                       }}
                     >
-                      <Image 
+                      <Image
                         src="/u9354481378_Modern_logo_design_compact_robot_head_in_circular_98ac6e0b-5d09-4f6a-980b-cfc4d4af2c9c_3 - Edited.png"
                         alt="Doctors Orders Logo"
                         width={80}
@@ -215,12 +220,31 @@ export default function MainPage() {
                     </motion.div>
                   </div>
 
-                  <h1 className="text-4xl font-semibold text-grey-900 dark:text-grey-100">
-                    {greeting}, {doctorName}
-                  </h1>
-                  <p className="text-xl text-blue-primary font-medium">
-                    Ready to <span className="text-blue-primary">Document Your Session?</span>
-                  </p>
+                  <motion.h1
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.8 }}
+                    className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-blue-800 to-gray-900 dark:from-white dark:via-blue-200 dark:to-white tracking-tight"
+                  >
+                    {greeting}, <br />
+                    <span className="text-blue-600 dark:text-blue-400">{doctorName}</span>
+                  </motion.h1>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6, duration: 0.8 }}
+                    className="text-xl text-gray-600 dark:text-gray-300 font-medium"
+                  >
+                    Ready to <span className="text-blue-600 dark:text-blue-400 relative">
+                      Document Your Session?
+                      <motion.span
+                        className="absolute -bottom-1 left-0 w-full h-[2px] bg-blue-600 dark:bg-blue-400"
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ delay: 1, duration: 0.8 }}
+                      />
+                    </span>
+                  </motion.p>
                 </div>
 
                 {/* Template Selector */}
@@ -260,31 +284,31 @@ export default function MainPage() {
                       // Save to Azure PostgreSQL via API
                       const response = await authenticatedFetch('/api/phi/encounters', {
                         method: 'PUT',
-                        body: JSON.stringify({ 
+                        body: JSON.stringify({
                           id: currentNote.id,
                           soap: data,
                           session_title: data.sessionName || sessionName || currentNote.session_title || 'Untitled Session',
                           status: 'draft'
                         })
                       });
-                      
+
                       if (!response.ok) {
                         throw new Error('Save failed');
                       }
-                      
+
                       const savedNote = await response.json();
-                      
+
                       // Update current note reference with server response
                       Object.assign(currentNote, savedNote);
-                      
+
                       // Update session name state if it was changed
                       if (data.sessionName && data.sessionName !== sessionName) {
                         setSessionName(data.sessionName);
                       }
-                      
+
                       // Trigger sidebar refresh to show updated note
                       triggerRefresh();
-                      
+
                       console.log('✅ Save successful - Note saved to Azure PostgreSQL');
                     } catch (error) {
                       console.error('❌ Error saving:', error);
@@ -302,9 +326,9 @@ export default function MainPage() {
       </main>
 
       {/* Tutorial Modal */}
-      <TutorialModule 
-        isOpen={isTutorialOpen} 
-        onClose={() => setIsTutorialOpen(false)} 
+      <TutorialModule
+        isOpen={isTutorialOpen}
+        onClose={() => setIsTutorialOpen(false)}
       />
 
       {/* Settings Modal */}
@@ -338,7 +362,7 @@ export default function MainPage() {
                   </svg>
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="p-4 bg-grey-50 dark:bg-[#1f1f1f] rounded-lg transition-colors">
                   <h3 className="font-medium text-grey-900 dark:text-grey-100 mb-2">Theme</h3>
@@ -356,7 +380,7 @@ export default function MainPage() {
                     Microphone permissions are managed by your browser. Check your browser settings if you're experiencing recording issues.
                   </p>
                 </div>
-                
+
                 <div className="p-4 bg-grey-50 dark:bg-[#1f1f1f] rounded-lg transition-colors">
                   <h3 className="font-medium text-grey-900 dark:text-grey-100 mb-2">Privacy</h3>
                   <p className="text-sm text-grey-600 dark:text-grey-300">
@@ -393,12 +417,12 @@ export default function MainPage() {
       </AnimatePresence>
 
       {/* Templates Modal */}
-      <TemplatesModal 
-        isOpen={isTemplatesModalOpen} 
+      <TemplatesModal
+        isOpen={isTemplatesModalOpen}
         onClose={() => {
           setIsTemplatesModalOpen(false);
           triggerRefresh(); // Refresh the sidebar when closing to show any new templates
-        }} 
+        }}
       />
     </div>
   );
