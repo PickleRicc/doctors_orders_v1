@@ -38,7 +38,8 @@ export default function TemplateBuilder({
       subjective: { fields: [] },
       objective: { measurements: [] },
       assessment: { prompts: [] },
-      plan: { sections: [] }
+      plan: { sections: [] },
+      ai_instructions: '' // Custom instructions for AI generation
     }
   });
 
@@ -57,7 +58,8 @@ export default function TemplateBuilder({
           subjective: initialTemplate.template_config?.subjective || { fields: [] },
           objective: initialTemplate.template_config?.objective || { measurements: [] },
           assessment: initialTemplate.template_config?.assessment || { prompts: [] },
-          plan: initialTemplate.template_config?.plan || { sections: [] }
+          plan: initialTemplate.template_config?.plan || { sections: [] },
+          ai_instructions: initialTemplate.template_config?.ai_instructions || ''
         }
       };
       setTemplate(loadedTemplate);
@@ -98,7 +100,13 @@ export default function TemplateBuilder({
           subjective: template.template_config?.subjective || { fields: [] },
           objective: template.template_config?.objective || { measurements: [] },
           assessment: template.template_config?.assessment || { prompts: [] },
-          plan: template.template_config?.plan || { sections: [] }
+          plan: template.template_config?.plan || { sections: [] },
+          ai_instructions: template.template_config?.ai_instructions || '',
+          // Include template metadata for AI context
+          name: template.name,
+          description: template.description,
+          body_region: template.body_region,
+          session_type: template.session_type
         }
       };
 
@@ -396,6 +404,30 @@ export default function TemplateBuilder({
               rows={3}
               className="w-full px-4 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary transition-all"
               placeholder="Brief description of when to use this template..."
+            />
+          </div>
+
+          {/* AI Instructions */}
+          <div>
+            <label className="block text-sm font-medium text-grey-700 dark:text-grey-300 mb-2">
+              AI Instructions (Optional)
+            </label>
+            <p className="text-xs text-grey-500 dark:text-grey-400 mb-2">
+              Provide specific instructions for how the AI should generate SOAP notes with this template.
+              This can include terminology preferences, documentation style, or specific requirements.
+            </p>
+            <textarea
+              value={template.template_config?.ai_instructions || ''}
+              onChange={(e) => setTemplate({
+                ...template,
+                template_config: {
+                  ...template.template_config,
+                  ai_instructions: e.target.value
+                }
+              })}
+              rows={4}
+              className="w-full px-4 py-2 bg-white/50 dark:bg-black/20 border border-grey-200 dark:border-white/10 rounded-lg text-grey-900 dark:text-grey-100 focus:outline-none focus:ring-2 focus:ring-blue-primary transition-all font-mono text-sm"
+              placeholder="Example: Focus on functional outcomes. Use patient-centered language. Include specific exercise progressions with sets and reps. Always document medical necessity for insurance purposes."
             />
           </div>
         </div>

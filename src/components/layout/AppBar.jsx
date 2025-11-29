@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useProfession, PROFESSIONS } from '../../hooks/useProfession';
 import { Menu, Bell, User, ChevronDown, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 /**
  * Glassmorphic AppBar component for main navigation
+ * Supports both Physical Therapy and Chiropractic users with dynamic terminology
  * Follows the style guide with glassmorphic effect and responsive design
  */
 function AppBar({ onMenuClick, sidebarOpen }) {
   const { user, signOut } = useAuth();
+  const { profession, getProfessionShortName } = useProfession();
   const router = useRouter();
 
   // Use router path for active tab state
@@ -79,7 +82,7 @@ function AppBar({ onMenuClick, sidebarOpen }) {
                   {user?.user_metadata?.first_name?.[0] || 'T'}
                 </div>
                 <span className="text-sm font-medium text-[#111827] hidden md:block truncate max-w-[100px] lg:max-w-[150px]">
-                  {user?.user_metadata?.full_name || 'Therapist'}
+                  {user?.user_metadata?.full_name || getProfessionShortName()}
                 </span>
                 <ChevronDown size={16} className="text-[#4b5563] hidden md:block" />
               </button>

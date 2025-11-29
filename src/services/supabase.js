@@ -27,26 +27,45 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 /**
- * Authentication service for PT SOAP Generator
- * Handles therapist authentication while ensuring NO patient data is stored
+ * Valid profession types for the application
+ * @constant {Object}
+ */
+export const PROFESSIONS = {
+  PHYSICAL_THERAPY: 'physical_therapy',
+  CHIROPRACTIC: 'chiropractic'
+};
+
+/**
+ * Authentication service for SOAP Generator
+ * Handles practitioner authentication while ensuring NO patient data is stored
+ * Supports both Physical Therapists and Chiropractors
  */
 const authService = {
   /**
-   * Sign up a new therapist
-   * @param {string} email - Therapist's email
-   * @param {string} password - Therapist's password
-   * @param {Object} metadata - Optional metadata (e.g., name, role)
+   * Sign up a new practitioner
+   * @param {string} email - Practitioner's email
+   * @param {string} password - Practitioner's password
+   * @param {Object} metadata - Optional metadata (e.g., name, profession)
    * @returns {Promise} - Sign up result
    */
   signUp: async (email, password, metadata = {}) => {
     try {
+      // Default profession to physical_therapy for backward compatibility
+      const profession = metadata.profession || PROFESSIONS.PHYSICAL_THERAPY;
+      
+      // Validate profession value
+      if (!Object.values(PROFESSIONS).includes(profession)) {
+        throw new Error(`Invalid profession: ${profession}. Must be one of: ${Object.values(PROFESSIONS).join(', ')}`);
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             ...metadata,
-            role: 'therapist', // Always set role to therapist
+            profession, // Store user's profession (physical_therapy or chiropractic)
+            role: 'practitioner', // Generic role for all practitioners
             created_at: new Date().toISOString(),
           },
         },
@@ -169,6 +188,46 @@ const authService = {
    */
   onAuthStateChange: (callback) => {
     return supabase.auth.onAuthStateChange(callback);
+  },
+
+  /**
+   * Update user's profession
+   * @param {string} profession - New profession value
+   * @returns {Promise} - Update result
+   */
+  updateProfession: async (profession) => {
+    try {
+      if (!Object.values(PROFESSIONS).includes(profession)) {
+        throw new Error(`Invalid profession: ${profession}. Must be one of: ${Object.values(PROFESSIONS).join(', ')}`);
+      }
+
+      const { data, error } = await supabase.auth.updateUser({
+        data: { profession }
+      });
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error updating profession:', error.message);
+      return { data: null, error };
+    }
+  },
+
+  /**
+   * Get user's profession from metadata
+   * @returns {Promise<string>} - User's profession or default
+   */
+  getUserProfession: async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      
+      // Default to physical_therapy for backward compatibility with existing users
+      return user?.user_metadata?.profession || PROFESSIONS.PHYSICAL_THERAPY;
+    } catch (error) {
+      console.error('Error getting user profession:', error.message);
+      return PROFESSIONS.PHYSICAL_THERAPY; // Default fallback
+    }
   },
 };
 

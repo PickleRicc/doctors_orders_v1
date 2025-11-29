@@ -1,10 +1,12 @@
 /**
- * Structured AI Service for PT SOAP Generator
+ * Structured AI Service for SOAP Generator
  * Simplified AI service focused on JSON-structured SOAP generation
+ * Supports both Physical Therapy and Chiropractic documentation
  * Replaces complex soapGenerationService.js with clean, focused approach
  */
 
 import { createChatCompletion, initializeAI, isAIInitialized } from './aiClient.js';
+import { PROFESSIONS } from './supabase.js';
 
 /**
  * Prepend strict rules to any AI prompt to prevent hallucination
@@ -24,10 +26,64 @@ CRITICAL INSTRUCTIONS - READ CAREFULLY:
 };
 
 /**
+ * Get profession-specific system prompt
+ * @param {string} profession - The profession type (physical_therapy or chiropractic)
+ * @returns {string} - System prompt for the AI
+ */
+const getSystemPromptForProfession = (profession) => {
+  if (profession === PROFESSIONS.CHIROPRACTIC) {
+    return `You are an expert chiropractor creating professional SOAP notes.
+
+CHIROPRACTIC-SPECIFIC GUIDELINES:
+1. Use chiropractic terminology: subluxation, vertebral listings (e.g., PL, PR, PI, PS, AL, AR), fixation, hypomobility, adjustment techniques
+2. Focus on spinal segment levels (C1-C7, T1-T12, L1-L5, Sacrum)
+3. Document static and motion palpation findings accurately
+4. Include adjustment techniques: Diversified, Gonstead, Drop Table, Activator, SOT, Toggle Recoil, etc.
+5. Document specific vertebral listings when mentioned (PL=Posterior Left, PR=Posterior Right, PI=Posterior Inferior, PS=Posterior Superior, etc.)
+6. Include postural assessment and biomechanical analysis
+7. Document subluxation complex findings with segment specificity
+8. Use appropriate chiropractic ICD-10 codes (M99.0x series for segmental dysfunction)
+
+CRITICAL RULES:
+1. ONLY use information explicitly stated in the transcript
+2. NEVER make up, assume, or infer information not present in the transcript
+3. If information for a field is not mentioned, use "Not documented" or leave empty
+4. If the transcript is empty or has insufficient information, return an error message
+5. Do not fill in template fields with generic or placeholder content
+6. Always return valid JSON matching the requested structure exactly
+
+Your goal is accuracy and honesty, not completeness. An incomplete note based on real data is better than a complete note with fabricated information.`;
+  }
+  
+  // Default: Physical Therapy prompt
+  return `You are an expert physical therapist creating professional SOAP notes.
+
+PHYSICAL THERAPY-SPECIFIC GUIDELINES:
+1. Use physical therapy terminology: therapeutic exercise, manual therapy, neuromuscular re-education, ROM, strength (MMT grades)
+2. Focus on functional outcomes and measurable goals
+3. Document special tests with sensitivity to specific pathologies
+4. Include interventions: stretching, strengthening, manual therapy, modalities
+5. Write SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound)
+6. Document medical necessity clearly for insurance purposes
+7. Use appropriate PT CPT codes (97110, 97112, 97140, 97530, etc.)
+
+CRITICAL RULES:
+1. ONLY use information explicitly stated in the transcript
+2. NEVER make up, assume, or infer information not present in the transcript
+3. If information for a field is not mentioned, use "Not documented" or leave empty
+4. If the transcript is empty or has insufficient information, return an error message
+5. Do not fill in template fields with generic or placeholder content
+6. Always return valid JSON matching the requested structure exactly
+
+Your goal is accuracy and honesty, not completeness. An incomplete note based on real data is better than a complete note with fabricated information.`;
+};
+
+/**
  * AI Service wrapper that matches the expected interface for template hooks
  * Provides generateCompletion method that template hooks expect
+ * @param {string} profession - Optional profession for profession-specific prompts (defaults to physical_therapy)
  */
-export const createAIService = () => {
+export const createAIService = (profession = PROFESSIONS.PHYSICAL_THERAPY) => {
   // Auto-initialize AI client if not already initialized
   if (!isAIInitialized()) {
     const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
@@ -46,7 +102,13 @@ export const createAIService = () => {
       throw new Error(errorMsg);
     }
   }
+
+  // Get profession-specific system prompt
+  const systemPrompt = getSystemPromptForProfession(profession);
+  const professionLabel = profession === PROFESSIONS.CHIROPRACTIC ? 'Chiropractic' : 'PT';
+
   return {
+    profession,
     generateCompletion: async (prompt, options = {}) => {
       try {
         // Add strict rules to prevent hallucination
@@ -62,7 +124,8 @@ export const createAIService = () => {
         // Note: Not using response_format as it's not supported by all models
         // The prompt should explicitly request JSON format instead
 
-        console.log('🧠 Generating structured SOAP with AI...', {
+        console.log(`🧠 Generating structured ${professionLabel} SOAP with AI...`, {
+          profession,
           promptLength: enhancedPrompt.length,
           options: normalizedOptions,
           timestamp: new Date().toISOString()
@@ -72,17 +135,7 @@ export const createAIService = () => {
           messages: [
             {
               role: 'system',
-              content: `You are an expert physical therapist creating professional SOAP notes. 
-
-CRITICAL RULES:
-1. ONLY use information explicitly stated in the transcript
-2. NEVER make up, assume, or infer information not present in the transcript
-3. If information for a field is not mentioned, use "Not documented" or leave empty
-4. If the transcript is empty or has insufficient information, return an error message
-5. Do not fill in template fields with generic or placeholder content
-6. Always return valid JSON matching the requested structure exactly
-
-Your goal is accuracy and honesty, not completeness. An incomplete note based on real data is better than a complete note with fabricated information.`
+              content: systemPrompt
             },
             {
               role: 'user',
@@ -192,13 +245,14 @@ export const validateAIResponse = (response) => {
 /**
  * Auto-suggest template type based on transcript content
  * @param {string} transcript - Session transcript
+ * @param {string} profession - User's profession (physical_therapy or chiropractic)
  * @returns {string} - Suggested template type
  */
-export const suggestTemplateType = (transcript) => {
+export const suggestTemplateType = (transcript, profession = PROFESSIONS.PHYSICAL_THERAPY) => {
   const lowerTranscript = transcript.toLowerCase();
   
-  // Keyword mapping for template suggestion
-  const templateKeywords = {
+  // PT Keyword mapping for template suggestion
+  const ptKeywords = {
     knee: ['knee', 'patella', 'meniscus', 'acl', 'pcl', 'mcl', 'lcl', 'quadriceps', 'hamstring'],
     shoulder: ['shoulder', 'rotator cuff', 'impingement', 'deltoid', 'supraspinatus', 'infraspinatus'],
     back: ['back', 'spine', 'lumbar', 'thoracic', 'lower back', 'upper back', 'sciatica'],
@@ -206,6 +260,20 @@ export const suggestTemplateType = (transcript) => {
     hip: ['hip', 'groin', 'pelvis', 'piriformis', 'hip flexor', 'glute'],
     ankle_foot: ['ankle', 'foot', 'achilles', 'plantar fasciitis', 'calf', 'toe']
   };
+
+  // Chiropractic Keyword mapping
+  const chiroKeywords = {
+    'cervical-adjustment': ['cervical', 'neck', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'atlas', 'axis', 'headache', 'upper cervical'],
+    'thoracic-adjustment': ['thoracic', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10', 't11', 't12', 'rib', 'mid back', 'upper back'],
+    'lumbar-adjustment': ['lumbar', 'l1', 'l2', 'l3', 'l4', 'l5', 'sacrum', 'sacral', 'si joint', 'sacroiliac', 'pelvis', 'lower back', 'low back'],
+    'full-spine-adjustment': ['full spine', 'complete', 'initial', 'evaluation', 'new patient', 'comprehensive'],
+    'extremity-adjustment': ['shoulder', 'elbow', 'wrist', 'hand', 'hip', 'knee', 'ankle', 'foot', 'extremity', 'joint'],
+    'maintenance-care': ['maintenance', 'wellness', 'preventive', 'routine', 'follow up', 'check up']
+  };
+
+  // Use profession-specific keywords
+  const templateKeywords = profession === PROFESSIONS.CHIROPRACTIC ? chiroKeywords : ptKeywords;
+  const defaultTemplate = profession === PROFESSIONS.CHIROPRACTIC ? 'cervical-adjustment' : 'knee';
 
   // Count keyword matches for each template
   const scores = {};
@@ -215,13 +283,16 @@ export const suggestTemplateType = (transcript) => {
     }, 0);
   });
 
-  // Return template with highest score, default to 'knee' if no clear winner
+  // Return template with highest score, default to profession-appropriate default
   const suggestedTemplate = Object.entries(scores).reduce((a, b) => 
     scores[a[0]] > scores[b[0]] ? a : b
   )[0];
 
-  return scores[suggestedTemplate] > 0 ? suggestedTemplate : 'knee';
+  return scores[suggestedTemplate] > 0 ? suggestedTemplate : defaultTemplate;
 };
+
+// Re-export PROFESSIONS for convenience
+export { PROFESSIONS };
 
 /**
  * Generate confidence score for AI-generated content

@@ -3,6 +3,7 @@ import { Home, FileText, Settings, Plus, Calendar, Clock, ChevronRight, Clipboar
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import useSessions from '@/hooks/useSessions';
+import { useProfession, PROFESSIONS } from '@/hooks/useProfession';
 import { format } from 'date-fns';
 import { ShimmerButton } from '@/components/magicui/shimmer-button';
 import TutorialButton from '@/components/tutorial/TutorialButton';
@@ -10,6 +11,7 @@ import useTutorial from '@/hooks/useTutorial';
 
 /**
  * Sidebar navigation component 
+ * Supports both Physical Therapy and Chiropractic users with dynamic terminology
  * Follows Notion-inspired style with collapsible design
  * Always visible on desktop, collapsible for more space
  */
@@ -17,6 +19,7 @@ function Sidebar({ collapsed = false, onToggleCollapse }) {
   const router = useRouter();
   const currentPath = router.pathname;
   const { sessions, isLoading, error, fetchSessionsByDate } = useSessions();
+  const { profession, isChiro } = useProfession();
   const [todaySessions, setTodaySessions] = useState([]);
   const [recentSessions, setRecentSessions] = useState([]);
   const { openTutorial } = useTutorial();
@@ -52,20 +55,36 @@ function Sidebar({ collapsed = false, onToggleCollapse }) {
     }
   };
 
-  // Get friendly display name for body region
+  // Get friendly display name for body region / template type
+  // Supports both PT and Chiropractic templates
   const getBodyRegionDisplay = (bodyRegion) => {
-    const regionMap = {
+    // PT body region map
+    const ptRegionMap = {
       'ankle_foot': 'Ankle/Foot',
       'knee': 'Knee',
       'hip': 'Hip',
-      'lumbar': 'Low Back',
-      'cervical': 'Neck',
+      'back': 'Back',
+      'neck': 'Neck',
       'shoulder': 'Shoulder',
       'elbow': 'Elbow',
       'wrist_hand': 'Wrist/Hand',
-      'general': 'General'
+      'general': 'General',
+      'daily-note': 'Daily Note',
+      'discharge': 'Discharge'
     };
-    return regionMap[bodyRegion] || bodyRegion;
+
+    // Chiropractic template map
+    const chiroRegionMap = {
+      'cervical-adjustment': 'Cervical',
+      'thoracic-adjustment': 'Thoracic',
+      'lumbar-adjustment': 'Lumbar',
+      'full-spine-adjustment': 'Full Spine',
+      'extremity-adjustment': 'Extremity',
+      'maintenance-care': 'Maintenance'
+    };
+
+    // Check chiropractic templates first, then PT
+    return chiroRegionMap[bodyRegion] || ptRegionMap[bodyRegion] || bodyRegion;
   };
 
   // Handle new session button click

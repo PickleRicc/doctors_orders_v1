@@ -3,19 +3,64 @@
  * Interactive table for objective SOAP data (tests, measurements, observations)
  * Supports both flat rows (backward compatible) and categorized rows
  * Categories: Observation, Palpation, ROM, Strength, Special Tests, Functional
+ * Supports both Physical Therapy and Chiropractic profession-specific results
  * Inline editing with glassmorphism styling following design system
  */
 
-import React, { useState, useRef, useEffect, memo } from 'react';
+import React, { useState, useRef, useEffect, memo, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, ChevronDown, Check } from 'lucide-react';
+import { PROFESSIONS } from '../../services/supabase';
+
+/**
+ * Get profession-specific common results for the Result dropdown
+ * @param {string} profession - The profession type
+ * @returns {string[]} - Array of common result options
+ */
+const getCommonResultsByProfession = (profession) => {
+  if (profession === PROFESSIONS.CHIROPRACTIC) {
+    return [
+      // General status
+      'WNL', 'Not Tested', 'Present', 'Absent',
+      // Motion/fixation findings
+      'Fixated', 'Hypomobile', 'Hypermobile', 'Restricted', 'Free',
+      // Vertebral listings - Posterior
+      'PL', 'PR', 'PI', 'PS',
+      'PL-S', 'PR-S', 'PL-I', 'PR-I',
+      // Vertebral listings - Anterior
+      'AL', 'AR', 'AI', 'AS',
+      // Pelvic listings
+      'PI-Ex', 'AS-In', 'In-Ex',
+      // Adjustment status
+      'Adjusted', 'Not Adjusted', 'Unable to Adjust',
+      // Palpation findings
+      'Tender', 'Hypertonic', 'Atrophic', 'Inflamed',
+      // Stability
+      'Stable', 'Improved', 'Holding'
+    ];
+  }
+  
+  // Physical Therapy results (default)
+  return [
+    'Positive', 'Negative', 'Not Tested', 'WNL', 'Limited', 'Painful',
+    // Reflex grades
+    '0', '1+', '2+', '3+', '4+',
+    // MMT grades
+    '0/5', '1/5', '2/5', '2+/5', '3-/5', '3/5', '3+/5', '4-/5', '4/5', '4+/5', '5/5',
+    // ROM descriptors
+    'Full', 'Decreased', 'Increased',
+    // Pain descriptors
+    'Pain-free', 'Mild pain', 'Moderate pain', 'Severe pain'
+  ];
+};
 
 const ObjectiveTable = memo(({ 
   data = { headers: [], rows: [], categories: [] }, 
   onChange, 
   onFocus, 
   onBlur,
-  className = '' 
+  className = '',
+  profession = PROFESSIONS.PHYSICAL_THERAPY // Support profession-specific results
 }) => {
   const [editingCell, setEditingCell] = useState(null);
   const [editingValue, setEditingValue] = useState('');
@@ -23,13 +68,16 @@ const ObjectiveTable = memo(({
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const inputRef = useRef(null);
 
+  // Get profession-specific common results
+  const professionResults = useMemo(() => getCommonResultsByProfession(profession), [profession]);
+
   // Default structure if no data provided
   const defaultData = {
     headers: ['Test/Measurement', 'Result', 'Notes'],
     rows: [],
     categories: null, // If null, use flat structure (backward compatible)
     allowAddRows: true,
-    commonResults: ['Positive', 'Negative', 'Not Tested', 'WNL', 'Limited', '1+', '2+', '3+']
+    commonResults: professionResults // Use profession-specific results
   };
 
   const tableData = { ...defaultData, ...data };

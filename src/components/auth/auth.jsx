@@ -1,15 +1,17 @@
 "use client"
 
 import React, { useState } from 'react'
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Shield, FileText } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Shield, FileText, Stethoscope, Activity } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Card } from '../ui/card'
 import { Separator } from '../ui/separator'
+import { PROFESSIONS } from '../../services/supabase'
 
 /**
  * AuthComponent - Authentication component for login, signup, and password reset
+ * Supports both Physical Therapists and Chiropractors
  */
 const AuthComponent = ({
   onLogin = () => {},
@@ -25,7 +27,8 @@ const AuthComponent = ({
     password: '',
     confirmPassword: '',
     firstName: '',
-    lastName: ''
+    lastName: '',
+    profession: PROFESSIONS.PHYSICAL_THERAPY // Default to PT
   })
 
   const handleInputChange = (field, value) => {
@@ -57,7 +60,8 @@ const AuthComponent = ({
       password: '',
       confirmPassword: '',
       firstName: '',
-      lastName: ''
+      lastName: '',
+      profession: PROFESSIONS.PHYSICAL_THERAPY
     })
   }
 
@@ -111,7 +115,7 @@ const AuthComponent = ({
               </h2>
               <p className="text-sm text-grey-600 dark:text-grey-400 mt-1">
                 {mode === 'login' && 'Sign in to your account to continue'}
-                {mode === 'signup' && 'Join thousands of PT professionals'}
+                {mode === 'signup' && 'Join thousands of healthcare professionals'}
                 {mode === 'reset' && 'Enter your email to receive reset instructions'}
               </p>
             </div>
@@ -119,41 +123,97 @@ const AuthComponent = ({
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name Fields for Signup */}
+            {/* Name Fields and Profession Selector for Signup */}
             {mode === 'signup' && (
-              <div className="grid grid-cols-2 gap-3">
+              <>
+                {/* Profession Selector */}
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-sm font-medium text-grey-900 dark:text-grey-100">
-                    First name
+                  <Label className="text-sm font-medium text-grey-900 dark:text-grey-100">
+                    I am a...
                   </Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-grey-500 dark:text-grey-400" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange('profession', PROFESSIONS.PHYSICAL_THERAPY)}
+                      className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
+                        formData.profession === PROFESSIONS.PHYSICAL_THERAPY
+                          ? 'border-blue-primary bg-blue-primary/10 dark:bg-blue-primary/20'
+                          : 'border-grey-200 dark:border-white/15 hover:border-grey-300 dark:hover:border-white/25 bg-white dark:bg-[#1f1f1f]'
+                      }`}
+                    >
+                      <Activity className={`w-6 h-6 ${
+                        formData.profession === PROFESSIONS.PHYSICAL_THERAPY
+                          ? 'text-blue-primary'
+                          : 'text-grey-500 dark:text-grey-400'
+                      }`} />
+                      <span className={`text-sm font-medium ${
+                        formData.profession === PROFESSIONS.PHYSICAL_THERAPY
+                          ? 'text-blue-primary'
+                          : 'text-grey-700 dark:text-grey-300'
+                      }`}>
+                        Physical Therapist
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange('profession', PROFESSIONS.CHIROPRACTIC)}
+                      className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
+                        formData.profession === PROFESSIONS.CHIROPRACTIC
+                          ? 'border-blue-primary bg-blue-primary/10 dark:bg-blue-primary/20'
+                          : 'border-grey-200 dark:border-white/15 hover:border-grey-300 dark:hover:border-white/25 bg-white dark:bg-[#1f1f1f]'
+                      }`}
+                    >
+                      <Stethoscope className={`w-6 h-6 ${
+                        formData.profession === PROFESSIONS.CHIROPRACTIC
+                          ? 'text-blue-primary'
+                          : 'text-grey-500 dark:text-grey-400'
+                      }`} />
+                      <span className={`text-sm font-medium ${
+                        formData.profession === PROFESSIONS.CHIROPRACTIC
+                          ? 'text-blue-primary'
+                          : 'text-grey-700 dark:text-grey-300'
+                      }`}>
+                        Chiropractor
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Name Fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName" className="text-sm font-medium text-grey-900 dark:text-grey-100">
+                      First name
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-grey-500 dark:text-grey-400" />
+                      <Input
+                        id="firstName"
+                        type="text"
+                        placeholder="John"
+                        value={formData.firstName}
+                        onChange={(e) => handleInputChange('firstName', e.target.value)}
+                        className="pl-10 bg-white dark:bg-[#1f1f1f] border-grey-200 dark:border-white/15 text-grey-900 dark:text-grey-100 focus:border-blue-primary focus:ring-blue-primary"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName" className="text-sm font-medium text-grey-900 dark:text-grey-100">
+                      Last name
+                    </Label>
                     <Input
-                      id="firstName"
+                      id="lastName"
                       type="text"
-                      placeholder="John"
-                      value={formData.firstName}
-                      onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      className="pl-10 bg-white dark:bg-[#1f1f1f] border-grey-200 dark:border-white/15 text-grey-900 dark:text-grey-100 focus:border-blue-primary focus:ring-blue-primary"
+                      placeholder="Doe"
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      className="bg-white dark:bg-[#1f1f1f] border-grey-200 dark:border-white/15 text-grey-900 dark:text-grey-100 focus:border-blue-primary focus:ring-blue-primary"
                       required
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-sm font-medium text-grey-900 dark:text-grey-100">
-                    Last name
-                  </Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className="bg-white dark:bg-[#1f1f1f] border-grey-200 dark:border-white/15 text-grey-900 dark:text-grey-100 focus:border-blue-primary focus:ring-blue-primary"
-                    required
-                  />
-                </div>
-              </div>
+              </>
             )}
 
             {/* Email Field */}

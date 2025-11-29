@@ -1,13 +1,15 @@
 /**
  * TemplateSelector - Template selection buttons
+ * Supports both Physical Therapy and Chiropractic templates with STRICT profession separation
  */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, User, Heart, Zap, Footprints, Wind, Loader2, Calendar, CheckCircle, Sparkles, FileText, Star } from 'lucide-react';
+import { Activity, User, Heart, Zap, Footprints, Wind, Loader2, Calendar, CheckCircle, Sparkles, FileText, Star, Stethoscope, Bone } from 'lucide-react';
 import { useAppState, APP_STATES } from './StateManager';
 import { useTemplateManager } from '../../hooks/templates/useTemplateManager';
 import { useCustomTemplates } from '../../hooks/useCustomTemplates';
+import { useProfession, PROFESSIONS } from '../../hooks/useProfession';
 import { createAIService } from '../../services/structuredAI';
 import { sampleTranscriptions } from '../../utils/testData';
 import { authenticatedFetch } from '../../lib/authHeaders';
@@ -15,7 +17,10 @@ import { authenticatedFetch } from '../../lib/authHeaders';
 import GenerationProgress from '../recording/GenerationProgress';
 import SpotlightCard from '../ui/SpotlightCard';
 
-const TEMPLATES = [
+// ============================================
+// PHYSICAL THERAPY TEMPLATES (PT-EXCLUSIVE)
+// ============================================
+const PT_TEMPLATES = [
   // Universal Templates
   { id: 'daily-note', name: 'Daily Note', icon: Calendar, description: 'Routine follow-up', category: 'universal' },
   { id: 'discharge', name: 'Discharge', icon: CheckCircle, description: 'Final visit', category: 'universal' },
@@ -29,16 +34,45 @@ const TEMPLATES = [
   { id: 'neck', name: 'Neck', icon: Wind, description: 'Cervical spine', category: 'bodyPart' }
 ];
 
+// ============================================
+// CHIROPRACTIC TEMPLATES (CHIRO-EXCLUSIVE)
+// ============================================
+const CHIRO_TEMPLATES = [
+  // Spinal Region Templates
+  { id: 'cervical-adjustment', name: 'Cervical', icon: Wind, description: 'C1-C7 adjustment', category: 'spinalRegion' },
+  { id: 'thoracic-adjustment', name: 'Thoracic', icon: Heart, description: 'T1-T12 & ribs', category: 'spinalRegion' },
+  { id: 'lumbar-adjustment', name: 'Lumbar', icon: Bone, description: 'L1-L5 & pelvis', category: 'spinalRegion' },
+  { id: 'full-spine-adjustment', name: 'Full Spine', icon: Activity, description: 'Complete evaluation', category: 'spinalRegion' },
+
+  // Specialized Templates
+  { id: 'extremity-adjustment', name: 'Extremity', icon: Zap, description: 'Joint adjustments', category: 'specialized' },
+  { id: 'maintenance-care', name: 'Maintenance', icon: CheckCircle, description: 'Wellness care', category: 'specialized' }
+];
+
+// Legacy export for backward compatibility
+const TEMPLATES = PT_TEMPLATES;
+
 // Using CSS variable for blue-primary instead of hardcoded value
 
 export default function TemplateSelector() {
   const { appState, selectedTemplate, selectTemplate, finishProcessing } = useAppState();
   const [generatingTemplateId, setGeneratingTemplateId] = useState(null);
+  
+  // Get user's profession for template filtering
+  const { profession, isPT, isChiro, getProfessionDisplayName } = useProfession();
+  
+  // Allow user to view other profession's templates (but not use them for actual sessions)
+  const [viewProfession, setViewProfession] = useState(null);
+  const effectiveProfession = viewProfession || profession;
 
-  // Initialize all template managers at component level
-  const kneeManager = useTemplateManager('knee');
-  const dailyNoteManager = useTemplateManager('daily-note');
-  const dischargeManager = useTemplateManager('discharge');
+  // Get templates based on current view profession
+  const currentTemplates = effectiveProfession === PROFESSIONS.CHIROPRACTIC ? CHIRO_TEMPLATES : PT_TEMPLATES;
+
+  // Initialize all template managers at component level with profession
+  const kneeManager = useTemplateManager('knee', profession);
+  const dailyNoteManager = useTemplateManager('daily-note', profession);
+  const dischargeManager = useTemplateManager('discharge', profession);
+  const cervicalManager = useTemplateManager('cervical-adjustment', profession);
 
   // Fetch custom templates
   const { templates: customTemplates, loading: loadingCustomTemplates } = useCustomTemplates();
@@ -69,8 +103,8 @@ export default function TemplateSelector() {
       const transcript = sampleTranscriptions.knee_evaluation;
       console.log('📄 Using test transcript:', transcript.substring(0, 200) + '...');
 
-      // Create AI service
-      const aiService = createAIService();
+      // Create AI service with profession-aware prompts
+      const aiService = createAIService(profession);
 
       // Use template manager to generate SOAP (this uses the proper template structure)
       console.log('🤖 Calling templateManager.generateSOAP...');
@@ -139,7 +173,7 @@ export default function TemplateSelector() {
 
       console.log('📄 Using daily note transcript:', transcript.substring(0, 150) + '...');
 
-      const aiService = createAIService();
+      const aiService = createAIService(profession);
       const soapResult = await dailyNoteManager.generateSOAP(transcript, aiService);
 
       if (!soapResult.success) {
@@ -194,7 +228,7 @@ export default function TemplateSelector() {
 
       console.log('📄 Using discharge note transcript:', transcript.substring(0, 150) + '...');
 
-      const aiService = createAIService();
+      const aiService = createAIService(profession);
       const soapResult = await dischargeManager.generateSOAP(transcript, aiService);
 
       if (!soapResult.success) {
@@ -262,12 +296,17 @@ export default function TemplateSelector() {
       console.log('📋 Loaded custom template:', templateData);
 
       // Use custom template generation directly
-      const { buildCustomPrompt } = await import('../../hooks/templates/useCustomTemplate');
+      const { buildCustomPrompt, normalizeTemplateConfig } = await import('../../hooks/templates/useCustomTemplate');
 
-      const aiService = createAIService();
-      const prompt = buildCustomPrompt(transcript, templateData.template_config);
+      // Log the normalized config for debugging
+      const normalizedConfig = normalizeTemplateConfig(templateData.template_config);
+      console.log('📋 Normalized template config:', normalizedConfig);
 
-      console.log('🤖 Generating with custom prompt...');
+      const aiService = createAIService(profession);
+      const prompt = buildCustomPrompt(transcript, templateData.template_config, profession);
+
+      console.log('🤖 Generating with custom prompt for profession:', profession);
+      console.log('📝 Prompt preview:', prompt.substring(0, 500) + '...');
       const aiResponse = await aiService.generateCompletion(prompt);
 
       // Parse the JSON response
@@ -340,15 +379,62 @@ export default function TemplateSelector() {
         <p className="text-base text-grey-600 dark:text-grey-400">
           {selectedTemplate
             ? 'Ready to start recording'
-            : 'Choose the body region for this evaluation'}
+            : effectiveProfession === PROFESSIONS.CHIROPRACTIC 
+              ? 'Choose the spinal region for this visit' 
+              : 'Choose the body region for this evaluation'}
         </p>
       </motion.div>
 
-      {/* Universal Templates Section */}
-      <div className="mb-8">
-        <h3 className="text-sm font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide mb-4">Universal Templates</h3>
-        <div className="grid grid-cols-2 gap-4">
-          {TEMPLATES.filter(t => t.category === 'universal').map((template, index) => {
+      {/* Profession Toggle - allows viewing different template sets */}
+      <div className="flex justify-center mb-8">
+        <div className="inline-flex rounded-lg border border-white/10 bg-white/5 p-1">
+          <button
+            onClick={() => setViewProfession(PROFESSIONS.PHYSICAL_THERAPY)}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+              effectiveProfession === PROFESSIONS.PHYSICAL_THERAPY
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'text-grey-400 hover:text-grey-200 hover:bg-white/5'
+            }`}
+          >
+            <Activity className="w-4 h-4" />
+            Physical Therapy
+          </button>
+          <button
+            onClick={() => setViewProfession(PROFESSIONS.CHIROPRACTIC)}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+              effectiveProfession === PROFESSIONS.CHIROPRACTIC
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'text-grey-400 hover:text-grey-200 hover:bg-white/5'
+            }`}
+          >
+            <Stethoscope className="w-4 h-4" />
+            Chiropractic
+          </button>
+        </div>
+      </div>
+
+      {/* Warning if viewing templates from different profession */}
+      {viewProfession && viewProfession !== profession && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-center"
+        >
+          <p className="text-sm text-yellow-400">
+            Viewing {viewProfession === PROFESSIONS.CHIROPRACTIC ? 'Chiropractic' : 'Physical Therapy'} templates. 
+            Your account is set up for {getProfessionDisplayName()}s.
+          </p>
+        </motion.div>
+      )}
+
+      {/* PT Templates */}
+      {effectiveProfession === PROFESSIONS.PHYSICAL_THERAPY && (
+        <>
+          {/* Universal Templates Section */}
+          <div className="mb-8">
+            <h3 className="text-sm font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide mb-4">Universal Templates</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {PT_TEMPLATES.filter(t => t.category === 'universal').map((template, index) => {
             const isSelected = selectedTemplate === template.id;
             const Icon = template.icon;
 
@@ -442,11 +528,11 @@ export default function TemplateSelector() {
         </div>
       </div>
 
-      {/* Body-Part Specific Templates Section */}
-      <div>
-        <h3 className="text-sm font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide mb-4">Body-Part Evaluations</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {TEMPLATES.filter(t => t.category === 'bodyPart').map((template, index) => {
+          {/* Body-Part Specific Templates Section */}
+          <div>
+            <h3 className="text-sm font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide mb-4">Body-Part Evaluations</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {PT_TEMPLATES.filter(t => t.category === 'bodyPart').map((template, index) => {
             const isSelected = selectedTemplate === template.id;
             const Icon = template.icon;
 
@@ -533,8 +619,149 @@ export default function TemplateSelector() {
               </motion.button>
             );
           })}
-        </div>
-      </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* CHIROPRACTIC Templates */}
+      {effectiveProfession === PROFESSIONS.CHIROPRACTIC && (
+        <>
+          {/* Spinal Region Templates Section */}
+          <div className="mb-8">
+            <h3 className="text-sm font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide mb-4">Spinal Region Adjustments</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {CHIRO_TEMPLATES.filter(t => t.category === 'spinalRegion').map((template, index) => {
+                const isSelected = selectedTemplate === template.id;
+                const Icon = template.icon;
+
+                return (
+                  <motion.button
+                    key={template.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 * index }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => selectTemplate(template.id)}
+                    className="relative text-left w-full group"
+                  >
+                    <SpotlightCard
+                      className={`
+                        h-full transition-all duration-300
+                        ${isSelected
+                          ? 'bg-blue-50/10 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.15)]'
+                          : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20'}
+                      `}
+                      spotlightColor={isSelected ? "rgba(37, 99, 235, 0.2)" : "rgba(255, 255, 255, 0.1)"}
+                    >
+                      <div className="p-5 pb-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`
+                              w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors
+                              ${isSelected
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                                : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 group-hover:bg-white/20 group-hover:text-white'}
+                            `}
+                          >
+                            <Icon className="w-5 h-5" strokeWidth={2} />
+                          </div>
+                          <div className={`text-base font-semibold transition-colors ${isSelected ? 'text-blue-500 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'}`}>
+                            {template.name}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`h-px w-full transition-colors ${isSelected ? 'bg-blue-500/20' : 'bg-gray-200/10 dark:bg-white/5'}`} />
+                      <div className="p-5 pt-4">
+                        <div className={`text-sm transition-colors ${isSelected ? 'text-blue-400/80' : 'text-gray-600 dark:text-gray-400'}`}>
+                          {template.description}
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center bg-blue-600 text-white text-xs font-medium shadow-lg shadow-blue-600/40"
+                        >
+                          ✓
+                        </motion.div>
+                      )}
+                    </SpotlightCard>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Specialized Chiropractic Templates Section */}
+          <div>
+            <h3 className="text-sm font-semibold text-grey-500 dark:text-grey-400 uppercase tracking-wide mb-4">Specialized Care</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {CHIRO_TEMPLATES.filter(t => t.category === 'specialized').map((template, index) => {
+                const isSelected = selectedTemplate === template.id;
+                const Icon = template.icon;
+
+                return (
+                  <motion.button
+                    key={template.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 * index }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => selectTemplate(template.id)}
+                    className="relative text-left w-full group"
+                  >
+                    <SpotlightCard
+                      className={`
+                        h-full transition-all duration-300
+                        ${isSelected
+                          ? 'bg-blue-50/10 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.15)]'
+                          : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20'}
+                      `}
+                      spotlightColor={isSelected ? "rgba(37, 99, 235, 0.2)" : "rgba(255, 255, 255, 0.1)"}
+                    >
+                      <div className="p-5 pb-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`
+                              w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors
+                              ${isSelected
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                                : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 group-hover:bg-white/20 group-hover:text-white'}
+                            `}
+                          >
+                            <Icon className="w-5 h-5" strokeWidth={2} />
+                          </div>
+                          <div className={`text-base font-semibold transition-colors ${isSelected ? 'text-blue-500 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'}`}>
+                            {template.name}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`h-px w-full transition-colors ${isSelected ? 'bg-blue-500/20' : 'bg-gray-200/10 dark:bg-white/5'}`} />
+                      <div className="p-5 pt-4">
+                        <div className={`text-sm transition-colors ${isSelected ? 'text-blue-400/80' : 'text-gray-600 dark:text-gray-400'}`}>
+                          {template.description}
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center bg-blue-600 text-white text-xs font-medium shadow-lg shadow-blue-600/40"
+                        >
+                          ✓
+                        </motion.div>
+                      )}
+                    </SpotlightCard>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Custom Templates Section */}
       {customTemplates && customTemplates.length > 0 && (

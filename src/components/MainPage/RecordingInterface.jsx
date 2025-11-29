@@ -1,5 +1,6 @@
 /**
  * RecordingInterface - Recording controls and waveform
+ * Supports both PT and Chiropractic templates with profession-aware AI generation
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -8,6 +9,7 @@ import { Mic, Square, Loader2, Pause, Play } from 'lucide-react';
 import { useAppState, APP_STATES } from './StateManager';
 import { transcribeAudio } from '../../services/transcriptionService';
 import { useTemplateManager } from '../../hooks/templates/useTemplateManager';
+import { useProfession, PROFESSIONS } from '../../hooks/useProfession';
 import { createAIService } from '../../services/structuredAI';
 import { authenticatedFetch } from '../../lib/authHeaders';
 import GenerationProgress from '../recording/GenerationProgress';
@@ -15,6 +17,7 @@ import MagneticButton from '../ui/MagneticButton';
 
 export default function RecordingInterface() {
   const { appState, selectedTemplate, startRecording, stopRecording, finishProcessing, sessionName, setSessionName, triggerRefresh } = useAppState();
+  const { profession } = useProfession();
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -25,7 +28,14 @@ export default function RecordingInterface() {
   const mediaRecorderRef = useRef(null);
   const timerRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const templateManager = useTemplateManager(selectedTemplate || 'knee');
+  
+  // Get default template based on profession
+  const getDefaultTemplate = () => {
+    return profession === PROFESSIONS.CHIROPRACTIC ? 'cervical-adjustment' : 'knee';
+  };
+  
+  // Pass profession to template manager for proper custom template handling
+  const templateManager = useTemplateManager(selectedTemplate || getDefaultTemplate(), profession);
 
   // Show recording button only when template is selected
   const showRecordButton = appState === APP_STATES.TEMPLATE_SELECTED;
@@ -135,9 +145,10 @@ export default function RecordingInterface() {
       setProcessingStatus('Initializing AI service...');
 
       // Step 0: Initialize AI service first (needed for both transcription and SOAP generation)
-      console.log('🤖 Initializing AI service...');
-      const aiService = createAIService();
-      console.log('✅ AI service initialized');
+      // Pass profession for profession-aware system prompts
+      console.log('🤖 Initializing AI service for profession:', profession);
+      const aiService = createAIService(profession);
+      console.log('✅ AI service initialized with profession:', profession);
 
       setProcessingStatus('Transcribing audio...');
 
