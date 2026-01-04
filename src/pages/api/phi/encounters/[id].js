@@ -6,13 +6,14 @@
 import { query, logAudit } from '../../../../lib/db';
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // SECURITY FIX: Removed wildcard CORS
+  // Next.js API routes don't need CORS headers for same-origin requests
+  // If cross-origin requests are needed in future, whitelist specific origins only
   
+  // Handle OPTIONS for CORS preflight (if needed for specific origins)
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
+    // For now, we don't support cross-origin requests
+    res.status(405).json({ error: 'Cross-origin requests not supported' });
     return;
   }
 
