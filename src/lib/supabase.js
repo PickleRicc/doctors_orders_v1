@@ -45,12 +45,19 @@ const createEmptyClient = () => {
 // Initialize Supabase client based on environment variables if available
 export const supabase = (() => {
   try {
-    const url = 'https://oozghvnctxihtbqzktdv.supabase.co';
-    const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vemdodm5jdHhpaHRicXprdGR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MjAyNzcsImV4cCI6MjA2NDk5NjI3N30.I3AbqcZO3bBkF2qCDBmvJkpA8j9zpgwFNk1NCZyjxpc';
+    // SECURITY FIX: Use environment variables instead of hardcoded credentials
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
     
     // Make sure we have both URL and key before trying to create client
     if (!url || !key) {
-      console.warn('Supabase environment variables missing. Using empty client.');
+      console.warn('Supabase environment variables missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY');
+      return createEmptyClient();
+    }
+    
+    // Validate URL format
+    if (!url.startsWith('https://') || !url.includes('.supabase.co')) {
+      console.error('Invalid Supabase URL format');
       return createEmptyClient();
     }
     
