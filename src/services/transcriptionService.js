@@ -1,19 +1,17 @@
 /**
  * Transcription Service for PT SOAP Generator
- * Handles audio transcription using OpenAI's Whisper API
+ * SECURITY: Now uses server-side endpoint instead of client-side OpenAI
  * Provides audio processing and transcription functionality
  */
 
-import { getOpenAIClient } from './aiClient.js';
+import { supabase } from '../lib/supabase.js';
 
 /**
- * Transcribe audio file using OpenAI's Whisper API
+ * Transcribe audio file using server-side API
  * @param {File|Blob} audioBlob - Audio file to transcribe
  * @returns {Promise<string>} - Transcription text
  */
 export const transcribeAudio = async (audioBlob) => {
-  const openai = getOpenAIClient();
-  
   console.log('🎤 Starting audio transcription...', {
     audioSize: audioBlob.size,
     audioType: audioBlob.type,
@@ -26,31 +24,41 @@ export const transcribeAudio = async (audioBlob) => {
       throw new Error('Invalid audio file: empty or missing audio data');
     }
     
-    // Ensure we have a proper File object for the OpenAI API
-    // The OpenAI SDK expects a proper File object, not just a blob
-    const audioFile = new File(
-      [audioBlob], 
-      'recording.webm', 
-      { type: audioBlob.type || 'audio/webm' }
+    // Convert audio to base64
+    const arrayBuffer = await audioBlob.arrayBuffer();
+    const base64Audio = btoa(
+      new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
     );
     
-    console.log('📁 Creating proper File object for API:', {
-      fileName: 'recording.webm',
-      fileSize: audioFile.size,
-      fileType: audioFile.type
+    // Get auth token
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Not authenticated');
+    }
+    
+    // Call server-side transcription endpoint
+    const response = await fetch('/api/transcribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({
+        audioData: base64Audio,
+        audioType: audioBlob.type || 'audio/webm'
+      })
     });
     
-    // Make the transcription request with a proper File object
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
-      model: "whisper-1",
-      language: "en", // Specify English for better accuracy
-      response_format: "text" // Get plain text response
-    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Transcription failed');
+    }
+    
+    const { transcription } = await response.json();
     
     // Validate transcription result
     if (!transcription || typeof transcription !== 'string') {
-      throw new Error('Invalid transcription response from Whisper API');
+      throw new Error('Invalid transcription response');
     }
     
     if (transcription.trim().length === 0) {

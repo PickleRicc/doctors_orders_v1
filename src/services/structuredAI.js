@@ -5,7 +5,8 @@
  * Replaces complex soapGenerationService.js with clean, focused approach
  */
 
-import { createChatCompletion, initializeAI, isAIInitialized } from './aiClient.js';
+// No longer need client-side AI - using server-side endpoints
+// import { createChatCompletion, initializeAI, isAIInitialized } from './aiClient.js';
 import { PROFESSIONS } from './supabase.js';
 
 /**
@@ -84,25 +85,9 @@ Your goal is accuracy and honesty, not completeness. An incomplete note based on
  * @param {string} profession - Optional profession for profession-specific prompts (defaults to physical_therapy)
  */
 export const createAIService = (profession = PROFESSIONS.PHYSICAL_THERAPY) => {
-  // Auto-initialize AI client if not already initialized
-  if (!isAIInitialized()) {
-    const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-    console.log('🔑 Checking OpenAI API key...', {
-      hasKey: !!apiKey,
-      keyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'none',
-      envVars: Object.keys(process.env).filter(k => k.includes('OPENAI'))
-    });
-    
-    if (apiKey) {
-      console.log('✅ Initializing OpenAI client...');
-      initializeAI(apiKey);
-    } else {
-      const errorMsg = '⚠️ No OpenAI API key found in environment variables. Please set NEXT_PUBLIC_OPENAI_API_KEY in .env.local';
-      console.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-  }
-
+  // SECURITY: No client-side OpenAI initialization needed anymore
+  // All AI calls now go through secure server-side endpoints
+  
   // Get profession-specific system prompt
   const systemPrompt = getSystemPromptForProfession(profession);
   const professionLabel = profession === PROFESSIONS.CHIROPRACTIC ? 'Chiropractic' : 'PT';
@@ -111,56 +96,55 @@ export const createAIService = (profession = PROFESSIONS.PHYSICAL_THERAPY) => {
     profession,
     generateCompletion: async (prompt, options = {}) => {
       try {
-        // Add strict rules to prevent hallucination
-        const enhancedPrompt = addStrictRules(prompt);
+        // SECURITY: Use server-side endpoint instead of client-side OpenAI
+        const { supabase } = await import('../lib/supabase.js');
         
-        // Convert camelCase options to snake_case for OpenAI API
-        const normalizedOptions = {
-          temperature: options.temperature || 0.2, // Lower temperature for more factual responses
-          max_tokens: options.maxTokens || options.max_tokens || 2000,
-          model: options.model || 'gpt-4o'
-        };
-        
-        // Note: Not using response_format as it's not supported by all models
-        // The prompt should explicitly request JSON format instead
+        // Get auth token
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('Not authenticated');
+        }
 
         console.log(`🧠 Generating structured ${professionLabel} SOAP with AI...`, {
           profession,
-          promptLength: enhancedPrompt.length,
-          options: normalizedOptions,
+          promptLength: prompt.length,
           timestamp: new Date().toISOString()
         });
 
-        const completion = await createChatCompletion({
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            },
-            {
-              role: 'user',
-              content: enhancedPrompt
-            }
-          ],
-          ...normalizedOptions
+        // Call server-side SOAP generation endpoint
+        const response = await fetch('/api/generate-soap', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            transcript: prompt,
+            templateType: profession,
+            prompt: addStrictRules(prompt)
+          })
         });
 
-        // Extract the response content from the completion
-        const response = completion.choices[0]?.message?.content;
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'SOAP generation failed');
+        }
+
+        const { soap } = await response.json();
         
-        if (!response) {
+        if (!soap) {
           throw new Error('No response content received from AI service');
         }
 
+        // Convert back to string for compatibility with existing code
+        let cleanedResponse = typeof soap === 'string' ? soap : JSON.stringify(soap);
+
         console.log('📄 AI Response received:', {
-          responseLength: response.length,
-          responsePreview: response.substring(0, 200) + '...',
+          responseLength: cleanedResponse.length,
+          responsePreview: cleanedResponse.substring(0, 200) + '...',
           timestamp: new Date().toISOString()
         });
 
-        // Clean up the response - remove markdown code blocks if present
-        let cleanedResponse = response.trim();
-        
         // Remove ```json and ``` wrappers if present
         if (cleanedResponse.startsWith('```json')) {
           cleanedResponse = cleanedResponse.replace(/^```json\s*\n?/, '').replace(/\n?```\s*$/, '');
@@ -171,7 +155,6 @@ export const createAIService = (profession = PROFESSIONS.PHYSICAL_THERAPY) => {
         cleanedResponse = cleanedResponse.trim();
 
         console.log('✅ AI response cleaned and ready', {
-          originalLength: response.length,
           cleanedLength: cleanedResponse.length,
           startsWithBrace: cleanedResponse.startsWith('{'),
           timestamp: new Date().toISOString()

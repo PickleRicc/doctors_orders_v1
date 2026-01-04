@@ -22,7 +22,7 @@ export function getPool() {
       user: process.env.PGUSER,
       password: process.env.PGPASSWORD,
       ssl: { 
-        rejectUnauthorized: false 
+        rejectUnauthorized: process.env.ENABLE_SSL_VALIDATION === 'true' ? true : false
       },
       max: 5, // Reduced for serverless (Vercel has limited connections)
       idleTimeoutMillis: 10000, // Close idle clients after 10 seconds (serverless optimization)

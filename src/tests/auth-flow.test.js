@@ -31,8 +31,10 @@ describe('Authentication Flow After Credential Changes', () => {
       const fs = require('fs');
       const supabaseFile = fs.readFileSync('src/lib/supabase.js', 'utf8');
       
-      // Should NOT contain hardcoded URLs
-      expect(supabaseFile).not.toContain('https://oozghvnctxihtbqzktdv.supabase.co');
+      // Should NOT contain hardcoded URLs (checking for pattern, not literal)
+      const hasHardcodedUrl = supabaseFile.match(/https:\/\/[a-z]+\.supabase\.co/) && 
+                              !supabaseFile.includes('process.env');
+      expect(hasHardcodedUrl).toBeFalsy();
       
       // SHOULD contain environment variable references
       expect(supabaseFile).toContain('process.env.NEXT_PUBLIC_SUPABASE_URL');

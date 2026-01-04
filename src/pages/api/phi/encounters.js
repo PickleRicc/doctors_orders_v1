@@ -1,5 +1,8 @@
 import { query } from '../../../lib/db';
 import { createClient } from '@supabase/supabase-js';
+import { phiRateLimit } from '../../../middleware/rateLimit';
+import { validateEncounter, validatePagination, isValidUUID } from '../../../lib/validation';
+import logger from '../../../lib/logger';
 
 // Initialize Supabase client for verifying JWT tokens
 const supabase = createClient(
@@ -22,22 +25,33 @@ async function getCurrentUser(req) {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error || !user) {
-      console.error('Failed to verify token:', error?.message);
+      logger.warn('phi-encounters', 'Failed to verify token', { error: error?.message });
       return null;
     }
     
     return user;
   } catch (error) {
-    console.error('Error getting current user:', error.message);
+    logger.error('phi-encounters', 'Error getting current user', { error: error.message });
     return null;
   }
 }
 
-export default async function handler(req, res) {
+const rateLimitedHandler = async (req, res) => {
   try {
     switch (req.method) {
       case 'GET': {
         const { limit = '50', id } = req.query;
+        
+        // Validate pagination
+        const paginationValidation = validatePagination(limit, 0);
+        if (!paginationValidation.isValid) {
+          return res.status(400).json({ error: 'Invalid pagination', details: paginationValidation.errors });
+        }
+        
+        // Validate ID if provided
+        if (id && !isValidUUID(id)) {
+          return res.status(400).json({ error: 'Invalid encounter ID format' });
+        }
         
         // Get current authenticated user
         const user = await getCurrentUser(req);
@@ -174,10 +188,14 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (error) {
-    console.error('Database error:', error);
+    logger.error('phi-encounters', 'Database error', { error: error.message, stack: error.stack });
     return res.status(500).json({ 
       error: 'Database error',
       message: error.message 
     });
   }
+};
+
+export default function handler(req, res) {
+  return phiRateLimit(req, res, rateLimitedHandler);
 }
