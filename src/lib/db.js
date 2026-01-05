@@ -71,20 +71,56 @@ export async function query(text, params) {
 
 /**
  * Audit logging helper for HIPAA compliance
+ * Enhanced with IP address, user agent, and change tracking
  * @param {string} encounterId - Encounter ID
  * @param {string} actorId - User/clinician ID
- * @param {string} event - Event type (READ, WRITE, DELETE, etc.)
+ * @param {string} event - Event type (CREATE, READ, UPDATE, DELETE, etc.)
+ * @param {Object} metadata - Additional audit data (ipAddress, userAgent, changes, resource)
  */
-export async function logAudit(encounterId, actorId, event) {
+export async function logAudit(encounterId, actorId, event, metadata = {}) {
   try {
+    const {
+      ipAddress = null,
+      userAgent = null,
+      changes = null,
+      resource = 'encounter'
+    } = metadata;
+
     await query(
-      'INSERT INTO phi.audit_events (encounter_id, actor_id, event) VALUES ($1, $2, $3)',
-      [encounterId, actorId, event]
+      `INSERT INTO phi.audit_events 
+       (encounter_id, actor_id, event, ip_address, user_agent, changes, resource) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        encounterId, 
+        actorId, 
+        event,
+        ipAddress,
+        userAgent,
+        changes ? JSON.stringify(changes) : null,
+        resource
+      ]
     );
+    console.log(`✅ Audit: ${event} by ${actorId} on ${resource} ${encounterId || ''}`);
   } catch (error) {
     // Log audit failures but don't break the main operation
-    console.error('Audit logging failed:', error);
+    console.error('❌ Audit logging failed:', error.message);
+    // In production, this should trigger an alert
   }
+}
+
+/**
+ * Helper to extract audit metadata from HTTP request
+ * @param {Object} req - Next.js API request object
+ * @returns {Object} Audit metadata (ipAddress, userAgent)
+ */
+export function getAuditMetadata(req) {
+  return {
+    ipAddress: req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+               req.headers['x-real-ip'] ||
+               req.socket?.remoteAddress ||
+               'unknown',
+    userAgent: req.headers['user-agent'] || 'unknown'
+  };
 }
 
 /**
@@ -106,5 +142,6 @@ export default {
   getPool,
   query,
   logAudit,
+  getAuditMetadata,
   testConnection
 };
